@@ -1,0 +1,75 @@
+import type { Account, Category, Transaction } from "@prisma/client";
+
+export type TransactionWithCategory = Transaction & {
+  category: Category | null;
+  account: Account;
+};
+
+export type AccountWithStats = {
+  id: string;
+  name: string;
+  bank: string | null;
+  color: string;
+  icon: string | null;
+  transactionCount: number;
+  totalAmount: number;
+};
+
+export type DashboardStats = {
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
+  transactionCount: number;
+};
+
+export type MonthlyData = {
+  month: string;
+  income: number;
+  expense: number;
+};
+
+export type CategoryBreakdown = {
+  name: string;
+  color: string;
+  total: number;
+  count: number;
+};
+
+export type MerchantTotal = {
+  merchant: string;
+  total: number;
+  count: number;
+};
+
+export type TransactionFilters = {
+  dateFrom?: string;
+  dateTo?: string;
+  categoryId?: string;
+  accountId?: string;
+  type?: string;
+  merchant?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+};
+
+export type PaginatedResult<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type MonthlyCategoryData = {
+  month: string;
+  [category: string]: number | string; // month is string, rest are numbers
+};
+
+export type CategoryMeta = {
+  name: string;
+  color: string;
+};
+
+export type PeriodFilter = "all" | "3m" | "6m" | "1y";

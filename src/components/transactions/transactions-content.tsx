@@ -1,0 +1,530 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TransactionFilters } from "./transaction-filters";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { EditTransactionDialog } from "./edit-transaction-dialog";
+import { AddTransactionDialog } from "./add-transaction-dialog";
+import { MediaViewerDialog } from "./media-viewer-dialog";
+import { MergeDialog } from "./merge-dialog";
+import { getTransactions, getCategories, getAccountsList, deleteTransactions } from "@/actions/transactions";
+import type { TransactionWithCategory, PaginatedResult } from "@/lib/types";
+import type { Category, Account } from "@prisma/client";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Pencil,
+  Image,
+  FileText,
+  Merge,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
+
+const TYPE_COLORS: Record<string, string> = {
+  income:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  expense: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  transfer: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  other: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
+};
+
+function buildUrl(params: Record<string, string | number>) {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    const s = String(v);
+    if (s && s !== "1" && k === "page") sp.set(k, s);
+    else if (s && !(k === "sortBy" && s === "date") && !(k === "sortOrder" && s === "desc") && k !== "page") {
+      if (s) sp.set(k, s);
+    }
+  }
+  const qs = sp.toString();
+  return qs ? `/transactions?${qs}` : "/transactions";
+}
+
+export function TransactionsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read initial state from URL
+  const urlPage = Number(searchParams.get("page")) || 1;
+  const urlSortBy = searchParams.get("sortBy") || "date";
+  const urlSortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
+  const urlDateFrom = searchParams.get("dateFrom") || "";
+  const urlDateTo = searchParams.get("dateTo") || "";
+  const urlCategoryId = searchParams.get("categoryId") || "";
+  const urlAccountId = searchParams.get("accountId") || "";
+  const urlType = searchParams.get("type") || "";
+  const urlMerchant = searchParams.get("merchant") || "";
+
+  const [filters, setFilters] = useState({
+    dateFrom: urlDateFrom,
+    dateTo: urlDateTo,
+    categoryId: urlCategoryId,
+    accountId: urlAccountId,
+    type: urlType,
+    merchant: urlMerchant,
+  });
+  const [sortBy, setSortBy] = useState(urlSortBy);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(urlSortOrder);
+  const [page, setPage] = useState(urlPage);
+  const [result, setResult] =
+    useState<PaginatedResult<TransactionWithCategory> | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editTx, setEditTx] = useState<TransactionWithCategory | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [viewMedia, setViewMedia] = useState<string[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showMerge, setShowMerge] = useState(false);
+  const [deleteIds, setDeleteIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+
+  const debouncedMerchant = useDebounce(filters.merchant, 300);
+
+  // Sync state to URL
+  useEffect(() => {
+    const url = buildUrl({
+      page,
+      sortBy,
+      sortOrder,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+      categoryId: filters.categoryId,
+      accountId: filters.accountId,
+      type: filters.type,
+      merchant: debouncedMerchant,
+    });
+    router.replace(url, { scroll: false });
+  }, [page, sortBy, sortOrder, filters.dateFrom, filters.dateTo, filters.categoryId, filters.accountId, filters.type, debouncedMerchant, router]);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const data = await getTransactions({
+      dateFrom: filters.dateFrom || undefined,
+      dateTo: filters.dateTo || undefined,
+      categoryId: filters.categoryId || undefined,
+      accountId: filters.accountId || undefined,
+      type: filters.type || undefined,
+      merchant: debouncedMerchant || undefined,
+      page,
+      sortBy,
+      sortOrder,
+    });
+    setResult(data);
+    setLoading(false);
+  }, [
+    filters.dateFrom,
+    filters.dateTo,
+    filters.categoryId,
+    filters.accountId,
+    filters.type,
+    debouncedMerchant,
+    page,
+    sortBy,
+    sortOrder,
+  ]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    Promise.all([getCategories(), getAccountsList()]).then(([cats, accs]) => {
+      setCategories(cats);
+      setAccounts(accs);
+    });
+  }, []);
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((f) => ({ ...f, [key]: value }));
+    setPage(1);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!result) return;
+    if (selected.size === result.data.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(result.data.map((t) => t.id)));
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteIds.length) return;
+    setDeleting(true);
+    const res = await deleteTransactions(deleteIds);
+    setDeleting(false);
+    if ("success" in res) {
+      toast.success(`Deleted ${res.count} transaction${res.count > 1 ? "s" : ""}`);
+      setSelected((prev) => {
+        const next = new Set(prev);
+        deleteIds.forEach((id) => next.delete(id));
+        return next;
+      });
+      loadData();
+    } else {
+      toast.error(res.error);
+    }
+    setDeleteIds([]);
+  };
+
+  const selectedTransactions =
+    result?.data.filter((t) => selected.has(t.id)) ?? [];
+
+  const SortableHeader = ({
+    field,
+    children,
+  }: {
+    field: string;
+    children: React.ReactNode;
+  }) => (
+    <TableHead>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-3 h-8"
+        onClick={() => handleSort(field)}
+      >
+        {children}
+        <ArrowUpDown className="ml-1 h-3 w-3" />
+      </Button>
+    </TableHead>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Transactions</h2>
+          <p className="text-muted-foreground">
+            {result ? `${result.total} transactions` : "Loading..."}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {selected.size >= 1 && (
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteIds([...selected])}
+            >
+              <Trash2 className="mr-1.5 h-4 w-4" />
+              Delete {selected.size}
+            </Button>
+          )}
+          {selected.size >= 2 && (
+            <Button onClick={() => setShowMerge(true)}>
+              <Merge className="mr-1.5 h-4 w-4" />
+              Merge {selected.size} Selected
+            </Button>
+          )}
+          <Button onClick={() => setShowAdd(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            Add Transaction
+          </Button>
+        </div>
+      </div>
+
+      <TransactionFilters
+        filters={filters}
+        categories={categories}
+        accounts={accounts}
+        onChange={handleFilterChange}
+        onReset={() => {
+          setFilters({ dateFrom: "", dateTo: "", categoryId: "", accountId: "", type: "", merchant: "" });
+          setSortBy("date");
+          setSortOrder("desc");
+          setPage(1);
+        }}
+      />
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-input accent-primary"
+                  checked={
+                    !!result &&
+                    result.data.length > 0 &&
+                    selected.size === result.data.length
+                  }
+                  onChange={toggleSelectAll}
+                />
+              </TableHead>
+              <SortableHeader field="date">Date & Time</SortableHeader>
+              <SortableHeader field="amount">Amount</SortableHeader>
+              <TableHead>Type</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Account</TableHead>
+              <SortableHeader field="merchant">Merchant</SortableHeader>
+              <TableHead className="hidden md:table-cell">
+                Description
+              </TableHead>
+              <TableHead>Files</TableHead>
+              <TableHead className="w-10" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading
+              ? [...Array(10)].map((_, i) => (
+                  <TableRow key={i}>
+                    {[...Array(10)].map((_, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              : result?.data.map((tx) => (
+                  <TableRow
+                    key={tx.id}
+                    className={selected.has(tx.id) ? "bg-primary/5" : ""}
+                  >
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-input accent-primary"
+                        checked={selected.has(tx.id)}
+                        onChange={() => toggleSelect(tx.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <div className="flex ">{formatDate(tx.date)}</div>
+                      {tx.time && (
+                        <div className="text-xs text-muted-foreground">
+                          {tx.time}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium whitespace-nowrap">
+                      {tx.amount != null
+                        ? formatCurrency(Number(tx.amount))
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={TYPE_COLORS[tx.type] || TYPE_COLORS.other}
+                      >
+                        {tx.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {tx.category && (
+                        <div className="flex items-center gap-1.5">
+                          <div
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: tx.category.color }}
+                          />
+                          <span className="text-sm">{tx.category.name}</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: tx.account.color }}
+                        />
+                        <span className="text-sm">{tx.account.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-[150px] truncate">
+                      {tx.merchant}
+                    </TableCell>
+                    <TableCell className="hidden max-w-[200px] truncate md:table-cell">
+                      {tx.description}
+                    </TableCell>
+                    <TableCell>
+                      {tx.mediaFiles.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs"
+                          onClick={() => setViewMedia(tx.mediaFiles)}
+                        >
+                          {tx.mediaFiles.some((f) =>
+                            /\.(jpg|jpeg|png)$/i.test(f),
+                          ) ? (
+                            <Image className="h-3.5 w-3.5" />
+                          ) : (
+                            <FileText className="h-3.5 w-3.5" />
+                          )}
+                          {tx.mediaFiles.length > 1 && tx.mediaFiles.length}
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-0.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setEditTx(tx)}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => setDeleteIds([tx.id])}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {result && result.totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Page {result.page} of {result.totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= result.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {editTx && (
+        <EditTransactionDialog
+          transaction={editTx}
+          categories={categories}
+          accounts={accounts}
+          open={!!editTx}
+          onOpenChange={(open) => !open && setEditTx(null)}
+          onSuccess={loadData}
+        />
+      )}
+
+      {showAdd && (
+        <AddTransactionDialog
+          categories={categories}
+          accounts={accounts}
+          open={showAdd}
+          onOpenChange={setShowAdd}
+          onSuccess={loadData}
+        />
+      )}
+
+      <MediaViewerDialog
+        files={viewMedia}
+        open={viewMedia.length > 0}
+        onOpenChange={(open) => !open && setViewMedia([])}
+      />
+
+      {showMerge && selectedTransactions.length >= 2 && (
+        <MergeDialog
+          transactions={selectedTransactions}
+          open={showMerge}
+          onOpenChange={(open) => {
+            if (!open) setShowMerge(false);
+          }}
+          onSuccess={() => {
+            setShowMerge(false);
+            setSelected(new Set());
+            router.refresh();
+            loadData();
+          }}
+        />
+      )}
+
+      <Dialog
+        open={deleteIds.length > 0}
+        onOpenChange={(open) => !open && setDeleteIds([])}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Transaction{deleteIds.length > 1 ? "s" : ""}</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              {deleteIds.length === 1
+                ? "this transaction"
+                : `${deleteIds.length} transactions`}
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteIds([])}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

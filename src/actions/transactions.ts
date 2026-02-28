@@ -1,0 +1,169 @@
+"use server";
+
+import { prisma } from "@/lib/db";
+import type { TransactionFilters, PaginatedResult, TransactionWithCategory } from "@/lib/types";
+import { transactionUpdateSchema, transactionCreateSchema } from "@/lib/validators";
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
+import { Prisma } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+
+export async function getTransactions(
+  filters: TransactionFilters = {}
+): Promise<PaginatedResult<TransactionWithCategory>> {
+  const {
+    dateFrom,
+    dateTo,
+    categoryId,
+    accountId,
+    type,
+    merchant,
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+    sortBy = "date",
+    sortOrder = "desc",
+  } = filters;
+
+  const where: Prisma.TransactionWhereInput = { mergedIntoId: null };
+
+  if (dateFrom || dateTo) {
+    where.date = {};
+    if (dateFrom) where.date.gte = new Date(dateFrom);
+    if (dateTo) where.date.lte = new Date(dateTo);
+  }
+
+  if (categoryId) where.categoryId = categoryId;
+  if (accountId) where.accountId = accountId;
+  if (type) where.type = type;
+  if (merchant) {
+    where.merchant = { contains: merchant, mode: "insensitive" };
+  }
+
+  const validSortFields = ["date", "amount", "type", "merchant"];
+  const primarySort: Prisma.TransactionOrderByWithRelationInput = {};
+  if (validSortFields.includes(sortBy)) {
+    (primarySort as Record<string, string>)[sortBy] = sortOrder;
+  } else {
+    primarySort.date = "desc";
+  }
+
+  // Always sort by date+time together for consistent ordering
+  const orderBy: Prisma.TransactionOrderByWithRelationInput[] =
+    sortBy === "date"
+      ? [{ date: sortOrder }, { time: sortOrder }]
+      : [primarySort, { date: "desc" }, { time: "desc" }];
+
+  const [data, total] = await Promise.all([
+    prisma.transaction.findMany({
+      where,
+      include: { category: true, account: true },
+      orderBy,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.transaction.count({ where }),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
+}
+
+export async function createTransaction(data: Record<string, unknown>): Promise<{ success: true } | { error: Record<string, string[]> }> {
+  const parsed = transactionCreateSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  const values = parsed.data;
+
+  await prisma.transaction.create({
+    data: {
+      date: values.date,
+      time: values.time ?? null,
+      amount: values.amount ?? null,
+      currency: values.currency,
+      type: values.type,
+      categoryId: values.categoryId ?? null,
+      accountId: values.accountId,
+      merchant: values.merchant ?? null,
+      description: values.description ?? null,
+      source: "manual",
+    },
+  });
+
+  revalidatePath("/transactions");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateTransaction(
+  id: string,
+  data: Record<string, unknown>
+) {
+  const parsed = transactionUpdateSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  const updateData: Prisma.TransactionUpdateInput = {};
+  const values = parsed.data;
+
+  if (values.amount !== undefined) {
+    updateData.amount = values.amount;
+  }
+  if (values.type !== undefined) {
+    updateData.type = values.type;
+  }
+  if (values.categoryId !== undefined) {
+    if (values.categoryId === null) {
+      updateData.category = { disconnect: true };
+    } else {
+      updateData.category = { connect: { id: values.categoryId } };
+    }
+  }
+  if (values.accountId !== undefined) {
+    updateData.account = { connect: { id: values.accountId } };
+  }
+  if (values.merchant !== undefined) {
+    updateData.merchant = values.merchant;
+  }
+  if (values.description !== undefined) {
+    updateData.description = values.description;
+  }
+
+  await prisma.transaction.update({
+    where: { id },
+    data: updateData,
+  });
+
+  revalidatePath("/transactions");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteTransactions(
+  ids: string[]
+): Promise<{ success: true; count: number } | { error: string }> {
+  if (!ids.length) return { error: "No IDs provided" };
+  if (ids.length > 100) return { error: "Too many IDs (max 100)" };
+
+  const { count } = await prisma.transaction.deleteMany({
+    where: { id: { in: ids } },
+  });
+
+  revalidatePath("/transactions");
+  revalidatePath("/");
+  return { success: true, count };
+}
+
+export async function getCategories() {
+  return prisma.category.findMany({ orderBy: { name: "asc" } });
+}
+
+export async function getAccountsList() {
+  return prisma.account.findMany({ orderBy: { name: "asc" } });
+}

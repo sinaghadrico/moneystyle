@@ -95,24 +95,46 @@ export async function getCategoryBreakdown(
 ): Promise<CategoryBreakdown[]> {
   const where = getDateFilter(period, accountId);
 
-  const results = await prisma.transaction.groupBy({
-    by: ["categoryId"],
+  // Get transactions with their splits
+  const transactions = await prisma.transaction.findMany({
     where: { ...where, type: "expense", amount: { not: null } },
-    _sum: { amount: true },
-    _count: true,
+    select: { categoryId: true, amount: true, splits: { select: { categoryId: true, amount: true } } },
   });
 
-  const categories = await prisma.category.findMany();
-  const categoryMap = new Map(categories.map((c) => [c.id, c]));
+  const allCategories = await prisma.category.findMany();
+  const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
 
-  return results
-    .map((r) => {
-      const cat = r.categoryId ? categoryMap.get(r.categoryId) : null;
+  // Aggregate amounts - if a transaction has splits, use split categories instead of parent category
+  const catTotals = new Map<string | null, { total: number; count: number }>();
+
+  for (const tx of transactions) {
+    if (tx.splits.length > 0) {
+      // Use split categories
+      for (const s of tx.splits) {
+        const key = s.categoryId;
+        const entry = catTotals.get(key) ?? { total: 0, count: 0 };
+        entry.total += Number(s.amount);
+        entry.count += 1;
+        catTotals.set(key, entry);
+      }
+    } else {
+      // Use parent category
+      const key = tx.categoryId;
+      const entry = catTotals.get(key) ?? { total: 0, count: 0 };
+      entry.total += Number(tx.amount ?? 0);
+      entry.count += 1;
+      catTotals.set(key, entry);
+    }
+  }
+
+  return Array.from(catTotals.entries())
+    .map(([catId, data]) => {
+      const cat = catId ? categoryMap.get(catId) : null;
       return {
         name: cat?.name ?? "Uncategorized",
         color: cat?.color ?? "#6b7280",
-        total: Math.round(Number(r._sum.amount ?? 0) * 100) / 100,
-        count: r._count,
+        total: Math.round(data.total * 100) / 100,
+        count: data.count,
       };
     })
     .sort((a, b) => b.total - a.total);

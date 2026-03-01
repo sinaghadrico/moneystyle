@@ -26,6 +26,7 @@ import { EditTransactionDialog } from "./edit-transaction-dialog";
 import { AddTransactionDialog } from "./add-transaction-dialog";
 import { MediaViewerDialog } from "./media-viewer-dialog";
 import { MergeDialog } from "./merge-dialog";
+import { SplitDialog } from "./split-dialog";
 import {
   getTransactions,
   getCategories,
@@ -46,6 +47,7 @@ import {
   Merge,
   Plus,
   Trash2,
+  Split,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -144,6 +146,7 @@ export function TransactionsContent() {
   const [viewMedia, setViewMedia] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showMerge, setShowMerge] = useState(false);
+  const [splitTx, setSplitTx] = useState<TransactionWithCategory | null>(null);
   const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
 
@@ -427,7 +430,22 @@ export function TransactionsContent() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {tx.category && (
+                      {tx.splits && tx.splits.length > 0 ? (
+                        <div className="space-y-0.5">
+                          {tx.splits.map((s, i) => (
+                            <div key={i} className="flex items-center gap-1.5 text-xs">
+                              <div
+                                className="h-2 w-2 rounded-full"
+                                style={{ backgroundColor: s.categoryColor ?? "#6b7280" }}
+                              />
+                              <span>{s.categoryName ?? "None"}</span>
+                              <span className="text-muted-foreground">
+                                ({formatCurrency(s.amount)})
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : tx.category ? (
                         <div className="flex items-center gap-1.5">
                           <div
                             className="h-2.5 w-2.5 rounded-full"
@@ -435,7 +453,7 @@ export function TransactionsContent() {
                           />
                           <span className="text-sm">{tx.category.name}</span>
                         </div>
-                      )}
+                      ) : null}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -499,6 +517,17 @@ export function TransactionsContent() {
                         >
                           <Pencil className="h-3 w-3" />
                         </Button>
+                        {tx.amount != null && tx.amount > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Split transaction"
+                            onClick={() => setSplitTx(tx)}
+                          >
+                            <Split className="h-3 w-3" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -569,6 +598,16 @@ export function TransactionsContent() {
         open={viewMedia.length > 0}
         onOpenChange={(open) => !open && setViewMedia([])}
       />
+
+      {splitTx && (
+        <SplitDialog
+          transaction={splitTx}
+          categories={categories}
+          open={!!splitTx}
+          onOpenChange={(open) => !open && setSplitTx(null)}
+          onSuccess={loadData}
+        />
+      )}
 
       {showMerge && selectedTransactions.length >= 2 && (
         <MergeDialog

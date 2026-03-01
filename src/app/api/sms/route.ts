@@ -4,6 +4,7 @@ import { parseMashreqSMS } from "@/lib/sms-parser";
 import { getDefaultAccount, sendTelegramMessage } from "@/lib/telegram";
 import { checkBudgetAlert } from "@/actions/budgets";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
+import { resolveCategory } from "@/lib/auto-categorize";
 
 export async function POST(request: NextRequest) {
   // Authenticate with API key
@@ -38,6 +39,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No account found" }, { status: 500 });
   }
 
+  // Auto-categorize by merchant
+  const categoryId = await resolveCategory(parsed.merchant);
+
   // Create transaction
   const transaction = await prisma.transaction.create({
     data: {
@@ -45,6 +49,7 @@ export async function POST(request: NextRequest) {
       amount: parsed.amount,
       currency: "AED",
       type: parsed.type,
+      categoryId,
       accountId: account.id,
       merchant: parsed.merchant ?? null,
       description: parsed.description ?? null,
@@ -57,7 +62,11 @@ export async function POST(request: NextRequest) {
   if (chatId) {
     const typeIcon = parsed.type === "income" ? "💰" : "💳";
     const merchantLabel = parsed.merchant ? ` at ${parsed.merchant}` : "";
-    let msg = `${typeIcon} SMS: ${parsed.amount.toLocaleString()} AED ${parsed.type}${merchantLabel} [${account.name}] #${transaction.id.slice(-6)}`;
+    const catName = categoryId
+      ? (await prisma.category.findUnique({ where: { id: categoryId } }))?.name
+      : null;
+    const catLabel = catName ? ` (${catName})` : "";
+    let msg = `${typeIcon} SMS: ${parsed.amount.toLocaleString()} AED ${parsed.type}${merchantLabel}${catLabel} [${account.name}] #${transaction.id.slice(-6)}`;
 
     if (parsed.balance !== undefined) {
       msg += `\n💰 Balance: ${parsed.balance.toLocaleString()} AED`;

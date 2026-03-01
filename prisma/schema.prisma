@@ -9,14 +9,16 @@ datasource db {
 }
 
 model Category {
-  id           String        @id @default(cuid())
-  name         String        @unique
-  color        String        @default("#6b7280")
-  icon         String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transactions Transaction[]
-  budget       Budget?
+  id            String                 @id @default(cuid())
+  name          String                 @unique
+  color         String                 @default("#6b7280")
+  icon          String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  transactions  Transaction[]
+  budget        Budget?
+  merchantRules MerchantCategoryRule[]
+  splits        TransactionSplit[]     @relation("SplitCategories")
 
   @@map("categories")
 }
@@ -68,28 +70,29 @@ model Account {
 }
 
 model Transaction {
-  id           String         @id @default(cuid())
+  id           String               @id @default(cuid())
   date         DateTime
   time         String?
-  amount       Decimal?       @db.Decimal(12, 2)
-  currency     String         @default("AED")
+  amount       Decimal?             @db.Decimal(12, 2)
+  currency     String               @default("AED")
   type         String
   categoryId   String?
-  category     Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   accountId    String
-  account      Account        @relation(fields: [accountId], references: [id])
+  account      Account              @relation(fields: [accountId], references: [id])
   merchant     String?
   description  String?
   items        String?
   source       String?
-  hasReceipt   Boolean        @default(false)
+  hasReceipt   Boolean              @default(false)
   mediaFiles   String[]
   mergedIntoId String?
-  mergedInto   Transaction?   @relation("MergedTransactions", fields: [mergedIntoId], references: [id])
-  mergedFrom   Transaction[]  @relation("MergedTransactions")
+  mergedInto   Transaction?         @relation("MergedTransactions", fields: [mergedIntoId], references: [id])
+  mergedFrom   Transaction[]        @relation("MergedTransactions")
   tags         TransactionTag[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  splits       TransactionSplit[]   @relation("TransactionSplits")
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
 
   @@index([date])
   @@index([categoryId])
@@ -98,4 +101,42 @@ model Transaction {
   @@index([merchant])
   @@index([mergedIntoId])
   @@map("transactions")
+}
+
+model MerchantCategoryRule {
+  id         String   @id @default(cuid())
+  pattern    String   @unique
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@map("merchant_category_rules")
+}
+
+model SavingsGoal {
+  id            String    @id @default(cuid())
+  name          String
+  targetAmount  Decimal   @db.Decimal(12, 2)
+  currentAmount Decimal   @db.Decimal(12, 2) @default(0)
+  deadline      DateTime?
+  color         String    @default("#10b981")
+  status        String    @default("active")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("savings_goals")
+}
+
+model TransactionSplit {
+  id            String       @id @default(cuid())
+  transactionId String
+  transaction   Transaction  @relation("TransactionSplits", fields: [transactionId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category?    @relation("SplitCategories", fields: [categoryId], references: [id], onDelete: SetNull)
+  amount        Decimal      @db.Decimal(12, 2)
+  description   String?
+  createdAt     DateTime     @default(now())
+
+  @@index([transactionId])
+  @@map("transaction_splits")
 }

@@ -62,3 +62,23 @@ export const budgetUpsertSchema = z.object({
 });
 
 export type BudgetUpsertInput = z.infer<typeof budgetUpsertSchema>;
+
+export const savingsGoalSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  targetAmount: z.coerce.number().positive("Target must be positive"),
+  deadline: z.coerce.date().nullable().optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color").default("#10b981"),
+});
+
+export type SavingsGoalInput = z.infer<typeof savingsGoalSchema>;
+
+export const splitTransactionSchema = z.object({
+  transactionId: z.string().min(1),
+  splits: z.array(z.object({
+    categoryId: z.string().nullable().optional(),
+    amount: z.coerce.number().positive("Amount must be positive"),
+    description: z.string().nullable().optional(),
+  })).min(2, "Need at least 2 splits"),
+});
+
+export type SplitTransactionInput = z.infer<typeof splitTransactionSchema>;

@@ -90,6 +90,7 @@ export async function getTransactions(
         category: true,
         account: true,
         tags: { include: { tag: true } },
+        splits: { include: { category: true } },
       },
       orderBy,
       skip: (page - 1) * pageSize,
@@ -106,6 +107,14 @@ export async function getTransactions(
         id: tt.tag.id,
         name: tt.tag.name,
         color: tt.tag.color,
+      })),
+      splits: tx.splits.map((s) => ({
+        id: s.id,
+        categoryId: s.categoryId,
+        categoryName: s.category?.name ?? null,
+        categoryColor: s.category?.color ?? null,
+        amount: Number(s.amount),
+        description: s.description,
       })),
     })),
     total,
@@ -237,6 +246,50 @@ export async function deleteTransactions(
   revalidatePath("/transactions");
   revalidatePath("/");
   return { success: true, count };
+}
+
+export async function splitTransaction(
+  transactionId: string,
+  data: { splits: { categoryId: string | null; amount: number; description: string | null }[] },
+) {
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId } });
+  if (!tx) return { error: "Transaction not found" };
+
+  const txAmount = Number(tx.amount ?? 0);
+  const splitTotal = data.splits.reduce((sum, s) => sum + s.amount, 0);
+
+  // Allow small floating-point difference
+  if (Math.abs(txAmount - splitTotal) > 0.01) {
+    return { error: `Split total (${splitTotal}) does not match transaction amount (${txAmount})` };
+  }
+
+  if (data.splits.length < 2) {
+    return { error: "Need at least 2 splits" };
+  }
+
+  // Delete existing splits
+  await prisma.transactionSplit.deleteMany({ where: { transactionId } });
+
+  // Create new splits
+  await prisma.transactionSplit.createMany({
+    data: data.splits.map((s) => ({
+      transactionId,
+      categoryId: s.categoryId,
+      amount: s.amount,
+      description: s.description,
+    })),
+  });
+
+  revalidatePath("/transactions");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function unsplitTransaction(transactionId: string) {
+  await prisma.transactionSplit.deleteMany({ where: { transactionId } });
+  revalidatePath("/transactions");
+  revalidatePath("/");
+  return { success: true };
 }
 
 export async function getCategories() {

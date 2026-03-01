@@ -516,6 +516,8 @@ export function generateHelp(): string {
     "",
     "📊 /report — Monthly report with comparisons",
     "",
+    "🐷 /savings — View savings goals progress",
+    "",
     "❓ /help — Show this message",
     "",
     "Format: [+]amount merchant [#category] [#tag1 #tag2] [@account]",
@@ -523,6 +525,47 @@ export function generateHelp(): string {
     "  First #tag matches a category, extra #tags become labels",
     "  @tag matches an account",
   ].join("\n");
+}
+
+export async function generateSavingsReport(): Promise<string> {
+  const goals = await prisma.savingsGoal.findMany({
+    where: { status: "active" },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (goals.length === 0) {
+    return "🐷 Savings Goals\n\nNo active savings goals.";
+  }
+
+  const lines: string[] = [];
+  lines.push("🐷 Savings Goals");
+  lines.push("");
+
+  let totalSaved = 0;
+  let totalTarget = 0;
+
+  for (const g of goals) {
+    const current = Number(g.currentAmount);
+    const target = Number(g.targetAmount);
+    const pct = target > 0 ? Math.round((current / target) * 100) : 0;
+    const bar = textBar(pct);
+    const deadline = g.deadline
+      ? ` (due ${g.deadline.toLocaleDateString("en-US", { month: "short", day: "numeric" })})`
+      : "";
+
+    lines.push(`${g.name}${deadline}`);
+    lines.push(`  ${bar} ${pct}%  ${fmtAmount(current)} / ${fmtAmount(target)} AED`);
+    lines.push("");
+
+    totalSaved += current;
+    totalTarget += target;
+  }
+
+  const overallPct = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+  lines.push(`Total: ${fmtAmount(totalSaved)} / ${fmtAmount(totalTarget)} AED (${overallPct}%)`);
+  lines.push(`${goals.length} active goal(s)`);
+
+  return lines.join("\n");
 }
 
 export function parseReportCommand(raw: string): boolean {

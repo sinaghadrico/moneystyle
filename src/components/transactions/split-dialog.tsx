@@ -1,0 +1,246 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { splitTransaction, unsplitTransaction } from "@/actions/transactions";
+import type { TransactionWithCategory } from "@/lib/types";
+import type { Category } from "@prisma/client";
+import { formatCurrency } from "@/lib/utils";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+type SplitRow = {
+  categoryId: string;
+  amount: string;
+  description: string;
+};
+
+export function SplitDialog({
+  transaction,
+  categories,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  transaction: TransactionWithCategory;
+  categories: Category[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+}) {
+  const totalAmount = transaction.amount ?? 0;
+  const hasSplits = transaction.splits && transaction.splits.length > 0;
+
+  const [saving, setSaving] = useState(false);
+  const [rows, setRows] = useState<SplitRow[]>(() => {
+    if (hasSplits && transaction.splits) {
+      return transaction.splits.map((s) => ({
+        categoryId: s.categoryId ?? "",
+        amount: s.amount.toString(),
+        description: s.description ?? "",
+      }));
+    }
+    return [
+      {
+        categoryId: transaction.categoryId ?? "",
+        amount: "",
+        description: "",
+      },
+      { categoryId: "", amount: "", description: "" },
+    ];
+  });
+
+  const splitTotal = rows.reduce(
+    (sum, r) => sum + (parseFloat(r.amount) || 0),
+    0,
+  );
+  const remaining = Math.round((totalAmount - splitTotal) * 100) / 100;
+  const isValid =
+    rows.length >= 2 &&
+    rows.every((r) => parseFloat(r.amount) > 0) &&
+    Math.abs(remaining) < 0.01;
+
+  const updateRow = (idx: number, field: keyof SplitRow, value: string) => {
+    setRows((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: value };
+      return next;
+    });
+  };
+
+  const addRow = () => {
+    setRows((prev) => [
+      ...prev,
+      { categoryId: "", amount: remaining > 0 ? remaining.toString() : "", description: "" },
+    ]);
+  };
+
+  const removeRow = (idx: number) => {
+    if (rows.length <= 2) return;
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const result = await splitTransaction(transaction.id, {
+      splits: rows.map((r) => ({
+        categoryId: r.categoryId || null,
+        amount: parseFloat(r.amount),
+        description: r.description || null,
+      })),
+    });
+
+    if ("error" in result) {
+      toast.error(typeof result.error === "string" ? result.error : "Failed to split");
+    } else {
+      toast.success("Transaction split");
+      onOpenChange(false);
+      onSuccess();
+    }
+    setSaving(false);
+  };
+
+  const handleUnsplit = async () => {
+    setSaving(true);
+    const result = await unsplitTransaction(transaction.id);
+    if ("error" in result) {
+      toast.error(String(result.error));
+    } else {
+      toast.success("Split removed");
+      onOpenChange(false);
+      onSuccess();
+    }
+    setSaving(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            Split Transaction — {formatCurrency(totalAmount)}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-4">
+          {rows.map((row, idx) => (
+            <div key={idx} className="flex items-end gap-2">
+              <div className="flex-1">
+                {idx === 0 && (
+                  <Label className="text-xs text-muted-foreground">
+                    Category
+                  </Label>
+                )}
+                <Select
+                  value={row.categoryId || "none"}
+                  onValueChange={(v) =>
+                    updateRow(idx, "categoryId", v === "none" ? "" : v)
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-28">
+                {idx === 0 && (
+                  <Label className="text-xs text-muted-foreground">
+                    Amount
+                  </Label>
+                )}
+                <Input
+                  type="number"
+                  step="0.01"
+                  className="h-9"
+                  value={row.amount}
+                  onChange={(e) => updateRow(idx, "amount", e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="flex-1">
+                {idx === 0 && (
+                  <Label className="text-xs text-muted-foreground">Note</Label>
+                )}
+                <Input
+                  className="h-9"
+                  value={row.description}
+                  onChange={(e) =>
+                    updateRow(idx, "description", e.target.value)
+                  }
+                  placeholder="Optional"
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                disabled={rows.length <= 2}
+                onClick={() => removeRow(idx)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+
+          <Button variant="outline" size="sm" onClick={addRow}>
+            <Plus className="mr-1 h-3.5 w-3.5" />
+            Add Split
+          </Button>
+
+          <div
+            className={`flex justify-between text-sm font-medium ${Math.abs(remaining) < 0.01 ? "text-green-600" : "text-destructive"}`}
+          >
+            <span>
+              Total: {formatCurrency(splitTotal)} / {formatCurrency(totalAmount)}
+            </span>
+            {Math.abs(remaining) >= 0.01 && (
+              <span>Remaining: {formatCurrency(remaining)}</span>
+            )}
+          </div>
+        </div>
+        <DialogFooter className="flex justify-between">
+          {hasSplits && (
+            <Button
+              variant="destructive"
+              onClick={handleUnsplit}
+              disabled={saving}
+            >
+              Remove Split
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving || !isValid}>
+              {saving ? "Saving..." : "Save Split"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

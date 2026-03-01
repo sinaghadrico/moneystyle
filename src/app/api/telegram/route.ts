@@ -9,6 +9,7 @@ import {
   generateStats,
   generateHelp,
   generateMonthlyReport,
+  generateSavingsReport,
   isUnknownCommand,
   resolveAccountByHint,
   resolveCategoryByHint,
@@ -18,6 +19,7 @@ import {
 } from "@/lib/telegram";
 import { checkBudgetAlert } from "@/actions/budgets";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
+import { resolveCategory } from "@/lib/auto-categorize";
 
 export async function POST(request: NextRequest) {
   // Validate webhook secret
@@ -53,6 +55,18 @@ export async function POST(request: NextRequest) {
   // /help or /start
   if (/^\/?(help|start|راهنما)$/i.test(text.trim())) {
     await sendTelegramMessage(chatId, generateHelp());
+    return NextResponse.json({ ok: true });
+  }
+
+  // /savings
+  if (/^\/?savings$/i.test(text.trim())) {
+    try {
+      const report = await generateSavingsReport();
+      await sendTelegramMessage(chatId, report);
+    } catch (err) {
+      console.error("Telegram savings error:", err);
+      await sendTelegramMessage(chatId, "Failed to load savings goals.");
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -140,10 +154,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Resolve category
+    // Resolve category — try hint first, then auto-categorize from merchant
     let category: { id: string; name: string } | null = null;
     if (parsed.categoryHint) {
       category = await resolveCategoryByHint(parsed.categoryHint);
+    }
+    if (!category && parsed.merchant) {
+      const autoCatId = await resolveCategory(parsed.merchant);
+      if (autoCatId) {
+        const cat = await prisma.category.findUnique({ where: { id: autoCatId } });
+        if (cat) category = { id: cat.id, name: cat.name };
+      }
     }
 
     // Resolve tags

@@ -6,11 +6,21 @@ export type TagData = {
   color: string;
 };
 
+export type TransactionSplitData = {
+  id: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  categoryColor: string | null;
+  amount: number;
+  description: string | null;
+};
+
 export type TransactionWithCategory = Omit<Transaction, "amount"> & {
   amount: number | null;
   category: Category | null;
   account: Account;
   tags: TagData[];
+  splits?: TransactionSplitData[];
 };
 
 export type AccountWithStats = {
@@ -94,3 +104,14 @@ export type CategoryMeta = {
 };
 
 export type PeriodFilter = "all" | "3m" | "6m" | "1y";
+
+export type SavingsProgress = {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: Date | null;
+  color: string;
+  status: string;
+  percentage: number;
+};

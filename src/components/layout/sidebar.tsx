@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -64,6 +65,9 @@ export function Sidebar() {
         <p className="text-xs text-muted-foreground">Finance Tracker</p>
       </div>
       <NavLinks />
+      <div className="mt-auto pt-4 border-t">
+        <ThemeToggle />
+      </div>
     </aside>
   );
 }

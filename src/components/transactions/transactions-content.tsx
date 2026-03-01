@@ -297,32 +297,33 @@ export function TransactionsContent() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Transactions</h2>
           <p className="text-muted-foreground">
             {result ? `${result.total} transactions` : "Loading..."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {selected.size >= 1 && (
             <Button
               variant="destructive"
               onClick={() => setDeleteIds([...selected])}
             >
               <Trash2 className="mr-1.5 h-4 w-4" />
-              Delete {selected.size}
+              <span className="sm:inline hidden">Delete</span> {selected.size}
             </Button>
           )}
           {selected.size >= 2 && (
             <Button onClick={() => setShowMerge(true)}>
               <Merge className="mr-1.5 h-4 w-4" />
-              Merge {selected.size} Selected
+              <span className="sm:inline hidden">Merge</span> {selected.size}<span className="sm:inline hidden"> Selected</span>
             </Button>
           )}
           <Button onClick={() => setShowAdd(true)}>
             <Plus className="mr-1 h-4 w-4" />
-            Add Transaction
+            <span className="sm:inline hidden">Add Transaction</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
       </div>
@@ -351,7 +352,133 @@ export function TransactionsContent() {
         }}
       />
 
-      <div className="rounded-md border">
+      {/* Mobile card view */}
+      <div className="space-y-3 md:hidden">
+        {loading
+          ? [...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-[120px] rounded-xl" />
+            ))
+          : result?.data.map((tx) => (
+              <div
+                key={tx.id}
+                className={`rounded-lg border p-3 space-y-2 ${selected.has(tx.id) ? "bg-primary/5 border-primary/20" : ""}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 min-w-0">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-input accent-primary"
+                      checked={selected.has(tx.id)}
+                      onChange={() => toggleSelect(tx.id)}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">
+                          {tx.amount != null ? formatCurrency(Number(tx.amount)) : "-"}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className={`text-[10px] ${TYPE_COLORS[tx.type] || TYPE_COLORS.other}`}
+                        >
+                          {tx.type}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {formatDate(tx.date)}
+                        {tx.time && ` ${tx.time}`}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-0.5 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditTx(tx)}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    {tx.amount != null && tx.amount > 0 && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Split" onClick={() => setSplitTx(tx)}>
+                        <Split className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => setDeleteIds([tx.id])}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm pl-6">
+                  {tx.splits && tx.splits.length > 0 ? (
+                    <div className="space-y-0.5 w-full">
+                      {tx.splits.map((s, i) => (
+                        <div key={i} className="flex items-center gap-1.5 text-xs">
+                          <div
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: s.categoryColor ?? "#6b7280" }}
+                          />
+                          <span>{s.categoryName ?? "None"}</span>
+                          {s.personName && (
+                            <span
+                              className="rounded px-1 text-[10px]"
+                              style={{ backgroundColor: (s.personColor ?? "#6b7280") + "20", color: s.personColor ?? "#6b7280" }}
+                            >
+                              {s.personName}
+                            </span>
+                          )}
+                          <span className="text-muted-foreground">({formatCurrency(s.amount)})</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : tx.category ? (
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.category.color }} />
+                      <span>{tx.category.name}</span>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.account.color }} />
+                    <span>{tx.account.name}</span>
+                  </div>
+                  {tx.merchant && (
+                    <span className="text-muted-foreground truncate">{tx.merchant}</span>
+                  )}
+                  {tx.tags && tx.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {tx.tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant="secondary"
+                          className="text-[10px] px-1.5 py-0"
+                          style={{ backgroundColor: tag.color + "20", color: tag.color, borderColor: tag.color }}
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {tx.mediaFiles.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 gap-1 px-1.5 text-xs"
+                      onClick={() => setViewMedia(tx.mediaFiles)}
+                    >
+                      {tx.mediaFiles.some((f) => /\.(jpg|jpeg|png)$/i.test(f)) ? (
+                        <ImageIcon className="h-3.5 w-3.5" />
+                      ) : (
+                        <FileText className="h-3.5 w-3.5" />
+                      )}
+                      {tx.mediaFiles.length > 1 && tx.mediaFiles.length}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -380,7 +507,7 @@ export function TransactionsContent() {
               <SortableHeader field="merchant" onSort={handleSort}>
                 Merchant
               </SortableHeader>
-              <TableHead className="hidden md:table-cell">
+              <TableHead className="hidden lg:table-cell">
                 Description
               </TableHead>
               <TableHead>Files</TableHead>
@@ -496,7 +623,7 @@ export function TransactionsContent() {
                     <TableCell className="max-w-[150px] truncate">
                       {tx.merchant}
                     </TableCell>
-                    <TableCell className="hidden max-w-[200px] truncate md:table-cell">
+                    <TableCell className="hidden max-w-[200px] truncate lg:table-cell">
                       {tx.description}
                     </TableCell>
                     <TableCell>
@@ -556,7 +683,7 @@ export function TransactionsContent() {
       </div>
 
       {result && result.totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Page {result.page} of {result.totalPages}
           </p>

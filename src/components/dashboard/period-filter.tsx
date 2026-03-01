@@ -19,7 +19,7 @@ export function PeriodFilterSelect({
 }) {
   return (
     <Select value={value} onValueChange={(v) => onChange(v as PeriodFilter)}>
-      <SelectTrigger className="w-[140px]">
+      <SelectTrigger className="w-full sm:w-[140px]">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

@@ -140,7 +140,7 @@ export function SplitDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             Split Transaction — {formatCurrency(totalAmount)}
@@ -148,13 +148,11 @@ export function SplitDialog({
         </DialogHeader>
         <div className="space-y-3 py-4">
           {rows.map((row, idx) => (
-            <div key={idx} className="flex items-end gap-2">
+            <div key={idx} className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <div className="flex-1">
-                {idx === 0 && (
-                  <Label className="text-xs text-muted-foreground">
-                    Category
-                  </Label>
-                )}
+                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
+                  Category
+                </Label>
                 <Select
                   value={row.categoryId || "none"}
                   onValueChange={(v) =>
@@ -174,12 +172,10 @@ export function SplitDialog({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-28">
-                {idx === 0 && (
-                  <Label className="text-xs text-muted-foreground">
-                    Person
-                  </Label>
-                )}
+              <div className="sm:w-28">
+                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
+                  Person
+                </Label>
                 <div className="flex items-center gap-1">
                   <Select
                     value={row.personId || "me"}
@@ -211,12 +207,10 @@ export function SplitDialog({
                   </Button>
                 </div>
               </div>
-              <div className="w-28">
-                {idx === 0 && (
-                  <Label className="text-xs text-muted-foreground">
-                    Amount
-                  </Label>
-                )}
+              <div className="sm:w-28">
+                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
+                  Amount
+                </Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -227,9 +221,9 @@ export function SplitDialog({
                 />
               </div>
               <div className="flex-1">
-                {idx === 0 && (
-                  <Label className="text-xs text-muted-foreground">Note</Label>
-                )}
+                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
+                  Note
+                </Label>
                 <Input
                   className="h-9"
                   value={row.description}
@@ -242,7 +236,7 @@ export function SplitDialog({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-9 w-9 shrink-0 self-end"
                 disabled={rows.length <= 2}
                 onClick={() => removeRow(idx)}
               >

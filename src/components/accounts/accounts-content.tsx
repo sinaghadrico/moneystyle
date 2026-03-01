@@ -32,7 +32,7 @@ export function AccountsContent() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Accounts</h2>
           <p className="text-muted-foreground">{accounts.length} accounts</p>
@@ -68,7 +68,7 @@ export function AccountsContent() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                     <Button
                       variant="ghost"
                       size="icon"

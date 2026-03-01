@@ -59,6 +59,33 @@ async function main() {
     console.error(`Error: ${data.description}`);
     process.exit(1);
   }
+
+  // Register bot commands menu
+  await registerCommands(token);
+}
+
+async function registerCommands(token: string) {
+  console.log("Registering bot commands...");
+  const commands = [
+    { command: "help", description: "Show all commands and usage guide" },
+    { command: "stats", description: "Monthly expense report" },
+    { command: "today", description: "Today's transactions" },
+    { command: "del", description: "Delete transaction(s)" },
+    { command: "undo", description: "Undo last transaction" },
+  ];
+
+  const res = await fetch(`${TELEGRAM_API}${token}/setMyCommands`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ commands }),
+  });
+  const data = await res.json();
+  if (data.ok) {
+    console.log("Bot commands registered:");
+    commands.forEach((c) => console.log(`  /${c.command} — ${c.description}`));
+  } else {
+    console.error(`Failed to register commands: ${data.description}`);
+  }
 }
 
 main();

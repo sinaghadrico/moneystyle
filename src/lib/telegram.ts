@@ -131,17 +131,26 @@ export interface DeleteCommand {
 
 /**
  * Parse delete commands:
- *   del abc123          — single by short ID
- *   del abc123 def456   — multiple by short ID
- *   del last            — last telegram transaction
- *   del last 3          — last N telegram transactions
+ *   /del abc123          — single by short ID
+ *   /del abc123 def456   — multiple by short ID
+ *   /del last            — last telegram transaction
+ *   /del last 3          — last N telegram transactions
+ *   /undo                — alias for /del last
+ *   Also supports: del, delete, حذف (without slash)
  */
 export function parseDeleteCommand(raw: string): DeleteCommand | null {
   const text = raw.trim();
-  const match = text.match(/^(?:del|delete|حذف)\s+(.+)$/i);
+
+  // /undo or undo → alias for "del last"
+  if (/^\/?(undo|برگرد)$/i.test(text)) {
+    return { kind: "delete", lastN: 1 };
+  }
+
+  const match = text.match(/^\/?(del|delete|حذف)\s+(.+)$/i);
   if (!match) return null;
 
-  const args = match[1].trim();
+  // shift: match[1] is the command word, match[2] is args
+  const args = match[2].trim();
 
   // "last" or "last N"
   const lastMatch = args.match(/^last\s*(\d+)?$/i);
@@ -202,14 +211,22 @@ export interface StatsCommand {
 
 /**
  * Parse stats commands:
- *   stats             — current month
- *   stats 2026-01     — specific month
- *   stats jan         — month name (current year)
- *   stats last        — previous month
+ *   /stats             — current month
+ *   /stats 2026-01     — specific month
+ *   /stats jan         — month name (current year)
+ *   /stats last        — previous month
+ *   /today             — today's transactions
+ *   Also supports: stats, stat, آمار, گزارش (without slash)
  */
 export function parseStatsCommand(raw: string): StatsCommand | null {
   const text = raw.trim();
-  const match = text.match(/^(?:stats|stat|آمار|گزارش)(?:\s+(.+))?$/i);
+
+  // /today or today → special day command
+  if (/^\/?(today|امروز)$/i.test(text)) {
+    return { kind: "stats", month: "__today__" };
+  }
+
+  const match = text.match(/^\/?(?:stats|stat|آمار|گزارش)(?:\s+(.+))?$/i);
   if (!match) return null;
 
   const arg = match[1]?.trim();
@@ -295,6 +312,11 @@ const MONTH_NAMES = [
 ];
 
 export async function generateStats(monthStr?: string): Promise<string> {
+  // /today is handled separately
+  if (monthStr === "__today__") {
+    return generateTodayStats();
+  }
+
   const now = new Date();
   const month =
     monthStr ||
@@ -375,11 +397,103 @@ export async function generateStats(monthStr?: string): Promise<string> {
   return lines.join("\n");
 }
 
+export async function generateTodayStats(): Promise<string> {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      date: { gte: startOfDay, lte: endOfDay },
+      mergedIntoId: null,
+    },
+    include: { category: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (transactions.length === 0) {
+    return "📋 Today\n\nNo transactions recorded today.";
+  }
+
+  const lines: string[] = [];
+  lines.push(
+    `📋 Today — ${now.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}`,
+  );
+  lines.push("");
+
+  let totalExpense = 0;
+  let totalIncome = 0;
+
+  for (const tx of transactions) {
+    const amt = Number(tx.amount ?? 0);
+    const sign = tx.type === "income" ? "+" : "-";
+    const cat = tx.category?.name ? ` [${tx.category.name}]` : "";
+    const merchant = tx.merchant ?? "";
+    lines.push(
+      `${sign}${fmtAmount(amt)} AED  ${merchant}${cat}  #${tx.id.slice(-6)}`,
+    );
+    if (tx.type === "income") totalIncome += amt;
+    else totalExpense += amt;
+  }
+
+  lines.push("");
+  if (totalExpense > 0)
+    lines.push(`💸 Spent: ${fmtAmount(totalExpense)} AED`);
+  if (totalIncome > 0)
+    lines.push(`💰 Earned: ${fmtAmount(totalIncome)} AED`);
+  lines.push(`📝 ${transactions.length} transaction(s)`);
+
+  return lines.join("\n");
+}
+
+export function generateHelp(): string {
+  return [
+    "💰 Revenue Bot — Commands",
+    "",
+    "📝 Record a transaction:",
+    "  250 Carrefour #grocery",
+    "  +15000 Salary #income @farnoosh",
+    "  50.5 Uber",
+    "",
+    "📊 /stats — This month's report",
+    "  /stats last — Last month",
+    "  /stats feb — Specific month",
+    "",
+    "📋 /today — Today's transactions",
+    "",
+    "🗑 /del last — Delete last entry",
+    "  /del last 3 — Delete last 3",
+    "  /del abc123 — Delete by ID",
+    "",
+    "↩️ /undo — Undo last entry",
+    "",
+    "❓ /help — Show this message",
+    "",
+    "Format: [+]amount merchant [#category] [@account]",
+    "  + prefix = income, no prefix = expense",
+    "  #tag matches a category, @tag matches an account",
+  ].join("\n");
+}
+
+/** Returns true if text looks like an unknown /command */
+export function isUnknownCommand(text: string): boolean {
+  return /^\/\w+/.test(text.trim());
+}
+
 const TELEGRAM_API = "https://api.telegram.org/bot";
 
 export async function sendTelegramMessage(
   chatId: number | string,
   text: string,
+  parseMode?: "HTML" | "Markdown",
 ): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
@@ -387,9 +501,12 @@ export async function sendTelegramMessage(
     return;
   }
 
+  const payload: Record<string, unknown> = { chat_id: chatId, text };
+  if (parseMode) payload.parse_mode = parseMode;
+
   await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text }),
+    body: JSON.stringify(payload),
   });
 }

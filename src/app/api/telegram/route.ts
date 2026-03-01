@@ -7,6 +7,8 @@ import {
   deleteByShortIds,
   deleteLastN,
   generateStats,
+  generateHelp,
+  isUnknownCommand,
   resolveAccountByHint,
   resolveCategoryByHint,
   getDefaultAccount,
@@ -43,6 +45,12 @@ export async function POST(request: NextRequest) {
 
   const chatId = (message.chat as Record<string, unknown>)?.id as number;
   const text = message.text as string;
+
+  // /help or /start
+  if (/^\/?(help|start|راهنما)$/i.test(text.trim())) {
+    await sendTelegramMessage(chatId, generateHelp());
+    return NextResponse.json({ ok: true });
+  }
 
   // Check for stats command
   const statsCmd = parseStatsCommand(text);
@@ -91,7 +99,14 @@ export async function POST(request: NextRequest) {
 
   const parsed = parseTelegramMessage(text);
   if (!parsed) {
-    // Not a recognized transaction format — ignore silently
+    // If it looks like a /command, reply with hint
+    if (isUnknownCommand(text)) {
+      await sendTelegramMessage(
+        chatId,
+        "Unknown command. Send /help to see available commands.",
+      );
+    }
+    // Otherwise ignore silently (random chat messages)
     return NextResponse.json({ ok: true });
   }
 

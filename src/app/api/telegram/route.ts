@@ -4,12 +4,14 @@ import {
   parseTelegramMessage,
   parseDeleteCommand,
   parseStatsCommand,
+  parseSettleCommand,
   deleteByShortIds,
   deleteLastN,
   generateStats,
   generateHelp,
   generateMonthlyReport,
   generateSavingsReport,
+  generateDebtsReport,
   isUnknownCommand,
   resolveAccountByHint,
   resolveCategoryByHint,
@@ -20,6 +22,8 @@ import {
 import { checkBudgetAlert } from "@/actions/budgets";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { resolveCategory } from "@/lib/auto-categorize";
+import { getOrCreatePerson } from "@/actions/persons";
+import { splitTransaction } from "@/actions/transactions";
 
 export async function POST(request: NextRequest) {
   // Validate webhook secret
@@ -78,6 +82,45 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       console.error("Telegram report error:", err);
       await sendTelegramMessage(chatId, "Failed to generate report.");
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  // /debts
+  if (/^\/?debts$/i.test(text.trim())) {
+    try {
+      const report = await generateDebtsReport();
+      await sendTelegramMessage(chatId, report);
+    } catch (err) {
+      console.error("Telegram debts error:", err);
+      await sendTelegramMessage(chatId, "Failed to load debts.");
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  // /settle name amount
+  const settleCmd = parseSettleCommand(text);
+  if (settleCmd) {
+    try {
+      const person = await getOrCreatePerson(settleCmd.personName);
+      if (!person) {
+        await sendTelegramMessage(chatId, "Could not resolve person name.");
+        return NextResponse.json({ ok: true });
+      }
+      await prisma.settlement.create({
+        data: {
+          personId: person.id,
+          amount: settleCmd.amount,
+          source: "telegram",
+        },
+      });
+      await sendTelegramMessage(
+        chatId,
+        `✅ Settled ${settleCmd.amount} AED with ${person.name}`,
+      );
+    } catch (err) {
+      console.error("Telegram settle error:", err);
+      await sendTelegramMessage(chatId, "Failed to record settlement.");
     }
     return NextResponse.json({ ok: true });
   }
@@ -195,6 +238,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Auto-split 50/50 if /split was used
+    let splitInfo = "";
+    if (parsed.splitPersonName && parsed.type === "expense") {
+      const person = await getOrCreatePerson(parsed.splitPersonName);
+      if (person) {
+        const halfAmount = Math.round((parsed.amount / 2) * 100) / 100;
+        const myHalf = Math.round((parsed.amount - halfAmount) * 100) / 100;
+        await splitTransaction(transaction.id, {
+          splits: [
+            { categoryId: category?.id ?? null, personId: null, amount: myHalf, description: null },
+            { categoryId: category?.id ?? null, personId: person.id, amount: halfAmount, description: null },
+          ],
+        });
+        splitInfo = `\n👥 Split: ${myHalf} you + ${halfAmount} ${person.name}`;
+      }
+    }
+
     // Build confirmation message
     const typeLabel = parsed.type === "income" ? "income" : "expense";
     const catLabel = category ? ` (${category.name})` : "";
@@ -202,7 +262,8 @@ export async function POST(request: NextRequest) {
     const tagLabel = tags.length > 0 ? ` [${tags.map((t) => t.name).join(", ")}]` : "";
     let confirmation =
       `Saved: ${parsed.amount} AED ${typeLabel}${merchantLabel}${catLabel}${tagLabel} [${account.name}]` +
-      (transaction.id ? ` #${transaction.id.slice(-6)}` : "");
+      (transaction.id ? ` #${transaction.id.slice(-6)}` : "") +
+      splitInfo;
 
     // Check budget alert
     if (category && parsed.type === "expense") {

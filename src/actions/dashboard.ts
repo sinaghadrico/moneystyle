@@ -23,31 +23,53 @@ function getDateFilter(period: string, accountId?: string): Prisma.TransactionWh
   return where;
 }
 
+/**
+ * Split-aware expense calculation helper.
+ * Returns total expense = unsplit txs amount + my splits (personId IS NULL) from split txs.
+ */
+async function getMyExpense(baseWhere: Prisma.TransactionWhereInput): Promise<number> {
+  const expenseWhere = { ...baseWhere, type: "expense" as const, amount: { not: null } };
+
+  const [unsplitAgg, mySplitsAgg] = await Promise.all([
+    // Unsplit transactions: full amount counts
+    prisma.transaction.aggregate({
+      where: { ...expenseWhere, splits: { none: {} } },
+      _sum: { amount: true },
+    }),
+    // Split transactions: only my splits (personId IS NULL)
+    prisma.transactionSplit.aggregate({
+      where: {
+        personId: null,
+        transaction: { ...expenseWhere, splits: { some: {} } },
+      },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  return Number(unsplitAgg._sum.amount ?? 0) + Number(mySplitsAgg._sum.amount ?? 0);
+}
+
 export async function getDashboardStats(
   period: string = "all",
   accountId?: string
 ): Promise<DashboardStats> {
   const where = getDateFilter(period, accountId);
 
-  const [income, expense, count] = await Promise.all([
+  const [income, myExpense, count] = await Promise.all([
     prisma.transaction.aggregate({
       where: { ...where, type: "income", amount: { not: null } },
       _sum: { amount: true },
     }),
-    prisma.transaction.aggregate({
-      where: { ...where, type: "expense", amount: { not: null } },
-      _sum: { amount: true },
-    }),
+    getMyExpense(where),
     prisma.transaction.count({ where }),
   ]);
 
   const totalIncome = Number(income._sum.amount ?? 0);
-  const totalExpense = Number(expense._sum.amount ?? 0);
 
   return {
     totalIncome,
-    totalExpense,
-    balance: totalIncome - totalExpense,
+    totalExpense: myExpense,
+    balance: totalIncome - myExpense,
     transactionCount: count,
   };
 }
@@ -58,9 +80,15 @@ export async function getMonthlyData(
 ): Promise<MonthlyData[]> {
   const where = getDateFilter(period, accountId);
 
+  // Fetch all transactions with splits to calculate per-month split-aware totals
   const transactions = await prisma.transaction.findMany({
     where: { ...where, amount: { not: null } },
-    select: { date: true, amount: true, type: true },
+    select: {
+      date: true,
+      amount: true,
+      type: true,
+      splits: { select: { amount: true, personId: true } },
+    },
     orderBy: { date: "asc" },
   });
 
@@ -69,12 +97,20 @@ export async function getMonthlyData(
   for (const t of transactions) {
     const month = t.date.toISOString().slice(0, 7);
     const current = monthMap.get(month) || { income: 0, expense: 0 };
-    const amount = Number(t.amount);
 
     if (t.type === "income") {
-      current.income += amount;
+      current.income += Number(t.amount);
     } else if (t.type === "expense") {
-      current.expense += amount;
+      if (t.splits.length > 0) {
+        // Only count my splits (personId IS NULL)
+        for (const s of t.splits) {
+          if (s.personId === null) {
+            current.expense += Number(s.amount);
+          }
+        }
+      } else {
+        current.expense += Number(t.amount);
+      }
     }
 
     monthMap.set(month, current);
@@ -95,22 +131,25 @@ export async function getCategoryBreakdown(
 ): Promise<CategoryBreakdown[]> {
   const where = getDateFilter(period, accountId);
 
-  // Get transactions with their splits
   const transactions = await prisma.transaction.findMany({
     where: { ...where, type: "expense", amount: { not: null } },
-    select: { categoryId: true, amount: true, splits: { select: { categoryId: true, amount: true } } },
+    select: {
+      categoryId: true,
+      amount: true,
+      splits: { select: { categoryId: true, amount: true, personId: true } },
+    },
   });
 
   const allCategories = await prisma.category.findMany();
   const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
 
-  // Aggregate amounts - if a transaction has splits, use split categories instead of parent category
   const catTotals = new Map<string | null, { total: number; count: number }>();
 
   for (const tx of transactions) {
     if (tx.splits.length > 0) {
-      // Use split categories
+      // Only count my splits (personId IS NULL)
       for (const s of tx.splits) {
+        if (s.personId !== null) continue;
         const key = s.categoryId;
         const entry = catTotals.get(key) ?? { total: 0, count: 0 };
         entry.total += Number(s.amount);
@@ -118,7 +157,6 @@ export async function getCategoryBreakdown(
         catTotals.set(key, entry);
       }
     } else {
-      // Use parent category
       const key = tx.categoryId;
       const entry = catTotals.get(key) ?? { total: 0, count: 0 };
       entry.total += Number(tx.amount ?? 0);
@@ -176,31 +214,45 @@ export async function getMonthlyCategoryBreakdown(
 
   const transactions = await prisma.transaction.findMany({
     where: { ...where, type: "expense", amount: { not: null } },
-    select: { date: true, amount: true, categoryId: true },
+    select: {
+      date: true,
+      amount: true,
+      categoryId: true,
+      splits: { select: { categoryId: true, amount: true, personId: true } },
+    },
     orderBy: { date: "asc" },
   });
 
   const categories = await prisma.category.findMany();
-  const categoryMap = new Map(categories.map((c) => [c.id, c]));
+  const categoryLookup = new Map(categories.map((c) => [c.id, c]));
 
-  // Build month -> category -> total
   const monthCatMap = new Map<string, Map<string, number>>();
   const allCatNames = new Set<string>();
 
   for (const t of transactions) {
     const month = t.date.toISOString().slice(0, 7);
-    const cat = t.categoryId ? categoryMap.get(t.categoryId) : null;
-    const catName = cat?.name ?? "Uncategorized";
-    const amount = Number(t.amount);
 
-    allCatNames.add(catName);
-
-    if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
-    const catTotals = monthCatMap.get(month)!;
-    catTotals.set(catName, (catTotals.get(catName) ?? 0) + amount);
+    if (t.splits.length > 0) {
+      // Only my splits
+      for (const s of t.splits) {
+        if (s.personId !== null) continue;
+        const cat = s.categoryId ? categoryLookup.get(s.categoryId) : null;
+        const catName = cat?.name ?? "Uncategorized";
+        allCatNames.add(catName);
+        if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
+        const catTotals = monthCatMap.get(month)!;
+        catTotals.set(catName, (catTotals.get(catName) ?? 0) + Number(s.amount));
+      }
+    } else {
+      const cat = t.categoryId ? categoryLookup.get(t.categoryId) : null;
+      const catName = cat?.name ?? "Uncategorized";
+      allCatNames.add(catName);
+      if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
+      const catTotals = monthCatMap.get(month)!;
+      catTotals.set(catName, (catTotals.get(catName) ?? 0) + Number(t.amount));
+    }
   }
 
-  // Build flat data array for recharts
   const data: MonthlyCategoryData[] = Array.from(monthCatMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, catTotals]) => {
@@ -211,7 +263,6 @@ export async function getMonthlyCategoryBreakdown(
       return row;
     });
 
-  // Build category meta (name + color), sorted by total descending
   const catTotalMap = new Map<string, number>();
   for (const [, catTotals] of monthCatMap) {
     for (const [name, total] of catTotals) {
@@ -234,17 +285,14 @@ export async function getExpensePrediction(): Promise<ExpensePrediction> {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const agg = await prisma.transaction.aggregate({
-    where: {
-      type: "expense",
-      date: { gte: startOfMonth, lte: endOfMonth },
-      mergedIntoId: null,
-      amount: { not: null },
-    },
-    _sum: { amount: true },
-  });
+  const dateWhere: Prisma.TransactionWhereInput = {
+    type: "expense",
+    date: { gte: startOfMonth, lte: endOfMonth },
+    mergedIntoId: null,
+    amount: { not: null },
+  };
 
-  const spent = Number(agg._sum.amount ?? 0);
+  const spent = await getMyExpense(dateWhere);
   const daysInMonth = endOfMonth.getDate();
   const daysElapsed = Math.max(now.getDate(), 1);
   const dailyAverage = spent / daysElapsed;

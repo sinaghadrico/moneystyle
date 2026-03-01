@@ -76,9 +76,30 @@ export const splitTransactionSchema = z.object({
   transactionId: z.string().min(1),
   splits: z.array(z.object({
     categoryId: z.string().nullable().optional(),
+    personId: z.string().nullable().optional(),
     amount: z.coerce.number().positive("Amount must be positive"),
     description: z.string().nullable().optional(),
   })).min(2, "Need at least 2 splits"),
 });
 
 export type SplitTransactionInput = z.infer<typeof splitTransactionSchema>;
+
+export const personCreateSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  phone: z.string().max(20).nullable().optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color"),
+});
+
+export const personUpdateSchema = personCreateSchema.partial();
+
+export type PersonCreateInput = z.infer<typeof personCreateSchema>;
+export type PersonUpdateInput = z.infer<typeof personUpdateSchema>;
+
+export const settlementCreateSchema = z.object({
+  personId: z.string().min(1, "Person is required"),
+  amount: z.coerce.number().positive("Amount must be positive"),
+  note: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+});
+
+export type SettlementCreateInput = z.infer<typeof settlementCreateSchema>;

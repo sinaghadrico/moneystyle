@@ -8,6 +8,7 @@ import {
   ArrowLeftRight,
   Tags,
   Landmark,
+  Users,
   Merge,
   Menu,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/accounts", label: "Accounts", icon: Landmark },
+  { href: "/persons", label: "Persons", icon: Users },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/merge-suggestions", label: "Merge Duplicates", icon: Merge },
 ];

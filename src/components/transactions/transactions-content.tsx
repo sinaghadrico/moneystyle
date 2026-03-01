@@ -33,8 +33,9 @@ import {
   getAccountsList,
   deleteTransactions,
 } from "@/actions/transactions";
+import { getPersons } from "@/actions/persons";
 import type { TransactionWithCategory, PaginatedResult } from "@/lib/types";
-import type { Category, Account } from "@prisma/client";
+import type { Category, Account, Person } from "@prisma/client";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
@@ -140,6 +141,7 @@ export function TransactionsContent() {
     useState<PaginatedResult<TransactionWithCategory> | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [persons, setPersons] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [editTx, setEditTx] = useState<TransactionWithCategory | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -229,9 +231,10 @@ export function TransactionsContent() {
   }, [loadData]);
 
   useEffect(() => {
-    Promise.all([getCategories(), getAccountsList()]).then(([cats, accs]) => {
+    Promise.all([getCategories(), getAccountsList(), getPersons()]).then(([cats, accs, pers]) => {
       setCategories(cats);
       setAccounts(accs);
+      setPersons(pers);
     });
   }, []);
 
@@ -439,6 +442,14 @@ export function TransactionsContent() {
                                 style={{ backgroundColor: s.categoryColor ?? "#6b7280" }}
                               />
                               <span>{s.categoryName ?? "None"}</span>
+                              {s.personName && (
+                                <span
+                                  className="rounded px-1 text-[10px]"
+                                  style={{ backgroundColor: (s.personColor ?? "#6b7280") + "20", color: s.personColor ?? "#6b7280" }}
+                                >
+                                  {s.personName}
+                                </span>
+                              )}
                               <span className="text-muted-foreground">
                                 ({formatCurrency(s.amount)})
                               </span>
@@ -603,6 +614,7 @@ export function TransactionsContent() {
         <SplitDialog
           transaction={splitTx}
           categories={categories}
+          persons={persons}
           open={!!splitTx}
           onOpenChange={(open) => !open && setSplitTx(null)}
           onSuccess={loadData}

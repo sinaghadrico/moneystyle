@@ -14,6 +14,7 @@ export interface ParsedMessage {
   tagHints?: string[];
   accountHint?: string;
   description?: string;
+  splitPersonName?: string;
 }
 
 export function parseTelegramMessage(raw: string): ParsedMessage | null {
@@ -32,6 +33,14 @@ export function parseTelegramMessage(raw: string): ParsedMessage | null {
 
   // Everything after the amount number
   let rest = text.slice(amountMatch[0].length).trim();
+
+  // Extract /split PersonName
+  let splitPersonName: string | undefined;
+  const splitMatch = rest.match(/\/split\s+(\S+)/i);
+  if (splitMatch) {
+    splitPersonName = splitMatch[1];
+    rest = rest.replace(splitMatch[0], "").trim();
+  }
 
   // Extract all #tags — first matching category = categoryHint, rest = tagHints
   const hashMatches = [...rest.matchAll(/#(\S+)/g)];
@@ -83,6 +92,7 @@ export function parseTelegramMessage(raw: string): ParsedMessage | null {
     tagHints: tagHints.length > 0 ? tagHints : undefined,
     accountHint,
     description,
+    splitPersonName,
   };
 }
 
@@ -502,6 +512,13 @@ export function generateHelp(): string {
     "  +15000 Salary #income @farnoosh",
     "  50.5 Uber",
     "",
+    "👥 Split with someone:",
+    "  500 restaurant /split علی",
+    "  Auto 50/50 split, creates debt",
+    "",
+    "💳 /debts — View who owes what",
+    "  /settle علی 250 — Record payment",
+    "",
     "📊 /stats — This month's report",
     "  /stats last — Last month",
     "  /stats feb — Specific month",
@@ -520,10 +537,11 @@ export function generateHelp(): string {
     "",
     "❓ /help — Show this message",
     "",
-    "Format: [+]amount merchant [#category] [#tag1 #tag2] [@account]",
+    "Format: [+]amount merchant [#category] [#tag1 #tag2] [@account] [/split name]",
     "  + prefix = income, no prefix = expense",
     "  First #tag matches a category, extra #tags become labels",
     "  @tag matches an account",
+    "  /split name splits 50/50 with that person",
   ].join("\n");
 }
 
@@ -570,6 +588,62 @@ export async function generateSavingsReport(): Promise<string> {
 
 export function parseReportCommand(raw: string): boolean {
   return /^\/?report$/i.test(raw.trim());
+}
+
+export interface SettleCommand {
+  kind: "settle";
+  personName: string;
+  amount: number;
+}
+
+/**
+ * Parse settle commands:
+ *   /settle علی 250
+ *   /settle Ali 100.5
+ */
+export function parseSettleCommand(raw: string): SettleCommand | null {
+  const text = persianToLatin(raw).trim();
+  const match = text.match(/^\/settle\s+(\S+)\s+(\d+(?:\.\d+)?)/i);
+  if (!match) return null;
+  const amount = parseFloat(match[2]);
+  if (isNaN(amount) || amount <= 0) return null;
+  return { kind: "settle", personName: match[1], amount };
+}
+
+export async function generateDebtsReport(): Promise<string> {
+  const persons = await prisma.person.findMany({
+    include: {
+      splits: { select: { amount: true } },
+      settlements: { select: { amount: true } },
+    },
+  });
+
+  if (persons.length === 0) {
+    return "💳 Debts\n\nNo shared expenses recorded.";
+  }
+
+  const lines: string[] = [];
+  lines.push("💳 Debts Summary");
+  lines.push("");
+
+  let anyDebt = false;
+  for (const p of persons) {
+    const totalSplits = p.splits.reduce((s, sp) => s + Number(sp.amount), 0);
+    const totalSettled = p.settlements.reduce((s, st) => s + Number(st.amount), 0);
+    const balance = totalSplits - totalSettled;
+    if (Math.abs(balance) < 0.01) continue;
+    anyDebt = true;
+    const icon = balance > 0 ? "🔴" : "🟢";
+    lines.push(`${icon} ${p.name}: ${fmtAmount(Math.abs(balance))} AED ${balance > 0 ? "owes you" : "you owe"}`);
+    lines.push(`   splits: ${fmtAmount(totalSplits)} | settled: ${fmtAmount(totalSettled)}`);
+    lines.push("");
+  }
+
+  if (!anyDebt) {
+    lines.push("All settled! No outstanding debts.");
+  }
+
+  return lines.join("\n");
 }
 
 export async function generateMonthlyReport(monthStr?: string): Promise<string> {

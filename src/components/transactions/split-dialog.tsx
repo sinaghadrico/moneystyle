@@ -19,14 +19,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { splitTransaction, unsplitTransaction } from "@/actions/transactions";
+import { PersonFormDialog } from "@/components/persons/person-form-dialog";
 import type { TransactionWithCategory } from "@/lib/types";
-import type { Category } from "@prisma/client";
+import type { Category, Person } from "@prisma/client";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type SplitRow = {
   categoryId: string;
+  personId: string;
   amount: string;
   description: string;
 };
@@ -34,12 +36,14 @@ type SplitRow = {
 export function SplitDialog({
   transaction,
   categories,
+  persons: initialPersons,
   open,
   onOpenChange,
   onSuccess,
 }: {
   transaction: TransactionWithCategory;
   categories: Category[];
+  persons: Person[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -47,11 +51,14 @@ export function SplitDialog({
   const totalAmount = transaction.amount ?? 0;
   const hasSplits = transaction.splits && transaction.splits.length > 0;
 
+  const [persons, setPersons] = useState<Person[]>(initialPersons);
   const [saving, setSaving] = useState(false);
+  const [showPersonCreate, setShowPersonCreate] = useState<number | null>(null);
   const [rows, setRows] = useState<SplitRow[]>(() => {
     if (hasSplits && transaction.splits) {
       return transaction.splits.map((s) => ({
         categoryId: s.categoryId ?? "",
+        personId: s.personId ?? "",
         amount: s.amount.toString(),
         description: s.description ?? "",
       }));
@@ -59,10 +66,11 @@ export function SplitDialog({
     return [
       {
         categoryId: transaction.categoryId ?? "",
+        personId: "",
         amount: "",
         description: "",
       },
-      { categoryId: "", amount: "", description: "" },
+      { categoryId: "", personId: "", amount: "", description: "" },
     ];
   });
 
@@ -87,7 +95,7 @@ export function SplitDialog({
   const addRow = () => {
     setRows((prev) => [
       ...prev,
-      { categoryId: "", amount: remaining > 0 ? remaining.toString() : "", description: "" },
+      { categoryId: "", personId: "", amount: remaining > 0 ? remaining.toString() : "", description: "" },
     ]);
   };
 
@@ -101,6 +109,7 @@ export function SplitDialog({
     const result = await splitTransaction(transaction.id, {
       splits: rows.map((r) => ({
         categoryId: r.categoryId || null,
+        personId: r.personId || null,
         amount: parseFloat(r.amount),
         description: r.description || null,
       })),
@@ -164,6 +173,43 @@ export function SplitDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="w-28">
+                {idx === 0 && (
+                  <Label className="text-xs text-muted-foreground">
+                    Person
+                  </Label>
+                )}
+                <div className="flex items-center gap-1">
+                  <Select
+                    value={row.personId || "me"}
+                    onValueChange={(v) =>
+                      updateRow(idx, "personId", v === "me" ? "" : v)
+                    }
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Me" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="me">Me</SelectItem>
+                      {persons.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => setShowPersonCreate(idx)}
+                    type="button"
+                    title="Add person"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
               <div className="w-28">
                 {idx === 0 && (
@@ -241,6 +287,23 @@ export function SplitDialog({
           </div>
         </DialogFooter>
       </DialogContent>
+
+      {showPersonCreate !== null && (
+        <PersonFormDialog
+          open
+          onOpenChange={(o) => !o && setShowPersonCreate(null)}
+          onSuccess={(created) => {
+            if (created) {
+              setPersons((prev) => [
+                ...prev,
+                { id: created.id, name: created.name } as Person,
+              ].sort((a, b) => a.name.localeCompare(b.name)));
+              updateRow(showPersonCreate, "personId", created.id);
+            }
+            setShowPersonCreate(null);
+          }}
+        />
+      )}
     </Dialog>
   );
 }

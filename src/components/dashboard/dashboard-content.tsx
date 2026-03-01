@@ -21,9 +21,11 @@ import {
 import { getAccountsList } from "@/actions/transactions";
 import { getBudgetProgress, type BudgetProgress } from "@/actions/budgets";
 import { getSavingsProgress } from "@/actions/savings";
+import { getDebtSummary } from "@/actions/persons";
 import { BudgetProgressCard } from "./budget-progress";
 import { PredictionCard } from "./prediction-card";
 import { SavingsCard } from "./savings-card";
+import { DebtsCard } from "./debts-card";
 import type {
   DashboardStats,
   MonthlyData,
@@ -34,6 +36,7 @@ import type {
   PeriodFilter,
   ExpensePrediction,
   SavingsProgress,
+  DebtSummary,
 } from "@/lib/types";
 import type { Account } from "@prisma/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -57,6 +60,7 @@ export function DashboardContent() {
   const [catMeta, setCatMeta] = useState<CategoryMeta[]>([]);
   const [budgets, setBudgets] = useState<BudgetProgress[]>([]);
   const [savings, setSavings] = useState<SavingsProgress[]>([]);
+  const [debts, setDebts] = useState<DebtSummary[]>([]);
   const [prediction, setPrediction] = useState<ExpensePrediction | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +71,7 @@ export function DashboardContent() {
   const loadData = useCallback(async (p: PeriodFilter, accId: string) => {
     setLoading(true);
     const aid = accId || undefined;
-    const [s, m, c, t, mc, bp, sp, pred] = await Promise.all([
+    const [s, m, c, t, mc, bp, sp, pred, d] = await Promise.all([
       getDashboardStats(p, aid),
       getMonthlyData(p, aid),
       getCategoryBreakdown(p, aid),
@@ -76,6 +80,7 @@ export function DashboardContent() {
       getBudgetProgress(),
       getSavingsProgress(),
       getExpensePrediction(),
+      getDebtSummary(),
     ]);
     setStats(s);
     setMonthly(m);
@@ -86,6 +91,7 @@ export function DashboardContent() {
     setBudgets(bp);
     setSavings(sp);
     setPrediction(pred);
+    setDebts(d);
     setLoading(false);
   }, []);
 
@@ -144,6 +150,7 @@ export function DashboardContent() {
             {prediction && <PredictionCard prediction={prediction} />}
             {budgets.length > 0 && <BudgetProgressCard data={budgets} />}
             <SavingsCard data={savings} onRefresh={() => loadData(period, accountId)} />
+            <DebtsCard data={debts} />
           </div>
           <MonthlyCategoryChart data={monthlyCat} categories={catMeta} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

@@ -11,6 +11,9 @@ export type TransactionSplitData = {
   categoryId: string | null;
   categoryName: string | null;
   categoryColor: string | null;
+  personId: string | null;
+  personName: string | null;
+  personColor: string | null;
   amount: number;
   description: string | null;
 };
@@ -104,6 +107,15 @@ export type CategoryMeta = {
 };
 
 export type PeriodFilter = "all" | "3m" | "6m" | "1y";
+
+export type DebtSummary = {
+  personId: string;
+  personName: string;
+  personColor: string;
+  totalSplits: number;
+  totalSettled: number;
+  balance: number;
+};
 
 export type SavingsProgress = {
   id: string;

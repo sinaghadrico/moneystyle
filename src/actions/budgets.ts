@@ -21,6 +21,38 @@ export type BudgetProgress = {
   percentage: number;
 };
 
+/**
+ * Split-aware budget progress:
+ * spent = direct expenses (no splits) in this category + my splits (personId IS NULL) in this category
+ */
+async function getMySpentForCategory(categoryId: string, startOfMonth: Date, endOfMonth: Date): Promise<number> {
+  const baseDateWhere = {
+    type: "expense" as const,
+    date: { gte: startOfMonth, lte: endOfMonth },
+    mergedIntoId: null,
+    amount: { not: null },
+  };
+
+  const [directAgg, mySplitsAgg] = await Promise.all([
+    // Direct expenses in this category (no splits)
+    prisma.transaction.aggregate({
+      where: { ...baseDateWhere, categoryId, splits: { none: {} } },
+      _sum: { amount: true },
+    }),
+    // My splits (personId IS NULL) in this category
+    prisma.transactionSplit.aggregate({
+      where: {
+        categoryId,
+        personId: null,
+        transaction: { ...baseDateWhere, splits: { some: {} } },
+      },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  return Number(directAgg._sum.amount ?? 0) + Number(mySplitsAgg._sum.amount ?? 0);
+}
+
 export async function getBudgetProgress(): Promise<BudgetProgress[]> {
   const budgets = await prisma.budget.findMany({
     include: { category: true },
@@ -35,18 +67,7 @@ export async function getBudgetProgress(): Promise<BudgetProgress[]> {
   const results: BudgetProgress[] = [];
 
   for (const budget of budgets) {
-    const agg = await prisma.transaction.aggregate({
-      where: {
-        categoryId: budget.categoryId,
-        type: "expense",
-        date: { gte: startOfMonth, lte: endOfMonth },
-        mergedIntoId: null,
-        amount: { not: null },
-      },
-      _sum: { amount: true },
-    });
-
-    const spent = Number(agg._sum.amount ?? 0);
+    const spent = await getMySpentForCategory(budget.categoryId, startOfMonth, endOfMonth);
     const limit = Number(budget.monthlyLimit);
     const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
 
@@ -111,18 +132,7 @@ export async function checkBudgetAlert(
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const agg = await prisma.transaction.aggregate({
-    where: {
-      categoryId,
-      type: "expense",
-      date: { gte: startOfMonth, lte: endOfMonth },
-      mergedIntoId: null,
-      amount: { not: null },
-    },
-    _sum: { amount: true },
-  });
-
-  const spent = Number(agg._sum.amount ?? 0);
+  const spent = await getMySpentForCategory(categoryId, startOfMonth, endOfMonth);
   const limit = Number(budget.monthlyLimit);
   const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
 

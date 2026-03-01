@@ -90,7 +90,7 @@ export async function getTransactions(
         category: true,
         account: true,
         tags: { include: { tag: true } },
-        splits: { include: { category: true } },
+        splits: { include: { category: true, person: true } },
       },
       orderBy,
       skip: (page - 1) * pageSize,
@@ -113,6 +113,9 @@ export async function getTransactions(
         categoryId: s.categoryId,
         categoryName: s.category?.name ?? null,
         categoryColor: s.category?.color ?? null,
+        personId: s.personId,
+        personName: s.person?.name ?? null,
+        personColor: s.person?.color ?? null,
         amount: Number(s.amount),
         description: s.description,
       })),
@@ -250,7 +253,7 @@ export async function deleteTransactions(
 
 export async function splitTransaction(
   transactionId: string,
-  data: { splits: { categoryId: string | null; amount: number; description: string | null }[] },
+  data: { splits: { categoryId: string | null; personId?: string | null; amount: number; description: string | null }[] },
 ) {
   const tx = await prisma.transaction.findUnique({ where: { id: transactionId } });
   if (!tx) return { error: "Transaction not found" };
@@ -275,6 +278,7 @@ export async function splitTransaction(
     data: data.splits.map((s) => ({
       transactionId,
       categoryId: s.categoryId,
+      personId: s.personId ?? null,
       amount: s.amount,
       description: s.description,
     })),

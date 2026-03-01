@@ -20,7 +20,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3020:3000"
     environment:
       DATABASE_URL: postgresql://revenue:revenue123@db:5432/revenue
       DIRECT_URL: postgresql://revenue:revenue123@db:5432/revenue

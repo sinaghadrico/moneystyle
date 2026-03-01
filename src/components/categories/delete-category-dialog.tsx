@@ -45,12 +45,11 @@ export function DeleteCategoryDialog({
 
   const handleDelete = async () => {
     setDeleting(true);
-    const result = await deleteCategory(
-      category.id,
-      reassignId || undefined
-    );
+    const result = await deleteCategory(category.id, reassignId || undefined);
     if (result.error) {
-      toast.error(typeof result.error === "string" ? result.error : "Failed to delete");
+      toast.error(
+        typeof result.error === "string" ? result.error : "Failed to delete",
+      );
     } else {
       toast.success("Category deleted");
       onOpenChange(false);
@@ -63,7 +62,7 @@ export function DeleteCategoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete "{category.name}"?</DialogTitle>
+          <DialogTitle>Delete &quot;{category.name}&quot;?</DialogTitle>
           <DialogDescription>
             {category.transactionCount > 0
               ? `This category has ${category.transactionCount} transactions. You can reassign them to another category or leave them uncategorized.`
@@ -76,7 +75,10 @@ export function DeleteCategoryDialog({
             <label className="text-sm font-medium">
               Reassign transactions to:
             </label>
-            <Select value={reassignId || "none"} onValueChange={(v) => setReassignId(v === "none" ? "" : v)}>
+            <Select
+              value={reassignId || "none"}
+              onValueChange={(v) => setReassignId(v === "none" ? "" : v)}
+            >
               <SelectTrigger className="mt-2">
                 <SelectValue placeholder="Leave uncategorized" />
               </SelectTrigger>

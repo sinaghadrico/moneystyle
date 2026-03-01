@@ -26,6 +26,7 @@ export function AccountsContent() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
@@ -34,9 +35,7 @@ export function AccountsContent() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Accounts</h2>
-          <p className="text-muted-foreground">
-            {accounts.length} accounts
-          </p>
+          <p className="text-muted-foreground">{accounts.length} accounts</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-4 w-4" />

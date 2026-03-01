@@ -39,7 +39,7 @@ export function TransactionFilters({
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1">
+      <div className="space-y-1 space-x-2">
         <label className="text-xs text-muted-foreground">From</label>
         <Input
           type="date"
@@ -48,7 +48,7 @@ export function TransactionFilters({
           className="w-[150px]"
         />
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 space-x-2">
         <label className="text-xs text-muted-foreground">To</label>
         <Input
           type="date"
@@ -57,7 +57,7 @@ export function TransactionFilters({
           className="w-[150px]"
         />
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 space-x-2">
         <label className="text-xs text-muted-foreground">Account</label>
         <Select
           value={filters.accountId || "all"}
@@ -76,7 +76,7 @@ export function TransactionFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 space-x-2">
         <label className="text-xs text-muted-foreground">Category</label>
         <Select
           value={filters.categoryId || "all"}
@@ -95,7 +95,7 @@ export function TransactionFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 space-x-2">
         <label className="text-xs text-muted-foreground">Type</label>
         <Select
           value={filters.type || "all"}
@@ -114,7 +114,7 @@ export function TransactionFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 space-x-2">
         <label className="text-xs text-muted-foreground">Merchant</label>
         <Input
           placeholder="Search merchant..."

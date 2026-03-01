@@ -45,6 +45,7 @@ export function MergeSuggestionsContent() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSuggestions();
   }, [loadSuggestions]);
 
@@ -131,7 +132,7 @@ export function MergeSuggestionsContent() {
         <div
           className="h-full rounded-full bg-primary transition-all"
           style={{
-            width: `${((currentIndex) / suggestions.length) * 100}%`,
+            width: `${(currentIndex / suggestions.length) * 100}%`,
           }}
         />
       </div>
@@ -222,7 +223,7 @@ export function MergeSuggestionsContent() {
                           }}
                         >
                           {tx.mediaFiles.some((f) =>
-                            /\.(jpg|jpeg|png)$/i.test(f)
+                            /\.(jpg|jpeg|png)$/i.test(f),
                           ) ? (
                             <Image className="h-3 w-3" />
                           ) : (

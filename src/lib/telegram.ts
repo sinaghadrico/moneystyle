@@ -77,10 +77,10 @@ export function parseTelegramMessage(raw: string): ParsedMessage | null {
   };
 }
 
-const DEFAULT_ACCOUNT_NAME = "Sina Mashreq";
+const DEFAULT_ACCOUNT_NAME = "Farnoosh Mashreq";
 
 export async function resolveAccountByHint(
-  hint: string
+  hint: string,
 ): Promise<{ id: string; name: string } | null> {
   const lower = hint.toLowerCase();
   const accounts = await prisma.account.findMany();
@@ -103,7 +103,7 @@ export async function getDefaultAccount(): Promise<{
 }
 
 export async function resolveCategoryByHint(
-  hint: string
+  hint: string,
 ): Promise<{ id: string; name: string } | null> {
   const lower = hint.toLowerCase();
   const categories = await prisma.category.findMany();
@@ -113,15 +113,11 @@ export async function resolveCategoryByHint(
   if (exact) return { id: exact.id, name: exact.name };
 
   // Substring/prefix match
-  const partial = categories.find((c) =>
-    c.name.toLowerCase().includes(lower)
-  );
+  const partial = categories.find((c) => c.name.toLowerCase().includes(lower));
   if (partial) return { id: partial.id, name: partial.name };
 
   // Reverse: hint contains the category name
-  const reverse = categories.find((c) =>
-    lower.includes(c.name.toLowerCase())
-  );
+  const reverse = categories.find((c) => lower.includes(c.name.toLowerCase()));
   if (reverse) return { id: reverse.id, name: reverse.name };
 
   return null;
@@ -163,7 +159,7 @@ export function parseDeleteCommand(raw: string): DeleteCommand | null {
 }
 
 export async function deleteByShortIds(
-  shortIds: string[]
+  shortIds: string[],
 ): Promise<{ deleted: string[]; notFound: string[] }> {
   const deleted: string[] = [];
   const notFound: string[] = [];
@@ -174,9 +170,7 @@ export async function deleteByShortIds(
     });
     if (tx) {
       await prisma.transaction.delete({ where: { id: tx.id } });
-      deleted.push(
-        `${tx.amount} AED ${tx.merchant || ""} #${tx.id.slice(-6)}`
-      );
+      deleted.push(`${tx.amount} AED ${tx.merchant || ""} #${tx.id.slice(-6)}`);
     } else {
       notFound.push(sid);
     }
@@ -185,9 +179,7 @@ export async function deleteByShortIds(
   return { deleted, notFound };
 }
 
-export async function deleteLastN(
-  n: number
-): Promise<{ deleted: string[] }> {
+export async function deleteLastN(n: number): Promise<{ deleted: string[] }> {
   const txs = await prisma.transaction.findMany({
     where: { source: "telegram" },
     orderBy: { createdAt: "desc" },
@@ -197,9 +189,7 @@ export async function deleteLastN(
   const deleted: string[] = [];
   for (const tx of txs) {
     await prisma.transaction.delete({ where: { id: tx.id } });
-    deleted.push(
-      `${tx.amount} AED ${tx.merchant || ""} #${tx.id.slice(-6)}`
-    );
+    deleted.push(`${tx.amount} AED ${tx.merchant || ""} #${tx.id.slice(-6)}`);
   }
 
   return { deleted };
@@ -229,7 +219,10 @@ export function parseStatsCommand(raw: string): StatsCommand | null {
   if (/^last$/i.test(arg)) {
     const d = new Date();
     d.setMonth(d.getMonth() - 1);
-    return { kind: "stats", month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` };
+    return {
+      kind: "stats",
+      month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+    };
   }
 
   // "2026-02" format
@@ -239,10 +232,29 @@ export function parseStatsCommand(raw: string): StatsCommand | null {
 
   // Month name like "jan", "feb", "january"
   const MONTHS: Record<string, number> = {
-    jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3,
-    apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7,
-    aug: 8, august: 8, sep: 9, september: 9, oct: 10, october: 10,
-    nov: 11, november: 11, dec: 12, december: 12,
+    jan: 1,
+    january: 1,
+    feb: 2,
+    february: 2,
+    mar: 3,
+    march: 3,
+    apr: 4,
+    april: 4,
+    may: 5,
+    jun: 6,
+    june: 6,
+    jul: 7,
+    july: 7,
+    aug: 8,
+    august: 8,
+    sep: 9,
+    september: 9,
+    oct: 10,
+    october: 10,
+    nov: 11,
+    november: 11,
+    dec: 12,
+    december: 12,
   };
   const m = MONTHS[arg.toLowerCase()];
   if (m) {
@@ -267,13 +279,26 @@ function fmtAmount(n: number): string {
 }
 
 const MONTH_NAMES = [
-  "", "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export async function generateStats(monthStr?: string): Promise<string> {
   const now = new Date();
-  const month = monthStr || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const month =
+    monthStr ||
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [yearStr, monStr] = month.split("-");
   const year = parseInt(yearStr, 10);
   const mon = parseInt(monStr, 10);
@@ -321,11 +346,15 @@ export async function generateStats(monthStr?: string): Promise<string> {
     const pct = grandTotal > 0 ? (cat.total / grandTotal) * 100 : 0;
     const bar = textBar(pct);
     const name = cat.name.padEnd(maxNameLen);
-    lines.push(`${name} ${bar} ${pct.toFixed(0).padStart(3)}%  ${fmtAmount(cat.total)} AED`);
+    lines.push(
+      `${name} ${bar} ${pct.toFixed(0).padStart(3)}%  ${fmtAmount(cat.total)} AED`,
+    );
   }
 
   lines.push("");
-  lines.push(`${"Total".padEnd(maxNameLen)} ${" ".repeat(BAR_WIDTH)}      ${fmtAmount(grandTotal)} AED`);
+  lines.push(
+    `${"Total".padEnd(maxNameLen)} ${" ".repeat(BAR_WIDTH)}      ${fmtAmount(grandTotal)} AED`,
+  );
   lines.push(`${transactions.length} transactions`);
 
   // Income summary
@@ -350,7 +379,7 @@ const TELEGRAM_API = "https://api.telegram.org/bot";
 
 export async function sendTelegramMessage(
   chatId: number | string,
-  text: string
+  text: string,
 ): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {

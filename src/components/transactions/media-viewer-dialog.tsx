@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 
 function toPublicUrl(path: string): string {
   // "photos/photo_1@..." -> "/media/photos/photo_1@..."
@@ -73,10 +74,13 @@ export function MediaViewerDialog({
           )}
 
           {isImage(current) ? (
-            <img
+            <Image
               src={url.replace("/media/media-sina/", "/media-sina/")}
               alt={filename}
+              width={800}
+              height={600}
               className="max-h-[70vh] max-w-full object-contain rounded"
+              unoptimized
             />
           ) : (
             <iframe

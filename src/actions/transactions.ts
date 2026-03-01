@@ -1,14 +1,21 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import type { TransactionFilters, PaginatedResult, TransactionWithCategory } from "@/lib/types";
-import { transactionUpdateSchema, transactionCreateSchema } from "@/lib/validators";
+import type {
+  TransactionFilters,
+  PaginatedResult,
+  TransactionWithCategory,
+} from "@/lib/types";
+import {
+  transactionUpdateSchema,
+  transactionCreateSchema,
+} from "@/lib/validators";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function getTransactions(
-  filters: TransactionFilters = {}
+  filters: TransactionFilters = {},
 ): Promise<PaginatedResult<TransactionWithCategory>> {
   const {
     dateFrom,
@@ -64,7 +71,10 @@ export async function getTransactions(
   ]);
 
   return {
-    data,
+    data: data.map((tx) => ({
+      ...tx,
+      amount: tx.amount != null ? Number(tx.amount) : null,
+    })),
     total,
     page,
     pageSize,
@@ -72,7 +82,9 @@ export async function getTransactions(
   };
 }
 
-export async function createTransaction(data: Record<string, unknown>): Promise<{ success: true } | { error: Record<string, string[]> }> {
+export async function createTransaction(
+  data: Record<string, unknown>,
+): Promise<{ success: true } | { error: Record<string, string[]> }> {
   const parsed = transactionCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -102,7 +114,7 @@ export async function createTransaction(data: Record<string, unknown>): Promise<
 
 export async function updateTransaction(
   id: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ) {
   const parsed = transactionUpdateSchema.safeParse(data);
   if (!parsed.success) {
@@ -146,7 +158,7 @@ export async function updateTransaction(
 }
 
 export async function deleteTransactions(
-  ids: string[]
+  ids: string[],
 ): Promise<{ success: true; count: number } | { error: string }> {
   if (!ids.length) return { error: "No IDs provided" };
   if (ids.length > 100) return { error: "Too many IDs (max 100)" };

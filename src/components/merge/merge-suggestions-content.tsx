@@ -18,7 +18,7 @@ import {
   Check,
   SkipForward,
   Merge,
-  Image,
+  Image as ImageIcon,
   FileText,
   PartyPopper,
 } from "lucide-react";
@@ -225,7 +225,7 @@ export function MergeSuggestionsContent() {
                           {tx.mediaFiles.some((f) =>
                             /\.(jpg|jpeg|png)$/i.test(f),
                           ) ? (
-                            <Image className="h-3 w-3" />
+                            <ImageIcon className="h-3 w-3" />
                           ) : (
                             <FileText className="h-3 w-3" />
                           )}

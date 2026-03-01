@@ -26,7 +26,12 @@ import { EditTransactionDialog } from "./edit-transaction-dialog";
 import { AddTransactionDialog } from "./add-transaction-dialog";
 import { MediaViewerDialog } from "./media-viewer-dialog";
 import { MergeDialog } from "./merge-dialog";
-import { getTransactions, getCategories, getAccountsList, deleteTransactions } from "@/actions/transactions";
+import {
+  getTransactions,
+  getCategories,
+  getAccountsList,
+  deleteTransactions,
+} from "@/actions/transactions";
 import type { TransactionWithCategory, PaginatedResult } from "@/lib/types";
 import type { Category, Account } from "@prisma/client";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -36,13 +41,37 @@ import {
   ChevronRight,
   ArrowUpDown,
   Pencil,
-  Image,
+  Image as ImageIcon,
   FileText,
   Merge,
   Plus,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+
+function SortableHeader({
+  field,
+  children,
+  onSort,
+}: {
+  field: string;
+  children: React.ReactNode;
+  onSort: (field: string) => void;
+}) {
+  return (
+    <TableHead>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-3 h-8"
+        onClick={() => onSort(field)}
+      >
+        {children}
+        <ArrowUpDown className="ml-1 h-3 w-3" />
+      </Button>
+    </TableHead>
+  );
+}
 
 const TYPE_COLORS: Record<string, string> = {
   income:
@@ -57,7 +86,12 @@ function buildUrl(params: Record<string, string | number>) {
   for (const [k, v] of Object.entries(params)) {
     const s = String(v);
     if (s && s !== "1" && k === "page") sp.set(k, s);
-    else if (s && !(k === "sortBy" && s === "date") && !(k === "sortOrder" && s === "desc") && k !== "page") {
+    else if (
+      s &&
+      !(k === "sortBy" && s === "date") &&
+      !(k === "sortOrder" && s === "desc") &&
+      k !== "page"
+    ) {
       if (s) sp.set(k, s);
     }
   }
@@ -72,7 +106,8 @@ export function TransactionsContent() {
   // Read initial state from URL
   const urlPage = Number(searchParams.get("page")) || 1;
   const urlSortBy = searchParams.get("sortBy") || "date";
-  const urlSortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
+  const urlSortOrder =
+    (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
   const urlDateFrom = searchParams.get("dateFrom") || "";
   const urlDateTo = searchParams.get("dateTo") || "";
   const urlCategoryId = searchParams.get("categoryId") || "";
@@ -120,7 +155,18 @@ export function TransactionsContent() {
       merchant: debouncedMerchant,
     });
     router.replace(url, { scroll: false });
-  }, [page, sortBy, sortOrder, filters.dateFrom, filters.dateTo, filters.categoryId, filters.accountId, filters.type, debouncedMerchant, router]);
+  }, [
+    page,
+    sortBy,
+    sortOrder,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.categoryId,
+    filters.accountId,
+    filters.type,
+    debouncedMerchant,
+    router,
+  ]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -150,6 +196,7 @@ export function TransactionsContent() {
   ]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
@@ -199,7 +246,9 @@ export function TransactionsContent() {
     const res = await deleteTransactions(deleteIds);
     setDeleting(false);
     if ("success" in res) {
-      toast.success(`Deleted ${res.count} transaction${res.count > 1 ? "s" : ""}`);
+      toast.success(
+        `Deleted ${res.count} transaction${res.count > 1 ? "s" : ""}`,
+      );
       setSelected((prev) => {
         const next = new Set(prev);
         deleteIds.forEach((id) => next.delete(id));
@@ -214,26 +263,6 @@ export function TransactionsContent() {
 
   const selectedTransactions =
     result?.data.filter((t) => selected.has(t.id)) ?? [];
-
-  const SortableHeader = ({
-    field,
-    children,
-  }: {
-    field: string;
-    children: React.ReactNode;
-  }) => (
-    <TableHead>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-3 h-8"
-        onClick={() => handleSort(field)}
-      >
-        {children}
-        <ArrowUpDown className="ml-1 h-3 w-3" />
-      </Button>
-    </TableHead>
-  );
 
   return (
     <div className="space-y-4">
@@ -273,7 +302,14 @@ export function TransactionsContent() {
         accounts={accounts}
         onChange={handleFilterChange}
         onReset={() => {
-          setFilters({ dateFrom: "", dateTo: "", categoryId: "", accountId: "", type: "", merchant: "" });
+          setFilters({
+            dateFrom: "",
+            dateTo: "",
+            categoryId: "",
+            accountId: "",
+            type: "",
+            merchant: "",
+          });
           setSortBy("date");
           setSortOrder("desc");
           setPage(1);
@@ -296,12 +332,18 @@ export function TransactionsContent() {
                   onChange={toggleSelectAll}
                 />
               </TableHead>
-              <SortableHeader field="date">Date & Time</SortableHeader>
-              <SortableHeader field="amount">Amount</SortableHeader>
+              <SortableHeader field="date" onSort={handleSort}>
+                Date & Time
+              </SortableHeader>
+              <SortableHeader field="amount" onSort={handleSort}>
+                Amount
+              </SortableHeader>
               <TableHead>Type</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Account</TableHead>
-              <SortableHeader field="merchant">Merchant</SortableHeader>
+              <SortableHeader field="merchant" onSort={handleSort}>
+                Merchant
+              </SortableHeader>
               <TableHead className="hidden md:table-cell">
                 Description
               </TableHead>
@@ -391,7 +433,7 @@ export function TransactionsContent() {
                           {tx.mediaFiles.some((f) =>
                             /\.(jpg|jpeg|png)$/i.test(f),
                           ) ? (
-                            <Image className="h-3.5 w-3.5" />
+                            <ImageIcon className="h-3.5 w-3.5" />
                           ) : (
                             <FileText className="h-3.5 w-3.5" />
                           )}
@@ -502,7 +544,9 @@ export function TransactionsContent() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Transaction{deleteIds.length > 1 ? "s" : ""}</DialogTitle>
+            <DialogTitle>
+              Delete Transaction{deleteIds.length > 1 ? "s" : ""}
+            </DialogTitle>
             <DialogDescription>
               Are you sure you want to delete{" "}
               {deleteIds.length === 1

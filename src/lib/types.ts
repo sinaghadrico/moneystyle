@@ -1,6 +1,7 @@
 import type { Account, Category, Transaction } from "@prisma/client";
 
-export type TransactionWithCategory = Transaction & {
+export type TransactionWithCategory = Omit<Transaction, "amount"> & {
+  amount: number | null;
   category: Category | null;
   account: Account;
 };

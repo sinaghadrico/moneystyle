@@ -63,10 +63,13 @@ export function MergeDialog({
 
         <div className="space-y-2 max-h-[50vh] overflow-y-auto py-2">
           {transactions.map((tx) => (
-            <button
+            <div
               key={tx.id}
+              role="button"
+              tabIndex={0}
               onClick={() => setPrimaryId(tx.id)}
-              className={`w-full rounded-lg border p-3 text-left transition-colors ${
+              onKeyDown={(e) => e.key === "Enter" && setPrimaryId(tx.id)}
+              className={`w-full rounded-lg border p-3 text-left transition-colors cursor-pointer ${
                 primaryId === tx.id
                   ? "border-primary bg-primary/5"
                   : "border-border hover:bg-muted/50"
@@ -107,7 +110,7 @@ export function MergeDialog({
                   </div>
                 )}
               </div>
-            </button>
+            </div>
           ))}
         </div>
 

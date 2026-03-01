@@ -166,10 +166,13 @@ export function MergeSuggestionsContent() {
 
           <div className="space-y-2">
             {current.transactions.map((tx) => (
-              <button
+              <div
                 key={tx.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => setPrimaryId(tx.id)}
-                className={`w-full rounded-lg border p-4 text-left transition-colors ${
+                onKeyDown={(e) => e.key === "Enter" && setPrimaryId(tx.id)}
+                className={`w-full rounded-lg border p-4 text-left transition-colors cursor-pointer ${
                   primaryId === tx.id
                     ? "border-primary bg-primary/5"
                     : "border-border hover:bg-muted/50"
@@ -241,7 +244,7 @@ export function MergeSuggestionsContent() {
                     </div>
                   )}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
 

@@ -11,6 +11,7 @@ export interface ParsedMessage {
   type: "income" | "expense";
   merchant?: string;
   categoryHint?: string;
+  tagHints?: string[];
   accountHint?: string;
   description?: string;
 }
@@ -32,12 +33,19 @@ export function parseTelegramMessage(raw: string): ParsedMessage | null {
   // Everything after the amount number
   let rest = text.slice(amountMatch[0].length).trim();
 
-  // Extract #category tag
+  // Extract all #tags — first matching category = categoryHint, rest = tagHints
+  const hashMatches = [...rest.matchAll(/#(\S+)/g)];
   let categoryHint: string | undefined;
-  const catMatch = rest.match(/#(\S+)/);
-  if (catMatch) {
-    categoryHint = catMatch[1];
-    rest = rest.replace(catMatch[0], "").trim();
+  const tagHints: string[] = [];
+  for (const m of hashMatches) {
+    rest = rest.replace(m[0], "").trim();
+  }
+  if (hashMatches.length > 0) {
+    // First tag is attempted as category, rest are tag hints
+    categoryHint = hashMatches[0][1];
+    for (let i = 1; i < hashMatches.length; i++) {
+      tagHints.push(hashMatches[i][1]);
+    }
   }
 
   // Extract @account tag
@@ -72,6 +80,7 @@ export function parseTelegramMessage(raw: string): ParsedMessage | null {
     type,
     merchant: merchant || undefined,
     categoryHint,
+    tagHints: tagHints.length > 0 ? tagHints : undefined,
     accountHint,
     description,
   };
@@ -121,6 +130,36 @@ export async function resolveCategoryByHint(
   if (reverse) return { id: reverse.id, name: reverse.name };
 
   return null;
+}
+
+export async function resolveTagsByHints(
+  hints: string[],
+): Promise<{ id: string; name: string }[]> {
+  const resolved: { id: string; name: string }[] = [];
+  for (const hint of hints) {
+    const lower = hint.toLowerCase();
+    let tag = await prisma.tag.findFirst({
+      where: { name: { equals: lower, mode: "insensitive" } },
+    });
+    if (!tag) {
+      tag = await prisma.tag.findFirst({
+        where: { name: { contains: lower, mode: "insensitive" } },
+      });
+    }
+    if (!tag) {
+      // Auto-create the tag
+      const TAG_COLORS = [
+        "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
+        "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280", "#0ea5e9",
+      ];
+      const count = await prisma.tag.count();
+      tag = await prisma.tag.create({
+        data: { name: hint, color: TAG_COLORS[count % TAG_COLORS.length] },
+      });
+    }
+    resolved.push({ id: tag.id, name: tag.name });
+  }
+  return resolved;
 }
 
 export interface DeleteCommand {
@@ -475,12 +514,127 @@ export function generateHelp(): string {
     "",
     "↩️ /undo — Undo last entry",
     "",
+    "📊 /report — Monthly report with comparisons",
+    "",
     "❓ /help — Show this message",
     "",
-    "Format: [+]amount merchant [#category] [@account]",
+    "Format: [+]amount merchant [#category] [#tag1 #tag2] [@account]",
     "  + prefix = income, no prefix = expense",
-    "  #tag matches a category, @tag matches an account",
+    "  First #tag matches a category, extra #tags become labels",
+    "  @tag matches an account",
   ].join("\n");
+}
+
+export function parseReportCommand(raw: string): boolean {
+  return /^\/?report$/i.test(raw.trim());
+}
+
+export async function generateMonthlyReport(monthStr?: string): Promise<string> {
+  const now = new Date();
+  const month =
+    monthStr ||
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const [yearStr, monStr] = month.split("-");
+  const year = parseInt(yearStr, 10);
+  const mon = parseInt(monStr, 10);
+
+  const startDate = new Date(year, mon - 1, 1);
+  const endDate = new Date(year, mon, 0, 23, 59, 59, 999);
+
+  // Previous month for comparison
+  const prevStart = new Date(year, mon - 2, 1);
+  const prevEnd = new Date(year, mon - 1, 0, 23, 59, 59, 999);
+
+  const [expenses, incomes, prevExpenses, prevIncomes] = await Promise.all([
+    prisma.transaction.findMany({
+      where: { date: { gte: startDate, lte: endDate }, type: "expense", mergedIntoId: null },
+      include: { category: true },
+    }),
+    prisma.transaction.findMany({
+      where: { date: { gte: startDate, lte: endDate }, type: "income", mergedIntoId: null },
+    }),
+    prisma.transaction.findMany({
+      where: { date: { gte: prevStart, lte: prevEnd }, type: "expense", mergedIntoId: null },
+    }),
+    prisma.transaction.findMany({
+      where: { date: { gte: prevStart, lte: prevEnd }, type: "income", mergedIntoId: null },
+    }),
+  ]);
+
+  const totalExpense = expenses.reduce((s, t) => s + Number(t.amount ?? 0), 0);
+  const totalIncome = incomes.reduce((s, t) => s + Number(t.amount ?? 0), 0);
+  const prevTotalExpense = prevExpenses.reduce((s, t) => s + Number(t.amount ?? 0), 0);
+  const prevTotalIncome = prevIncomes.reduce((s, t) => s + Number(t.amount ?? 0), 0);
+
+  // Top merchants
+  const merchantMap = new Map<string, number>();
+  for (const tx of expenses) {
+    const m = tx.merchant || "Unknown";
+    merchantMap.set(m, (merchantMap.get(m) ?? 0) + Number(tx.amount ?? 0));
+  }
+  const topMerchants = [...merchantMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  // Category breakdown
+  const catMap = new Map<string, number>();
+  for (const tx of expenses) {
+    const name = tx.category?.name || "Uncategorized";
+    catMap.set(name, (catMap.get(name) ?? 0) + Number(tx.amount ?? 0));
+  }
+  const sortedCats = [...catMap.entries()].sort((a, b) => b[1] - a[1]);
+
+  // Budget status
+  const budgets = await prisma.budget.findMany({ include: { category: true } });
+  const budgetLines: string[] = [];
+  for (const b of budgets) {
+    const spent = catMap.get(b.category.name) ?? 0;
+    const limit = Number(b.monthlyLimit);
+    const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+    const icon = pct >= 100 ? "🔴" : pct >= b.alertThreshold ? "🟡" : "🟢";
+    budgetLines.push(`  ${icon} ${b.category.name}: ${fmtAmount(spent)} / ${fmtAmount(limit)} AED (${pct}%)`);
+  }
+
+  const lines: string[] = [];
+  lines.push(`📊 Monthly Report — ${MONTH_NAMES[mon]} ${year}`);
+  lines.push("");
+  lines.push(`💸 Total Expenses: ${fmtAmount(totalExpense)} AED`);
+  lines.push(`💰 Total Income: ${fmtAmount(totalIncome)} AED`);
+  lines.push(`📉 Net: ${fmtAmount(totalIncome - totalExpense)} AED`);
+  lines.push(`📝 ${expenses.length + incomes.length} transactions`);
+
+  // Month-over-month comparison
+  if (prevTotalExpense > 0) {
+    const expChange = ((totalExpense - prevTotalExpense) / prevTotalExpense) * 100;
+    const arrow = expChange > 0 ? "📈" : "📉";
+    lines.push("");
+    lines.push(`${arrow} vs last month: ${expChange > 0 ? "+" : ""}${expChange.toFixed(0)}% expenses`);
+  }
+
+  if (sortedCats.length > 0) {
+    lines.push("");
+    lines.push("📂 By Category:");
+    for (const [name, total] of sortedCats.slice(0, 8)) {
+      const pct = totalExpense > 0 ? ((total / totalExpense) * 100).toFixed(0) : "0";
+      lines.push(`  ${name}: ${fmtAmount(total)} AED (${pct}%)`);
+    }
+  }
+
+  if (topMerchants.length > 0) {
+    lines.push("");
+    lines.push("🏪 Top Merchants:");
+    for (const [name, total] of topMerchants) {
+      lines.push(`  ${name}: ${fmtAmount(total)} AED`);
+    }
+  }
+
+  if (budgetLines.length > 0) {
+    lines.push("");
+    lines.push("📋 Budget Status:");
+    lines.push(...budgetLines);
+  }
+
+  return lines.join("\n");
 }
 
 /** Returns true if text looks like an unknown /command */

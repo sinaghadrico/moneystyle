@@ -8,12 +8,16 @@ import {
   deleteLastN,
   generateStats,
   generateHelp,
+  generateMonthlyReport,
   isUnknownCommand,
   resolveAccountByHint,
   resolveCategoryByHint,
+  resolveTagsByHints,
   getDefaultAccount,
   sendTelegramMessage,
 } from "@/lib/telegram";
+import { checkBudgetAlert } from "@/actions/budgets";
+import { checkTransactionAnomaly } from "@/lib/anomaly";
 
 export async function POST(request: NextRequest) {
   // Validate webhook secret
@@ -49,6 +53,18 @@ export async function POST(request: NextRequest) {
   // /help or /start
   if (/^\/?(help|start|راهنما)$/i.test(text.trim())) {
     await sendTelegramMessage(chatId, generateHelp());
+    return NextResponse.json({ ok: true });
+  }
+
+  // /report
+  if (/^\/?report$/i.test(text.trim())) {
+    try {
+      const report = await generateMonthlyReport();
+      await sendTelegramMessage(chatId, report);
+    } catch (err) {
+      console.error("Telegram report error:", err);
+      await sendTelegramMessage(chatId, "Failed to generate report.");
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -130,6 +146,12 @@ export async function POST(request: NextRequest) {
       category = await resolveCategoryByHint(parsed.categoryHint);
     }
 
+    // Resolve tags
+    let tags: { id: string; name: string }[] = [];
+    if (parsed.tagHints && parsed.tagHints.length > 0) {
+      tags = await resolveTagsByHints(parsed.tagHints);
+    }
+
     // Create transaction
     const transaction = await prisma.transaction.create({
       data: {
@@ -145,13 +167,35 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Save tags
+    if (tags.length > 0) {
+      await prisma.transactionTag.createMany({
+        data: tags.map((t) => ({ transactionId: transaction.id, tagId: t.id })),
+      });
+    }
+
     // Build confirmation message
     const typeLabel = parsed.type === "income" ? "income" : "expense";
     const catLabel = category ? ` (${category.name})` : "";
     const merchantLabel = parsed.merchant ? ` at ${parsed.merchant}` : "";
-    const confirmation =
-      `Saved: ${parsed.amount} AED ${typeLabel}${merchantLabel}${catLabel} [${account.name}]` +
+    const tagLabel = tags.length > 0 ? ` [${tags.map((t) => t.name).join(", ")}]` : "";
+    let confirmation =
+      `Saved: ${parsed.amount} AED ${typeLabel}${merchantLabel}${catLabel}${tagLabel} [${account.name}]` +
       (transaction.id ? ` #${transaction.id.slice(-6)}` : "");
+
+    // Check budget alert
+    if (category && parsed.type === "expense") {
+      const budgetWarning = await checkBudgetAlert(category.id);
+      if (budgetWarning) confirmation += budgetWarning;
+    }
+
+    // Check anomaly
+    const anomalyWarning = await checkTransactionAnomaly(
+      parsed.amount,
+      category?.id ?? null,
+      parsed.merchant ?? null,
+    );
+    if (anomalyWarning) confirmation += anomalyWarning;
 
     await sendTelegramMessage(chatId, confirmation);
   } catch (err) {

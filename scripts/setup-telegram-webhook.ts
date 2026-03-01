@@ -72,6 +72,7 @@ async function registerCommands(token: string) {
     { command: "today", description: "Today's transactions" },
     { command: "del", description: "Delete transaction(s)" },
     { command: "undo", description: "Undo last transaction" },
+    { command: "report", description: "Monthly report with comparisons" },
   ];
 
   const res = await fetch(`${TELEGRAM_API}${token}/setMyCommands`, {

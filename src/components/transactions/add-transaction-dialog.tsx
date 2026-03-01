@@ -22,6 +22,7 @@ import { TRANSACTION_TYPES } from "@/lib/constants";
 import { createTransaction } from "@/actions/transactions";
 import type { Category, Account } from "@prisma/client";
 import { toast } from "sonner";
+import { TagInput } from "@/components/ui/tag-input";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -57,6 +58,7 @@ export function AddTransactionDialog({
     accountId: accounts[0]?.id ?? "",
     merchant: "",
     description: "",
+    tagIds: [] as string[],
   });
 
   const handleSave = async () => {
@@ -70,6 +72,7 @@ export function AddTransactionDialog({
       accountId: form.accountId,
       merchant: form.merchant || null,
       description: form.description || null,
+      tagIds: form.tagIds,
     });
 
     if ("error" in result) {
@@ -191,6 +194,13 @@ export function AddTransactionDialog({
                 setForm({ ...form, description: e.target.value })
               }
               placeholder="Description"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Tags</Label>
+            <TagInput
+              value={form.tagIds}
+              onChange={(tagIds) => setForm({ ...form, tagIds })}
             />
           </div>
         </div>

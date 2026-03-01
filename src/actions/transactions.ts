@@ -13,6 +13,8 @@ import {
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { checkTransactionAnomaly } from "@/lib/anomaly";
+import { sendTelegramMessage } from "@/lib/telegram";
 
 export async function getTransactions(
   filters: TransactionFilters = {},
@@ -24,6 +26,11 @@ export async function getTransactions(
     accountId,
     type,
     merchant,
+    tagIds,
+    amountMin,
+    amountMax,
+    search,
+    source,
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
     sortBy = "date",
@@ -44,6 +51,23 @@ export async function getTransactions(
   if (merchant) {
     where.merchant = { contains: merchant, mode: "insensitive" };
   }
+  if (tagIds && tagIds.length > 0) {
+    where.tags = { some: { tagId: { in: tagIds } } };
+  }
+  if (amountMin !== undefined || amountMax !== undefined) {
+    where.amount = {};
+    if (amountMin !== undefined) where.amount.gte = amountMin;
+    if (amountMax !== undefined) where.amount.lte = amountMax;
+  }
+  if (search) {
+    where.OR = [
+      { merchant: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+  if (source) {
+    where.source = source;
+  }
 
   const validSortFields = ["date", "amount", "type", "merchant"];
   const primarySort: Prisma.TransactionOrderByWithRelationInput = {};
@@ -62,7 +86,11 @@ export async function getTransactions(
   const [data, total] = await Promise.all([
     prisma.transaction.findMany({
       where,
-      include: { category: true, account: true },
+      include: {
+        category: true,
+        account: true,
+        tags: { include: { tag: true } },
+      },
       orderBy,
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -74,6 +102,11 @@ export async function getTransactions(
     data: data.map((tx) => ({
       ...tx,
       amount: tx.amount != null ? Number(tx.amount) : null,
+      tags: tx.tags.map((tt) => ({
+        id: tt.tag.id,
+        name: tt.tag.name,
+        color: tt.tag.color,
+      })),
     })),
     total,
     page,
@@ -92,7 +125,7 @@ export async function createTransaction(
 
   const values = parsed.data;
 
-  await prisma.transaction.create({
+  const tx = await prisma.transaction.create({
     data: {
       date: values.date,
       time: values.time ?? null,
@@ -106,6 +139,31 @@ export async function createTransaction(
       source: "manual",
     },
   });
+
+  if (values.tagIds && values.tagIds.length > 0) {
+    await prisma.transactionTag.createMany({
+      data: values.tagIds.map((tagId) => ({ transactionId: tx.id, tagId })),
+    });
+  }
+
+  // Check anomaly and send Telegram alert for web-created transactions
+  if (values.type === "expense" && values.amount && values.amount > 0) {
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (chatId) {
+      const warning = await checkTransactionAnomaly(
+        values.amount,
+        values.categoryId ?? null,
+        values.merchant ?? null,
+      );
+      if (warning) {
+        const merchant = values.merchant ? ` at ${values.merchant}` : "";
+        await sendTelegramMessage(
+          chatId,
+          `🔍 Web transaction alert: ${values.amount} AED${merchant}${warning}`,
+        );
+      }
+    }
+  }
 
   revalidatePath("/transactions");
   revalidatePath("/");
@@ -151,6 +209,15 @@ export async function updateTransaction(
     where: { id },
     data: updateData,
   });
+
+  if (values.tagIds !== undefined) {
+    await prisma.transactionTag.deleteMany({ where: { transactionId: id } });
+    if (values.tagIds.length > 0) {
+      await prisma.transactionTag.createMany({
+        data: values.tagIds.map((tagId) => ({ transactionId: id, tagId })),
+      });
+    }
+  }
 
   revalidatePath("/transactions");
   revalidatePath("/");

@@ -1,9 +1,16 @@
-import type { Account, Category, Transaction } from "@prisma/client";
+import type { Account, Category, Transaction, Tag } from "@prisma/client";
+
+export type TagData = {
+  id: string;
+  name: string;
+  color: string;
+};
 
 export type TransactionWithCategory = Omit<Transaction, "amount"> & {
   amount: number | null;
   category: Category | null;
   account: Account;
+  tags: TagData[];
 };
 
 export type AccountWithStats = {
@@ -49,10 +56,23 @@ export type TransactionFilters = {
   accountId?: string;
   type?: string;
   merchant?: string;
+  tagIds?: string[];
+  amountMin?: number;
+  amountMax?: number;
+  search?: string;
+  source?: string;
   page?: number;
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+};
+
+export type ExpensePrediction = {
+  spent: number;
+  predicted: number;
+  daysElapsed: number;
+  daysInMonth: number;
+  dailyAverage: number;
 };
 
 export type PaginatedResult<T> = {

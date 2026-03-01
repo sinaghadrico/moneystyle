@@ -7,8 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryFormDialog } from "./category-form-dialog";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
 import { getCategoriesWithStats } from "@/actions/categories";
+import { getBudgets } from "@/actions/budgets";
+import { BudgetFormDialog } from "@/components/budgets/budget-form-dialog";
 import { formatCurrency } from "@/lib/utils";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Wallet } from "lucide-react";
 
 type CategoryWithStats = {
   id: string;
@@ -25,11 +27,24 @@ export function CategoriesContent() {
   const [showCreate, setShowCreate] = useState(false);
   const [editCat, setEditCat] = useState<CategoryWithStats | null>(null);
   const [deleteCat, setDeleteCat] = useState<CategoryWithStats | null>(null);
+  const [budgetCat, setBudgetCat] = useState<CategoryWithStats | null>(null);
+  const [budgetMap, setBudgetMap] = useState<Map<string, { monthlyLimit: number; alertThreshold: number }>>(new Map());
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const data = await getCategoriesWithStats();
+    const [data, budgets] = await Promise.all([
+      getCategoriesWithStats(),
+      getBudgets(),
+    ]);
     setCategories(data);
+    const bMap = new Map<string, { monthlyLimit: number; alertThreshold: number }>();
+    for (const b of budgets) {
+      bMap.set(b.categoryId, {
+        monthlyLimit: Number(b.monthlyLimit),
+        alertThreshold: b.alertThreshold,
+      });
+    }
+    setBudgetMap(bMap);
     setLoading(false);
   }, []);
 
@@ -96,9 +111,41 @@ export function CategoriesContent() {
                     </Button>
                   </div>
                 </div>
-                <p className="mt-3 text-lg font-bold">
-                  {formatCurrency(cat.totalAmount)}
-                </p>
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-lg font-bold">
+                    {formatCurrency(cat.totalAmount)}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs text-muted-foreground"
+                    onClick={() => setBudgetCat(cat)}
+                  >
+                    <Wallet className="h-3 w-3" />
+                    {budgetMap.has(cat.id)
+                      ? `${formatCurrency(budgetMap.get(cat.id)!.monthlyLimit)}/mo`
+                      : "Set Budget"}
+                  </Button>
+                </div>
+                {budgetMap.has(cat.id) && (
+                  <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        cat.totalAmount / budgetMap.get(cat.id)!.monthlyLimit >= 1
+                          ? "bg-red-500"
+                          : cat.totalAmount / budgetMap.get(cat.id)!.monthlyLimit >= 0.8
+                            ? "bg-orange-500"
+                            : "bg-green-500"
+                      }`}
+                      style={{
+                        width: `${Math.min(
+                          (cat.totalAmount / budgetMap.get(cat.id)!.monthlyLimit) * 100,
+                          100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -128,6 +175,18 @@ export function CategoriesContent() {
           allCategories={categories}
           open={!!deleteCat}
           onOpenChange={(open) => !open && setDeleteCat(null)}
+          onSuccess={loadData}
+        />
+      )}
+
+      {budgetCat && (
+        <BudgetFormDialog
+          categoryId={budgetCat.id}
+          categoryName={budgetCat.name}
+          existingLimit={budgetMap.get(budgetCat.id)?.monthlyLimit}
+          existingThreshold={budgetMap.get(budgetCat.id)?.alertThreshold}
+          open={!!budgetCat}
+          onOpenChange={(open) => !open && setBudgetCat(null)}
           onSuccess={loadData}
         />
       )}

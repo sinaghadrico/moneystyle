@@ -7,6 +7,7 @@ export const transactionUpdateSchema = z.object({
   accountId: z.string().optional(),
   merchant: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  tagIds: z.array(z.string()).optional(),
 });
 
 export type TransactionUpdateInput = z.infer<typeof transactionUpdateSchema>;
@@ -21,6 +22,7 @@ export const transactionCreateSchema = z.object({
   accountId: z.string().min(1, "Account is required"),
   merchant: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  tagIds: z.array(z.string()).optional(),
 });
 
 export type TransactionCreateInput = z.infer<typeof transactionCreateSchema>;
@@ -45,3 +47,18 @@ export const accountUpdateSchema = accountCreateSchema.partial();
 
 export type AccountCreateInput = z.infer<typeof accountCreateSchema>;
 export type AccountUpdateInput = z.infer<typeof accountUpdateSchema>;
+
+export const tagCreateSchema = z.object({
+  name: z.string().min(1, "Name is required").max(30),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color").optional(),
+});
+
+export type TagCreateInput = z.infer<typeof tagCreateSchema>;
+
+export const budgetUpsertSchema = z.object({
+  categoryId: z.string().min(1, "Category is required"),
+  monthlyLimit: z.coerce.number().positive("Limit must be positive"),
+  alertThreshold: z.coerce.number().int().min(1).max(100).default(80),
+});
+
+export type BudgetUpsertInput = z.infer<typeof budgetUpsertSchema>;

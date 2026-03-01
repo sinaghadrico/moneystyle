@@ -114,6 +114,10 @@ export function TransactionsContent() {
   const urlAccountId = searchParams.get("accountId") || "";
   const urlType = searchParams.get("type") || "";
   const urlMerchant = searchParams.get("merchant") || "";
+  const urlSearch = searchParams.get("search") || "";
+  const urlAmountMin = searchParams.get("amountMin") || "";
+  const urlAmountMax = searchParams.get("amountMax") || "";
+  const urlSource = searchParams.get("source") || "";
 
   const [filters, setFilters] = useState({
     dateFrom: urlDateFrom,
@@ -122,6 +126,10 @@ export function TransactionsContent() {
     accountId: urlAccountId,
     type: urlType,
     merchant: urlMerchant,
+    search: urlSearch,
+    amountMin: urlAmountMin,
+    amountMax: urlAmountMax,
+    source: urlSource,
   });
   const [sortBy, setSortBy] = useState(urlSortBy);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">(urlSortOrder);
@@ -140,6 +148,7 @@ export function TransactionsContent() {
   const [deleting, setDeleting] = useState(false);
 
   const debouncedMerchant = useDebounce(filters.merchant, 300);
+  const debouncedSearch = useDebounce(filters.search, 300);
 
   // Sync state to URL
   useEffect(() => {
@@ -153,6 +162,10 @@ export function TransactionsContent() {
       accountId: filters.accountId,
       type: filters.type,
       merchant: debouncedMerchant,
+      search: debouncedSearch,
+      amountMin: filters.amountMin,
+      amountMax: filters.amountMax,
+      source: filters.source,
     });
     router.replace(url, { scroll: false });
   }, [
@@ -165,6 +178,10 @@ export function TransactionsContent() {
     filters.accountId,
     filters.type,
     debouncedMerchant,
+    debouncedSearch,
+    filters.amountMin,
+    filters.amountMax,
+    filters.source,
     router,
   ]);
 
@@ -177,6 +194,10 @@ export function TransactionsContent() {
       accountId: filters.accountId || undefined,
       type: filters.type || undefined,
       merchant: debouncedMerchant || undefined,
+      search: debouncedSearch || undefined,
+      amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+      amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+      source: filters.source || undefined,
       page,
       sortBy,
       sortOrder,
@@ -190,6 +211,10 @@ export function TransactionsContent() {
     filters.accountId,
     filters.type,
     debouncedMerchant,
+    debouncedSearch,
+    filters.amountMin,
+    filters.amountMax,
+    filters.source,
     page,
     sortBy,
     sortOrder,
@@ -309,6 +334,10 @@ export function TransactionsContent() {
             accountId: "",
             type: "",
             merchant: "",
+            search: "",
+            amountMin: "",
+            amountMax: "",
+            source: "",
           });
           setSortBy("date");
           setSortOrder("desc");
@@ -340,6 +369,7 @@ export function TransactionsContent() {
               </SortableHeader>
               <TableHead>Type</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead>Account</TableHead>
               <SortableHeader field="merchant" onSort={handleSort}>
                 Merchant
@@ -406,6 +436,24 @@ export function TransactionsContent() {
                           <span className="text-sm">{tx.category.name}</span>
                         </div>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {tx.tags?.map((tag) => (
+                          <Badge
+                            key={tag.id}
+                            variant="secondary"
+                            className="text-[10px] px-1.5 py-0"
+                            style={{
+                              backgroundColor: tag.color + "20",
+                              color: tag.color,
+                              borderColor: tag.color,
+                            }}
+                          >
+                            {tag.name}
+                          </Badge>
+                        ))}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">

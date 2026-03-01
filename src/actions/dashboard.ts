@@ -8,6 +8,7 @@ import type {
   MerchantTotal,
   MonthlyCategoryData,
   CategoryMeta,
+  ExpensePrediction,
 } from "@/lib/types";
 import { getDateRange } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
@@ -204,4 +205,28 @@ export async function getMonthlyCategoryBreakdown(
     .sort((a, b) => (catTotalMap.get(b.name) ?? 0) - (catTotalMap.get(a.name) ?? 0));
 
   return { data, categories: catMeta };
+}
+
+export async function getExpensePrediction(): Promise<ExpensePrediction> {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const agg = await prisma.transaction.aggregate({
+    where: {
+      type: "expense",
+      date: { gte: startOfMonth, lte: endOfMonth },
+      mergedIntoId: null,
+      amount: { not: null },
+    },
+    _sum: { amount: true },
+  });
+
+  const spent = Number(agg._sum.amount ?? 0);
+  const daysInMonth = endOfMonth.getDate();
+  const daysElapsed = Math.max(now.getDate(), 1);
+  const dailyAverage = spent / daysElapsed;
+  const predicted = Math.round(dailyAverage * daysInMonth * 100) / 100;
+
+  return { spent, predicted, daysElapsed, daysInMonth, dailyAverage };
 }

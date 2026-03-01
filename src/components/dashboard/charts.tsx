@@ -15,6 +15,8 @@ import {
   LineChart,
   Line,
   Legend,
+  Area,
+  AreaChart,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +32,20 @@ import { formatMonth } from "@/lib/utils";
 const currencyFormatter = (value: number | undefined) =>
   `AED ${(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
+const tooltipStyle = {
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "12px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  padding: "10px 14px",
+  fontSize: "13px",
+};
+
+const axisStyle = {
+  fontSize: 11,
+  fill: "hsl(var(--muted-foreground))",
+};
+
 export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
   const chartData = data.map((d) => ({
     ...d,
@@ -37,28 +53,31 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
   }));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Monthly Income vs Expense</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">Monthly Income vs Expense</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
+      <CardContent className="pt-0">
+        <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="label" className="text-xs" />
-              <YAxis tickFormatter={currencyFormatter} className="text-xs" />
-              <Tooltip
-                formatter={currencyFormatter}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-              />
-              <Legend />
-              <Bar dataKey="income" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} />
+            <BarChart data={chartData} barGap={4} barCategoryGap="20%">
+              <defs>
+                <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity={0.6} />
+                </linearGradient>
+                <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.6} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+              <XAxis dataKey="label" tick={axisStyle} axisLine={false} tickLine={false} dy={8} />
+              <YAxis tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} dx={-4} />
+              <Tooltip formatter={currencyFormatter} contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }} />
+              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+              <Bar dataKey="income" fill="url(#incomeGrad)" radius={[6, 6, 0, 0]} name="Income" />
+              <Bar dataKey="expense" fill="url(#expenseGrad)" radius={[6, 6, 0, 0]} name="Expense" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -68,35 +87,70 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
 }
 
 export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const total = data.reduce((s, d) => s + d.total, 0);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Expense by Category</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">Expense by Category</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                dataKey="total"
-                nameKey="name"
-                label={({ name, percent }) =>
-                  `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                }
-                labelLine={false}
+      <CardContent className="pt-0">
+        <div className="h-[320px] flex">
+          <div className="flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={105}
+                  dataKey="total"
+                  nameKey="name"
+                  paddingAngle={2}
+                  strokeWidth={0}
+                  onMouseEnter={(_, i) => setActiveIndex(i)}
+                  onMouseLeave={() => setActiveIndex(null)}
+                >
+                  {data.map((entry, index) => (
+                    <Cell
+                      key={index}
+                      fill={entry.color}
+                      opacity={activeIndex === null || activeIndex === index ? 1 : 0.4}
+                      style={{ transition: "opacity 0.2s", cursor: "pointer" }}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={currencyFormatter}
+                  contentStyle={tooltipStyle}
+                />
+                {/* Center label */}
+                <text x="50%" y="48%" textAnchor="middle" fill="hsl(var(--foreground))" fontSize={20} fontWeight={700}>
+                  {currencyFormatter(total)}
+                </text>
+                <text x="50%" y="56%" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize={11}>
+                  Total
+                </text>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="w-[140px] flex flex-col justify-center gap-1.5 pr-2">
+            {data.slice(0, 7).map((entry, i) => (
+              <div
+                key={entry.name}
+                className="flex items-center gap-2 text-xs"
+                onMouseEnter={() => setActiveIndex(i)}
+                onMouseLeave={() => setActiveIndex(null)}
+                style={{ opacity: activeIndex === null || activeIndex === i ? 1 : 0.4, transition: "opacity 0.2s", cursor: "pointer" }}
               >
-                {data.map((entry, index) => (
-                  <Cell key={index} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={currencyFormatter} />
-            </PieChart>
-          </ResponsiveContainer>
+                <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                <span className="truncate flex-1 text-muted-foreground">{entry.name}</span>
+                <span className="font-medium tabular-nums">{total > 0 ? ((entry.total / total) * 100).toFixed(0) : 0}%</span>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -105,25 +159,32 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
 
 export function TopMerchantsChart({ data }: { data: MerchantTotal[] }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Top 10 Merchants</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">Top 10 Merchants</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
+      <CardContent className="pt-0">
+        <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis type="number" tickFormatter={currencyFormatter} className="text-xs" />
+            <BarChart data={data} layout="vertical" barSize={18}>
+              <defs>
+                <linearGradient id="merchantGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.7} />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" opacity={0.5} />
+              <XAxis type="number" tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} />
               <YAxis
                 type="category"
                 dataKey="merchant"
-                width={120}
-                className="text-xs"
-                tick={{ fontSize: 11 }}
+                width={110}
+                tick={{ ...axisStyle, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
               />
-              <Tooltip formatter={currencyFormatter} />
-              <Bar dataKey="total" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              <Tooltip formatter={currencyFormatter} contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }} />
+              <Bar dataKey="total" fill="url(#merchantGrad)" radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -167,13 +228,13 @@ export function MonthlyCategoryChart({
   }));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Monthly Expense by Category</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">Monthly Expense by Category</CardTitle>
         <div className="flex flex-wrap gap-1.5 pt-2">
           <Badge
             variant={allSelected ? "default" : "outline"}
-            className="cursor-pointer select-none text-xs"
+            className="cursor-pointer select-none text-xs px-2.5 py-0.5 rounded-full transition-all"
             onClick={toggleAll}
           >
             All
@@ -182,10 +243,10 @@ export function MonthlyCategoryChart({
             <Badge
               key={cat.name}
               variant={visible.has(cat.name) ? "default" : "outline"}
-              className="cursor-pointer select-none text-xs"
+              className="cursor-pointer select-none text-xs px-2.5 py-0.5 rounded-full transition-all"
               style={
                 visible.has(cat.name)
-                  ? { backgroundColor: cat.color, borderColor: cat.color }
+                  ? { backgroundColor: cat.color, borderColor: cat.color, color: "#fff" }
                   : { color: cat.color, borderColor: cat.color }
               }
               onClick={() => toggle(cat.name)}
@@ -195,22 +256,19 @@ export function MonthlyCategoryChart({
           ))}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="label" className="text-xs" />
-              <YAxis tickFormatter={currencyFormatter} className="text-xs" />
+            <BarChart data={chartData} barCategoryGap="15%">
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+              <XAxis dataKey="label" tick={axisStyle} axisLine={false} tickLine={false} dy={8} />
+              <YAxis tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} dx={-4} />
               <Tooltip
                 formatter={currencyFormatter}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
               />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 12 }} />
               {categories
                 .filter((cat) => visible.has(cat.name))
                 .map((cat) => (
@@ -219,6 +277,7 @@ export function MonthlyCategoryChart({
                     dataKey={cat.name}
                     stackId="category"
                     fill={cat.color}
+                    radius={[0, 0, 0, 0]}
                   />
                 ))}
             </BarChart>
@@ -237,49 +296,64 @@ export function MonthlyTrendChart({ data }: { data: MonthlyData[] }) {
   }));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Monthly Trend</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">Monthly Trend</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
+      <CardContent className="pt-0">
+        <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="label" className="text-xs" />
-              <YAxis tickFormatter={currencyFormatter} className="text-xs" />
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="incomeArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="expenseArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+              <XAxis dataKey="label" tick={axisStyle} axisLine={false} tickLine={false} dy={8} />
+              <YAxis tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} dx={-4} />
               <Tooltip
                 formatter={currencyFormatter}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
+                contentStyle={tooltipStyle}
+                cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
               />
-              <Legend />
-              <Line
+              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+              <Area
                 type="monotone"
                 dataKey="income"
                 stroke="#22c55e"
-                strokeWidth={2}
-                dot={{ r: 3 }}
+                strokeWidth={2.5}
+                fill="url(#incomeArea)"
+                dot={{ r: 3, fill: "#22c55e", strokeWidth: 0 }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
+                name="Income"
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="expense"
                 stroke="#ef4444"
-                strokeWidth={2}
-                dot={{ r: 3 }}
+                strokeWidth={2.5}
+                fill="url(#expenseArea)"
+                dot={{ r: 3, fill: "#ef4444", strokeWidth: 0 }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
+                name="Expense"
               />
               <Line
                 type="monotone"
                 dataKey="net"
                 stroke="#3b82f6"
                 strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ r: 3 }}
+                strokeDasharray="6 4"
+                dot={{ r: 3, fill: "#3b82f6", strokeWidth: 0 }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
+                name="Net"
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

@@ -31,6 +31,10 @@ import {
   FlaskConical,
   Loader2,
   GripVertical,
+  BookOpen,
+  Smartphone,
+  Copy,
+  Check,
 } from "lucide-react";
 import {
   getSmsPatterns,
@@ -151,6 +155,10 @@ export function SmsPatternsSection() {
   // SMS API Key
   const [smsApiKey, setSmsApiKey] = useState("");
   const [savingKey, setSavingKey] = useState(false);
+
+  // Setup guide
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const loadPatterns = useCallback(async () => {
     setLoading(true);
@@ -286,6 +294,14 @@ export function SmsPatternsSection() {
     }
   };
 
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const appUrl = typeof window !== "undefined" ? window.location.origin : "";
+
   const typeBadge = (type: string) => {
     switch (type) {
       case "income":
@@ -393,6 +409,182 @@ export function SmsPatternsSection() {
         <p className="text-xs text-muted-foreground">
           Patterns are tested in priority order (lowest first). First match wins.
         </p>
+
+        {/* Setup Guide */}
+        <div className="rounded-lg border">
+          <button
+            type="button"
+            onClick={() => setGuideOpen((v) => !v)}
+            className="flex w-full items-center gap-2 p-3 text-left text-sm font-medium hover:bg-muted/50 transition-colors"
+          >
+            <BookOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="flex-1">Setup Guide: Auto-forward SMS</span>
+            <span className="text-xs text-muted-foreground">
+              {guideOpen ? "Hide" : "Show"}
+            </span>
+          </button>
+
+          {guideOpen && (
+            <div className="space-y-4 border-t px-3 pb-4 pt-3">
+              <p className="text-xs text-muted-foreground">
+                Since PWA apps cannot read SMS directly, you need a phone automation app
+                to forward bank SMS messages to your <code className="rounded bg-muted px-1">/api/sms</code> endpoint.
+              </p>
+
+              {/* Endpoint info */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Your endpoint</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 truncate rounded bg-muted px-2 py-1 text-xs font-mono">
+                    {appUrl}/api/sms
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => copyToClipboard(`${appUrl}/api/sms`, "url")}
+                  >
+                    {copied === "url" ? (
+                      <Check className="h-3 w-3 text-emerald-600" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+                {smsApiKey && (
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 truncate rounded bg-muted px-2 py-1 text-xs font-mono">
+                      Header: Authorization: Bearer {smsApiKey.slice(0, 4)}...
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() =>
+                        copyToClipboard(`Bearer ${smsApiKey}`, "key")
+                      }
+                    >
+                      {copied === "key" ? (
+                        <Check className="h-3 w-3 text-emerald-600" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* iOS Shortcuts */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Smartphone className="h-3.5 w-3.5" />
+                  <Label className="text-xs font-medium">iOS Shortcuts</Label>
+                </div>
+                <ol className="list-inside list-decimal space-y-1 text-xs text-muted-foreground">
+                  <li>Open the <strong>Shortcuts</strong> app on your iPhone</li>
+                  <li>Tap <strong>Automation</strong> tab &rarr; <strong>New Automation</strong></li>
+                  <li>Select <strong>Message</strong> &rarr; choose your bank as sender</li>
+                  <li>Set &quot;When I receive&quot; &rarr; <strong>Run Immediately</strong></li>
+                  <li>Add action: <strong>Get Contents of URL</strong></li>
+                  <li>
+                    URL: <code className="rounded bg-muted px-1">{appUrl}/api/sms</code>
+                  </li>
+                  <li>Method: <strong>POST</strong></li>
+                  <li>
+                    Headers: <code className="rounded bg-muted px-1">Content-Type: application/json</code>
+                    {smsApiKey && (
+                      <> and <code className="rounded bg-muted px-1">Authorization: Bearer your-key</code></>
+                    )}
+                  </li>
+                  <li>
+                    Body (JSON): <code className="rounded bg-muted px-1">{`{"text": "Shortcut Input"}`}</code>
+                    &mdash; use the <strong>Message Content</strong> variable from the trigger
+                  </li>
+                  <li>Turn off &quot;Ask Before Running&quot; and save</li>
+                </ol>
+              </div>
+
+              {/* Android Tasker / MacroDroid */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Smartphone className="h-3.5 w-3.5" />
+                  <Label className="text-xs font-medium">Android (Tasker / MacroDroid)</Label>
+                </div>
+                <p className="text-xs font-medium text-muted-foreground">MacroDroid (easier):</p>
+                <ol className="list-inside list-decimal space-y-1 text-xs text-muted-foreground">
+                  <li>Install <strong>MacroDroid</strong> from Play Store</li>
+                  <li>Create new Macro &rarr; Add Trigger: <strong>SMS Received</strong></li>
+                  <li>Filter by sender (your bank number)</li>
+                  <li>Add Action: <strong>HTTP Request</strong></li>
+                  <li>
+                    URL: <code className="rounded bg-muted px-1">{appUrl}/api/sms</code>
+                  </li>
+                  <li>Method: <strong>POST</strong></li>
+                  <li>
+                    Header: <code className="rounded bg-muted px-1">Content-Type: application/json</code>
+                    {smsApiKey && (
+                      <> and <code className="rounded bg-muted px-1">Authorization: Bearer your-key</code></>
+                    )}
+                  </li>
+                  <li>
+                    Body: <code className="rounded bg-muted px-1">{`{"text": "{sms_text}"}`}</code>
+                    &mdash; use the built-in <strong>{`{sms_text}`}</strong> variable
+                  </li>
+                  <li>Save and enable the macro</li>
+                </ol>
+
+                <p className="text-xs font-medium text-muted-foreground mt-2">Tasker:</p>
+                <ol className="list-inside list-decimal space-y-1 text-xs text-muted-foreground">
+                  <li>Install <strong>Tasker</strong> from Play Store</li>
+                  <li>Create Profile &rarr; Event &rarr; <strong>Phone &rarr; Received Text</strong></li>
+                  <li>Set sender to your bank number</li>
+                  <li>Link to a new Task with action: <strong>Net &rarr; HTTP Request</strong></li>
+                  <li>Method: POST, URL: <code className="rounded bg-muted px-1">{appUrl}/api/sms</code></li>
+                  <li>
+                    Headers: <code className="rounded bg-muted px-1">Content-Type: application/json</code>
+                    {smsApiKey && (
+                      <>, <code className="rounded bg-muted px-1">Authorization: Bearer your-key</code></>
+                    )}
+                  </li>
+                  <li>
+                    Body: <code className="rounded bg-muted px-1">{`{"text": "%SMSRB"}`}</code>
+                    &mdash; <strong>%SMSRB</strong> is Tasker&apos;s SMS body variable
+                  </li>
+                  <li>Save and activate the profile</li>
+                </ol>
+              </div>
+
+              {/* Test with curl */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Test with cURL</Label>
+                <div className="relative">
+                  <pre className="overflow-x-auto rounded bg-muted p-2 text-xs font-mono leading-relaxed">
+{`curl -X POST ${appUrl}/api/sms \\
+  -H "Content-Type: application/json" \\${smsApiKey ? `\n  -H "Authorization: Bearer ${smsApiKey}" \\` : ""}
+  -d '{"text": "Thank you for using NEO VISA Debit Card for AED 127.48 at TABBY FZ LLC on 01-MAR-2026"}'`}
+                  </pre>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1 h-6 w-6"
+                    onClick={() =>
+                      copyToClipboard(
+                        `curl -X POST ${appUrl}/api/sms -H "Content-Type: application/json"${smsApiKey ? ` -H "Authorization: Bearer ${smsApiKey}"` : ""} -d '{"text": "Thank you for using NEO VISA Debit Card for AED 127.48 at TABBY FZ LLC on 01-MAR-2026"}'`,
+                        "curl",
+                      )
+                    }
+                  >
+                    {copied === "curl" ? (
+                      <Check className="h-3 w-3 text-emerald-600" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Add/Edit Dialog */}
         <ResponsiveDialog open={dialogOpen} onOpenChange={setDialogOpen}>

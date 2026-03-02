@@ -291,3 +291,59 @@ export type BasketAnalysis = {
   cheapestTotal: number | null;
   splitStrategy: SplitStrategy | null;
 };
+
+// Profile types
+
+export type IncomeSourceData = {
+  id: string;
+  name: string;
+  amount: number;
+  depositDay: number;
+  currency: string;
+  isActive: boolean;
+};
+
+export type ReserveData = {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  type: string;
+  location: string;
+  note: string | null;
+  lastRecordedAt: string | null;
+};
+
+export type ReserveSnapshotData = {
+  id: string;
+  amount: number;
+  note: string | null;
+  recordedAt: string;
+};
+
+export type InstallmentData = {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  dueDay: number;
+  totalCount: number | null;
+  paidCount: number;
+  isActive: boolean;
+  reminderDays: number;
+};
+
+export type FinancialOverview = {
+  totalMonthlyIncome: number;
+  totalMonthlyInstallments: number;
+  netMonthlyCashflow: number;
+  totalReserves: number;
+  reservesByType: { type: string; total: number }[];
+  upcomingInstallments: {
+    id: string;
+    name: string;
+    amount: number;
+    dueDay: number;
+    daysUntilDue: number;
+  }[];
+};

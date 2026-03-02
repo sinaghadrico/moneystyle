@@ -12,6 +12,7 @@ import {
   Merge,
   Settings,
   TrendingUp,
+  UserCircle,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/persons", label: "Persons", icon: Users },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/merge-suggestions", label: "Merge Duplicates", icon: Merge },
+  { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -150,6 +150,53 @@ export const shoppingListItemSchema = z.object({
   quantity: z.coerce.number().positive().default(1),
 });
 
+// Profile validators
+
+export const incomeSourceSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  amount: z.coerce.number().positive("Amount must be positive"),
+  depositDay: z.coerce.number().int().min(1).max(31).default(1),
+  currency: z.string().min(1).max(5).default("AED"),
+  isActive: z.boolean().default(true),
+});
+
+export const incomeSourceUpdateSchema = incomeSourceSchema.partial();
+
+export type IncomeSourceInput = z.infer<typeof incomeSourceSchema>;
+
+export const reserveSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  amount: z.coerce.number().positive("Amount must be positive"),
+  currency: z.string().min(1).max(5).default("AED"),
+  type: z.enum(["cash", "gold", "crypto", "family", "other"]),
+  location: z.string().min(1, "Location is required").max(200),
+  note: z.string().max(500).nullable().optional(),
+});
+
+export const reserveUpdateSchema = reserveSchema.partial();
+
+export type ReserveInput = z.infer<typeof reserveSchema>;
+
+export const recordReserveValueSchema = z.object({
+  amount: z.coerce.number().positive("Amount must be positive"),
+  note: z.string().max(500).nullable().optional(),
+});
+
+export const installmentSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  amount: z.coerce.number().positive("Amount must be positive"),
+  currency: z.string().min(1).max(5).default("AED"),
+  dueDay: z.coerce.number().int().min(1).max(31).default(1),
+  totalCount: z.coerce.number().int().positive().nullable().optional(),
+  paidCount: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+  reminderDays: z.coerce.number().int().min(0).max(30).default(2),
+});
+
+export const installmentUpdateSchema = installmentSchema.partial();
+
+export type InstallmentInput = z.infer<typeof installmentSchema>;
+
 export const settingsUpdateSchema = z.object({
   currency: z.string().min(1).max(5).optional(),
   defaultPageSize: z.coerce.number().int().min(5).max(100).optional(),

@@ -241,6 +241,62 @@ model SmsPattern {
   @@map("sms_patterns")
 }
 
+model IncomeSource {
+  id         String   @id @default(cuid())
+  name       String
+  amount     Decimal  @db.Decimal(12, 2)
+  depositDay Int      @default(1)
+  currency   String   @default("AED")
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("income_sources")
+}
+
+model Reserve {
+  id        String             @id @default(cuid())
+  name      String
+  amount    Decimal            @db.Decimal(12, 2)
+  currency  String             @default("AED")
+  type      String
+  location  String
+  note      String?
+  snapshots ReserveSnapshot[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@map("reserves")
+}
+
+model ReserveSnapshot {
+  id         String   @id @default(cuid())
+  reserveId  String
+  reserve    Reserve  @relation(fields: [reserveId], references: [id], onDelete: Cascade)
+  amount     Decimal  @db.Decimal(12, 2)
+  note       String?
+  recordedAt DateTime @default(now())
+
+  @@index([reserveId])
+  @@map("reserve_snapshots")
+}
+
+model Installment {
+  id           String   @id @default(cuid())
+  name         String
+  amount       Decimal  @db.Decimal(12, 2)
+  currency     String   @default("AED")
+  dueDay       Int      @default(1)
+  totalCount   Int?
+  paidCount    Int      @default(0)
+  isActive     Boolean  @default(true)
+  reminderDays Int      @default(2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("installments")
+}
+
 model AppSettings {
   id                     String   @id @default("default")
   currency               String   @default("AED")

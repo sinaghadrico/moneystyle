@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import OpenAI from "openai";
+import { getPrompt, AI_PROMPT_KEYS } from "@/lib/ai-prompts";
 
 export type ParsedItem = {
   name: string;
@@ -66,6 +67,7 @@ export async function parseReceiptImage(
   }
 
   const openai = new OpenAI({ apiKey });
+  const systemPrompt = await getPrompt(AI_PROMPT_KEYS.receiptParser);
 
   try {
     const response = await openai.chat.completions.create({
@@ -74,18 +76,7 @@ export async function parseReceiptImage(
       messages: [
         {
           role: "system",
-          content: `You extract line items from receipt images. Return ONLY a JSON object in this exact format:
-{"items":[{"name":"Item Name","quantity":1,"unitPrice":10.50,"totalPrice":10.50}]}
-
-Rules:
-- Extract every item/product line from the receipt
-- If quantity is not shown, use 1
-- If unit price is not shown, set unitPrice to null and use the line total as totalPrice
-- totalPrice should be quantity * unitPrice when both are available
-- Handle receipts in any language (English, Arabic, Farsi, etc.)
-- Do NOT include tax lines, subtotals, totals, discounts, or payment method lines as items
-- Round all prices to 2 decimal places
-- Return ONLY the JSON, no markdown, no explanation`,
+          content: systemPrompt,
         },
         {
           role: "user",

@@ -17,6 +17,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { getCurrencyRates } from "@/actions/currencies";
 import { convertAmount } from "@/lib/currency";
+import { getPrompt, AI_PROMPT_KEYS } from "@/lib/ai-prompts";
 import type {
   IncomeSourceData,
   ReserveData,
@@ -600,6 +601,7 @@ Total reserves: ${Math.round(reserves.reduce((s, r) => s + convertAmount(Number(
 
   const { default: OpenAI } = await import("openai");
   const openai = new OpenAI({ apiKey });
+  const systemPrompt = await getPrompt(AI_PROMPT_KEYS.moneyAdvice);
 
   try {
     const response = await openai.chat.completions.create({
@@ -608,24 +610,7 @@ Total reserves: ${Math.round(reserves.reduce((s, r) => s + convertAmount(Number(
       messages: [
         {
           role: "system",
-          content: `You are a personal finance advisor. Analyze the user's financial data and suggest how they can generate income from their reserves and savings.
-
-Rules:
-- Be specific: use the actual amounts, types, and locations from their data
-- Calculate emergency fund needed (3 months of expenses)
-- Calculate how much is actually investable (total reserves minus emergency fund)
-- Give 3-5 concrete suggestions based on their reserve types and locations
-- For each suggestion, estimate potential monthly and yearly returns
-- Consider the reserve type: cash → savings accounts/deposits, gold → hold or diversify, crypto → staking/yield, family loans → N/A
-- Risk levels: low (savings accounts, deposits), medium (bonds, funds), high (stocks, crypto yield)
-- Be practical for someone in the UAE/Middle East region
-- Respond in the user's currency
-- Be concise and actionable
-
-Return ONLY a JSON object in this exact format:
-{"summary":"Brief 1-2 sentence overview","emergencyFundNeeded":NUMBER,"emergencyFundCurrent":NUMBER,"investableAmount":NUMBER,"suggestions":[{"title":"Short title","description":"2-3 sentence explanation with specific numbers","potentialMonthly":NUMBER_OR_NULL,"potentialYearly":NUMBER_OR_NULL,"risk":"low|medium|high","relatedReserve":"name of reserve or null"}]}
-
-Return ONLY the JSON, no markdown, no explanation.`,
+          content: systemPrompt,
         },
         {
           role: "user",

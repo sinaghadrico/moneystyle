@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { basicNormalize, fuzzyNormalize, resolveItemName } from "@/lib/item-normalization";
 import { itemGroupUpdateSchema } from "@/lib/validators";
+import { getPrompt, AI_PROMPT_KEYS } from "@/lib/ai-prompts";
 import type {
   PriceAnalysisFilters,
   ItemPriceSummary,
@@ -516,6 +517,7 @@ export async function normalizeItemNamesWithAI(): Promise<
   }
 
   const openai = new OpenAI({ apiKey });
+  const systemPrompt = await getPrompt(AI_PROMPT_KEYS.itemNormalizer);
 
   try {
     const response = await openai.chat.completions.create({
@@ -524,16 +526,7 @@ export async function normalizeItemNamesWithAI(): Promise<
       messages: [
         {
           role: "system",
-          content: `You group product names into canonical categories.
-Return ONLY a JSON object in this format:
-{"groups":[{"canonical":"Milk","members":["Milk 1L","Low Fat Milk","Milk 2L"]}]}
-
-Rules:
-- Group items that are the same product but with different sizes, brands, or descriptions
-- The canonical name should be short and generic (e.g., "Milk" not "Milk 1 Liter Low Fat")
-- Items with no similar items should still get their own group
-- Handle names in any language
-- Return ONLY the JSON, no markdown, no explanation`,
+          content: systemPrompt,
         },
         {
           role: "user",

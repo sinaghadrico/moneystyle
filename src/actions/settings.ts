@@ -322,3 +322,39 @@ export async function testSmsPattern(
 
   return { success: true, amount: amount.toFixed(2), merchant };
 }
+
+// ── AI Prompts ──
+
+export type AiPromptData = {
+  key: string;
+  label: string;
+  content: string;
+  isCustom: boolean;
+};
+
+export async function getAiPrompts(): Promise<AiPromptData[]> {
+  const { DEFAULT_PROMPTS } = await import("@/lib/ai-prompts");
+  const rows = await prisma.aiPrompt.findMany();
+  const customMap = new Map(rows.map((r) => [r.key, r.content]));
+
+  return Object.entries(DEFAULT_PROMPTS).map(([key, def]) => ({
+    key,
+    label: def.label,
+    content: customMap.get(key) ?? def.content,
+    isCustom: customMap.has(key),
+  }));
+}
+
+export async function updateAiPrompt(key: string, content: string) {
+  await prisma.aiPrompt.upsert({
+    where: { key },
+    create: { key, content },
+    update: { content },
+  });
+  return { success: true };
+}
+
+export async function resetAiPrompt(key: string) {
+  await prisma.aiPrompt.deleteMany({ where: { key } });
+  return { success: true };
+}

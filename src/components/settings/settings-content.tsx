@@ -39,6 +39,7 @@ import { getAccountsList } from "@/actions/transactions";
 import { useAppSettings } from "@/components/settings/settings-provider";
 import { SmsPatternsSection } from "@/components/settings/sms-patterns-section";
 import { CurrencyManagementSection } from "@/components/settings/currency-management-section";
+import { AiPromptsSection } from "@/components/settings/ai-prompts-section";
 import { CurrencySelect } from "@/components/ui/currency-select";
 
 type Settings = {
@@ -466,6 +467,9 @@ export function SettingsContent() {
 
         {/* SMS Patterns */}
         <SmsPatternsSection />
+
+        {/* AI Prompts */}
+        <AiPromptsSection />
 
         {/* Data Management */}
         <Card>

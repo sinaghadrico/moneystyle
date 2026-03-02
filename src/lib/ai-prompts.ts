@@ -1,0 +1,70 @@
+import { prisma } from "@/lib/db";
+
+export const AI_PROMPT_KEYS = {
+  receiptParser: "receipt_parser",
+  moneyAdvice: "money_advice",
+  itemNormalizer: "item_normalizer",
+} as const;
+
+export type AiPromptKey = (typeof AI_PROMPT_KEYS)[keyof typeof AI_PROMPT_KEYS];
+
+export const DEFAULT_PROMPTS: Record<AiPromptKey, { label: string; content: string }> = {
+  [AI_PROMPT_KEYS.receiptParser]: {
+    label: "Receipt Parser",
+    content: `You extract line items from receipt images. Return ONLY a JSON object in this exact format:
+{"items":[{"name":"Item Name","quantity":1,"unitPrice":10.50,"totalPrice":10.50}]}
+
+Rules:
+- Extract every item/product line from the receipt
+- If quantity is not shown, use 1
+- If unit price is not shown, set unitPrice to null and use the line total as totalPrice
+- totalPrice should be quantity * unitPrice when both are available
+- Handle receipts in any language (English, Arabic, Farsi, etc.)
+- Do NOT include tax lines, subtotals, totals, discounts, or payment method lines as items
+- Round all prices to 2 decimal places
+- Return ONLY the JSON, no markdown, no explanation`,
+  },
+  [AI_PROMPT_KEYS.moneyAdvice]: {
+    label: "Money Advice",
+    content: `You are a personal finance advisor. Analyze the user's financial data and suggest how they can generate income from their reserves and savings.
+
+Rules:
+- Be specific: use the actual amounts, types, and locations from their data
+- Calculate emergency fund needed (3 months of expenses)
+- Calculate how much is actually investable (total reserves minus emergency fund)
+- Give 3-5 concrete suggestions based on their reserve types and locations
+- For each suggestion, estimate potential monthly and yearly returns
+- Consider the reserve type: cash → savings accounts/deposits, gold → hold or diversify, crypto → staking/yield, family loans → N/A
+- Risk levels: low (savings accounts, deposits), medium (bonds, funds), high (stocks, crypto yield)
+- Be practical for someone in the UAE/Middle East region
+- Respond in the user's currency
+- Be concise and actionable
+
+Return ONLY a JSON object in this exact format:
+{"summary":"Brief 1-2 sentence overview","emergencyFundNeeded":NUMBER,"emergencyFundCurrent":NUMBER,"investableAmount":NUMBER,"suggestions":[{"title":"Short title","description":"2-3 sentence explanation with specific numbers","potentialMonthly":NUMBER_OR_NULL,"potentialYearly":NUMBER_OR_NULL,"risk":"low|medium|high","relatedReserve":"name of reserve or null"}]}
+
+Return ONLY the JSON, no markdown, no explanation.`,
+  },
+  [AI_PROMPT_KEYS.itemNormalizer]: {
+    label: "Item Name Normalizer",
+    content: `You group product names into canonical categories.
+Return ONLY a JSON object in this format:
+{"groups":[{"canonical":"Milk","members":["Milk 1L","Low Fat Milk","Milk 2L"]}]}
+
+Rules:
+- Group items that are the same product but with different sizes, brands, or descriptions
+- The canonical name should be short and generic (e.g., "Milk" not "Milk 1 Liter Low Fat")
+- Items with no similar items should still get their own group
+- Handle names in any language
+- Return ONLY the JSON, no markdown, no explanation`,
+  },
+};
+
+/**
+ * Get prompt content for a given key.
+ * Returns DB value if exists, otherwise the hardcoded default.
+ */
+export async function getPrompt(key: AiPromptKey): Promise<string> {
+  const row = await prisma.aiPrompt.findUnique({ where: { key } });
+  return row?.content ?? DEFAULT_PROMPTS[key].content;
+}

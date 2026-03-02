@@ -9,6 +9,8 @@ import type {
   BasketAnalysis,
   BasketMerchantResult,
   BasketItemResult,
+  SplitStrategy,
+  SplitStoreAssignment,
 } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
@@ -329,9 +331,92 @@ export async function analyzeBasket(
   const fullCoverage = results.find((r) => r.unavailableCount === 0);
   const cheapest = fullCoverage ?? results[0] ?? null;
 
+  // ---------------------------------------------------------------------------
+  // Split Strategy: pick cheapest merchant per item
+  // ---------------------------------------------------------------------------
+  let splitStrategy: SplitStrategy | null = null;
+
+  if (results.length >= 2) {
+    // For each basket item, find the merchant with the lowest avgPrice
+    const bestPerItem = new Map<
+      string,
+      { merchant: string; itemName: string; quantity: number; avgPrice: number; totalPrice: number }
+    >();
+    const unavailableItems: string[] = [];
+
+    for (const bi of basketItems) {
+      let bestMerchant: string | null = null;
+      let bestAvg = Infinity;
+
+      for (const [merchant, itemPrices] of merchantData) {
+        const prices = itemPrices.get(bi.resolvedName);
+        if (prices && prices.length > 0) {
+          const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+          if (avg < bestAvg) {
+            bestAvg = avg;
+            bestMerchant = merchant;
+          }
+        }
+      }
+
+      if (bestMerchant) {
+        const roundedAvg = Math.round(bestAvg * 100) / 100;
+        bestPerItem.set(bi.itemName, {
+          merchant: bestMerchant,
+          itemName: bi.itemName,
+          quantity: bi.quantity,
+          avgPrice: roundedAvg,
+          totalPrice: Math.round(roundedAvg * bi.quantity * 100) / 100,
+        });
+      } else {
+        unavailableItems.push(bi.itemName);
+      }
+    }
+
+    // Group by merchant
+    const storeMap = new Map<string, SplitStoreAssignment>();
+    for (const entry of bestPerItem.values()) {
+      let assignment = storeMap.get(entry.merchant);
+      if (!assignment) {
+        assignment = { merchant: entry.merchant, items: [], storeTotal: 0 };
+        storeMap.set(entry.merchant, assignment);
+      }
+      assignment.items.push({
+        itemName: entry.itemName,
+        quantity: entry.quantity,
+        totalPrice: entry.totalPrice,
+      });
+      assignment.storeTotal += entry.totalPrice;
+    }
+
+    // Round store totals
+    const assignments = Array.from(storeMap.values()).map((a) => ({
+      ...a,
+      storeTotal: Math.round(a.storeTotal * 100) / 100,
+    }));
+    assignments.sort((a, b) => b.items.length - a.items.length);
+
+    const splitTotal =
+      Math.round(assignments.reduce((sum, a) => sum + a.storeTotal, 0) * 100) / 100;
+    const singleStoreTotal = cheapest?.availableTotal ?? splitTotal;
+    const savings = Math.round((singleStoreTotal - splitTotal) * 100) / 100;
+
+    // Only show split if it actually saves money and requires > 1 store
+    if (assignments.length >= 2 && savings > 0) {
+      splitStrategy = {
+        assignments,
+        splitTotal,
+        savings,
+        storeCount: assignments.length,
+        unavailableItems,
+      };
+    }
+  }
+
   return {
     merchants: results,
     cheapestMerchant: cheapest?.merchant ?? null,
     cheapestTotal: cheapest?.availableTotal ?? null,
+    splitStrategy,
   };
 }

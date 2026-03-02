@@ -27,6 +27,7 @@ import type {
   ShoppingListData,
   ShoppingListDetail,
   BasketAnalysis,
+  SplitStrategy,
 } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
@@ -43,6 +44,7 @@ import {
   ChevronUp,
   Copy,
   Check,
+  Scissors,
 } from "lucide-react";
 
 type Props = {
@@ -611,6 +613,11 @@ function AnalysisResults({ analysis }: { analysis: BasketAnalysis }) {
         </Card>
       )}
 
+      {/* Split strategy */}
+      {analysis.splitStrategy && (
+        <SplitStrategyCard strategy={analysis.splitStrategy} />
+      )}
+
       {/* Merchant list */}
       {analysis.merchants.map((merchant, idx) => (
         <MerchantCard
@@ -622,6 +629,78 @@ function AnalysisResults({ analysis }: { analysis: BasketAnalysis }) {
         />
       ))}
     </div>
+  );
+}
+
+function SplitStrategyCard({ strategy }: { strategy: SplitStrategy }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card className="border-green-500/40 bg-green-500/5">
+      <CardContent className="py-3 space-y-2">
+        <button
+          className="w-full flex items-center gap-3 text-left"
+          onClick={() => setExpanded(!expanded)}
+        >
+          <Scissors className="h-5 w-5 text-green-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm">
+              Split across {strategy.storeCount} stores
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Save {formatCurrency(strategy.savings)} vs single store
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="font-bold text-lg tabular-nums">
+              {formatCurrency(strategy.splitTotal)}
+            </span>
+            {expanded ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
+        </button>
+
+        {expanded && (
+          <div className="space-y-3 pt-1">
+            {strategy.assignments.map((assignment) => (
+              <div key={assignment.merchant} className="pl-8">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium">{assignment.merchant}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {formatCurrency(assignment.storeTotal)}
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  {assignment.items.map((item) => (
+                    <div
+                      key={item.itemName}
+                      className="flex items-center justify-between text-xs text-muted-foreground"
+                    >
+                      <span className="truncate">
+                        {item.itemName}
+                        {item.quantity > 1 ? ` x${item.quantity}` : ""}
+                      </span>
+                      <span className="tabular-nums shrink-0 ml-2">
+                        {formatCurrency(item.totalPrice)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {strategy.unavailableItems.length > 0 && (
+              <div className="pl-8 text-xs text-muted-foreground flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                No data: {strategy.unavailableItems.join(", ")}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

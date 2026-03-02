@@ -271,8 +271,23 @@ export type BasketItemResult = {
   purchaseCount: number;
 };
 
+export type SplitStoreAssignment = {
+  merchant: string;
+  items: { itemName: string; quantity: number; totalPrice: number }[];
+  storeTotal: number;
+};
+
+export type SplitStrategy = {
+  assignments: SplitStoreAssignment[];
+  splitTotal: number;
+  savings: number; // vs cheapest single store
+  storeCount: number;
+  unavailableItems: string[]; // items with no data at any merchant
+};
+
 export type BasketAnalysis = {
   merchants: BasketMerchantResult[];
   cheapestMerchant: string | null;
   cheapestTotal: number | null;
+  splitStrategy: SplitStrategy | null;
 };

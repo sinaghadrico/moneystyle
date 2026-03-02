@@ -21,7 +21,6 @@ import {
   ArrowLeftRight,
   Palette,
   Send,
-  MessageSquare,
   Database,
   Download,
   Loader2,
@@ -37,6 +36,7 @@ import {
 } from "@/actions/settings";
 import { getAccountsList } from "@/actions/transactions";
 import { useAppSettings } from "@/components/settings/settings-provider";
+import { SmsPatternsSection } from "@/components/settings/sms-patterns-section";
 
 type Settings = {
   currency: string;
@@ -394,32 +394,8 @@ export function SettingsContent() {
           </CardContent>
         </Card>
 
-        {/* SMS */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <MessageSquare className="h-4 w-4" />
-              SMS Integration
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="smsApiKey">API Key</Label>
-              <Input
-                id="smsApiKey"
-                type="password"
-                value={settings.smsApiKey ?? ""}
-                onChange={(e) =>
-                  update({ smsApiKey: e.target.value || null })
-                }
-                placeholder="Bearer token for SMS endpoint"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Used to authenticate POST requests to /api/sms
-            </p>
-          </CardContent>
-        </Card>
+        {/* SMS Patterns */}
+        <SmsPatternsSection />
 
         {/* Data Management */}
         <Card>

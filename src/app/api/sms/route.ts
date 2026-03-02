@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { parseMashreqSMS } from "@/lib/sms-parser";
+import { parseSMSWithPatterns } from "@/lib/sms-parser";
 import { getDefaultAccount, sendTelegramMessage } from "@/lib/telegram";
 import { checkBudgetAlert } from "@/actions/budgets";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing 'text' field" }, { status: 400 });
   }
 
-  const parsed = parseMashreqSMS(smsText);
+  const dbPatterns = await prisma.smsPattern.findMany({
+    where: { enabled: true },
+    orderBy: { priority: "asc" },
+  });
+  const parsed = parseSMSWithPatterns(smsText, dbPatterns);
   if (!parsed) {
     return NextResponse.json({ error: "Could not parse SMS", raw: smsText }, { status: 422 });
   }

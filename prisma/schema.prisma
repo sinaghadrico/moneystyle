@@ -170,6 +170,23 @@ model TransactionSplit {
   @@map("transaction_splits")
 }
 
+model SmsPattern {
+  id                   String   @id @default(cuid())
+  name                 String   @unique
+  regex                String
+  type                 String   // "income" | "expense" | "auto"
+  priority             Int      @default(50)
+  amountCaptureGroup   Int      @default(1)
+  merchantCaptureGroup Int?
+  enabled              Boolean  @default(true)
+  creditKeywords       String?  // comma-separated, for type="auto"
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([priority])
+  @@map("sms_patterns")
+}
+
 model AppSettings {
   id                     String   @id @default("default")
   currency               String   @default("AED")

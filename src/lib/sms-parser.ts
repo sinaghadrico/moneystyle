@@ -1,3 +1,14 @@
+export interface SmsPatternRow {
+  id: string;
+  regex: string;
+  type: string; // "income" | "expense" | "auto"
+  priority: number;
+  amountCaptureGroup: number;
+  merchantCaptureGroup: number | null;
+  enabled: boolean;
+  creditKeywords: string | null;
+}
+
 export interface ParsedSMS {
   amount: number;
   type: "income" | "expense";
@@ -125,4 +136,67 @@ export function parseMashreqSMS(text: string): ParsedSMS | null {
   }
 
   return null;
+}
+
+/**
+ * Parse SMS using configurable DB patterns.
+ * Falls back to hardcoded parseMashreqSMS if no patterns match.
+ */
+export function parseSMSWithPatterns(
+  text: string,
+  patterns: SmsPatternRow[],
+): ParsedSMS | null {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+
+  for (const pattern of patterns) {
+    if (!pattern.enabled) continue;
+
+    let re: RegExp;
+    try {
+      re = new RegExp(pattern.regex, "i");
+    } catch {
+      continue; // skip invalid regex
+    }
+
+    const match = cleaned.match(re);
+    if (!match) continue;
+
+    const amountStr = match[pattern.amountCaptureGroup];
+    if (!amountStr) continue;
+
+    const amount = parseFloat(amountStr.replace(/,/g, ""));
+    if (isNaN(amount) || amount <= 0) continue;
+
+    // Determine type
+    let type: "income" | "expense";
+    if (pattern.type === "auto") {
+      const keywords = (pattern.creditKeywords ?? "")
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean);
+      const isCredit = keywords.some((kw) =>
+        cleaned.toLowerCase().includes(kw.toLowerCase()),
+      );
+      type = isCredit ? "income" : "expense";
+    } else {
+      type = pattern.type as "income" | "expense";
+    }
+
+    // Extract merchant
+    const merchant =
+      pattern.merchantCaptureGroup && match[pattern.merchantCaptureGroup]
+        ? match[pattern.merchantCaptureGroup].trim()
+        : undefined;
+
+    return {
+      amount,
+      type,
+      merchant,
+      description: cleaned.slice(0, 80),
+      date: new Date(),
+    };
+  }
+
+  // Fallback to hardcoded parser
+  return parseMashreqSMS(text);
 }

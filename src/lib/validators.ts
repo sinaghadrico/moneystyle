@@ -104,6 +104,22 @@ export const settlementCreateSchema = z.object({
 
 export type SettlementCreateInput = z.infer<typeof settlementCreateSchema>;
 
+export const smsPatternCreateSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  regex: z.string().min(1, "Regex is required"),
+  type: z.enum(["income", "expense", "auto"]),
+  priority: z.coerce.number().int().min(0).max(100).default(50),
+  amountCaptureGroup: z.coerce.number().int().min(1).default(1),
+  merchantCaptureGroup: z.coerce.number().int().min(1).nullable().optional(),
+  enabled: z.boolean().default(true),
+  creditKeywords: z.string().nullable().optional(),
+});
+
+export const smsPatternUpdateSchema = smsPatternCreateSchema.partial();
+
+export type SmsPatternCreateInput = z.infer<typeof smsPatternCreateSchema>;
+export type SmsPatternUpdateInput = z.infer<typeof smsPatternUpdateSchema>;
+
 export const settingsUpdateSchema = z.object({
   currency: z.string().min(1).max(5).optional(),
   defaultPageSize: z.coerce.number().int().min(5).max(100).optional(),

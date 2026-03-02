@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -21,6 +21,7 @@ import {
   removeItemFromList,
   updateItemQuantity,
   analyzeBasket,
+  searchItemNames,
 } from "@/actions/shopping-basket";
 import type {
   ShoppingListData,
@@ -38,6 +39,10 @@ import {
   AlertTriangle,
   Store,
   Minus as MinusIcon,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check,
 } from "lucide-react";
 
 type Props = {
@@ -80,7 +85,6 @@ export function ShoppingBasketDialog({ open, onOpenChange }: Props) {
     }
     setNewListName("");
     await loadLists();
-    // Open the newly created list
     const detail = await getShoppingListDetail(result.id);
     if (detail) setActiveList(detail);
   }
@@ -229,7 +233,6 @@ function ListsView({
 }) {
   return (
     <div className="space-y-3">
-      {/* Create new */}
       <div className="flex gap-2">
         <Input
           placeholder="New list name..."
@@ -290,6 +293,120 @@ function ListsView({
 }
 
 // ---------------------------------------------------------------------------
+// Autocomplete Input
+// ---------------------------------------------------------------------------
+
+function AutocompleteInput({
+  value,
+  onChange,
+  onSubmit,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+}) {
+  const [suggestions, setSuggestions] = useState<{ name: string; count: number }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const fetchSuggestions = useCallback(async (query: string) => {
+    if (query.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const results = await searchItemNames(query);
+    setSuggestions(results);
+    setShowSuggestions(results.length > 0);
+    setActiveIndex(-1);
+  }, []);
+
+  // Debounce
+  useEffect(() => {
+    const t = setTimeout(() => fetchSuggestions(value), 200);
+    return () => clearTimeout(t);
+  }, [value, fetchSuggestions]);
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function selectSuggestion(name: string) {
+    onChange(name);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    inputRef.current?.focus();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === "Enter") onSubmit();
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeIndex >= 0) {
+        selectSuggestion(suggestions[activeIndex].name);
+      } else {
+        setShowSuggestions(false);
+        onSubmit();
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  }
+
+  return (
+    <div ref={wrapperRef} className="relative flex-1">
+      <Input
+        ref={inputRef}
+        placeholder="Item name..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+      />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-popover border rounded-md shadow-md overflow-hidden">
+          {suggestions.map((s, i) => (
+            <button
+              key={s.name}
+              className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-muted/50 ${
+                i === activeIndex ? "bg-muted" : ""
+              }`}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                selectSuggestion(s.name);
+              }}
+            >
+              <span className="truncate">{s.name}</span>
+              <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                {s.count}x
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Detail View
 // ---------------------------------------------------------------------------
 
@@ -318,16 +435,38 @@ function DetailView({
   onQuantityChange: (id: string, delta: number) => void;
   onCompare: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopyAsText() {
+    const lines: string[] = [];
+    lines.push(`\u{1F6D2} ${list.name}`);
+    lines.push("");
+    for (const item of list.items) {
+      const qty = item.quantity > 1 ? ` x${item.quantity}` : "";
+      lines.push(`\u25A1 ${item.itemName}${qty}`);
+    }
+
+    if (analysis?.cheapestMerchant && analysis.cheapestTotal != null) {
+      lines.push("");
+      lines.push(
+        `\u{1F4A1} Best at: ${analysis.cheapestMerchant} (~${formatCurrency(analysis.cheapestTotal)})`,
+      );
+    }
+
+    navigator.clipboard.writeText(lines.join("\n"));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.success("Copied to clipboard");
+  }
+
   return (
     <div className="space-y-4">
-      {/* Add item */}
+      {/* Add item with autocomplete */}
       <div className="flex gap-2">
-        <Input
-          placeholder="Item name..."
-          className="flex-1"
+        <AutocompleteInput
           value={newItemName}
-          onChange={(e) => onNewItemNameChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onAddItem()}
+          onChange={onNewItemNameChange}
+          onSubmit={onAddItem}
         />
         <Input
           type="number"
@@ -345,7 +484,7 @@ function DetailView({
       {/* Items list */}
       {list.items.length === 0 ? (
         <div className="py-6 text-center text-muted-foreground text-sm">
-          Add items to your list above
+          Start typing to search from your purchase history
         </div>
       ) : (
         <div className="space-y-1">
@@ -390,20 +529,44 @@ function DetailView({
         </div>
       )}
 
-      {/* Compare button */}
+      {/* Action buttons */}
       {list.items.length > 0 && (
-        <Button
-          className="w-full"
-          onClick={onCompare}
-          disabled={analyzing}
-        >
-          <Store className="h-4 w-4 mr-2" />
-          {analyzing ? "Comparing..." : "Compare Stores"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="flex-1"
+            onClick={onCompare}
+            disabled={analyzing}
+          >
+            <Store className="h-4 w-4 mr-2" />
+            {analyzing ? "Comparing..." : "Compare Stores"}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleCopyAsText}
+            title="Copy as text"
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Loading skeleton during analysis */}
+      {analyzing && (
+        <div className="space-y-3">
+          <div className="h-16 animate-pulse rounded-lg bg-yellow-500/10 border border-yellow-500/20" />
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-14 animate-pulse rounded-lg bg-muted/50" />
+          ))}
+        </div>
       )}
 
       {/* Analysis results */}
-      {analysis && <AnalysisResults analysis={analysis} />}
+      {!analyzing && analysis && <AnalysisResults analysis={analysis} />}
     </div>
   );
 }
@@ -420,7 +583,7 @@ function AnalysisResults({ analysis }: { analysis: BasketAnalysis }) {
           <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
           No purchase history found for these items.
           <br />
-          Add line items to your transactions first.
+          Add line items to your transactions to enable price comparison.
         </CardContent>
       </Card>
     );
@@ -455,6 +618,7 @@ function AnalysisResults({ analysis }: { analysis: BasketAnalysis }) {
           merchant={merchant}
           rank={idx + 1}
           isCheapest={merchant.merchant === analysis.cheapestMerchant}
+          defaultExpanded={idx === 0}
         />
       ))}
     </div>
@@ -465,18 +629,18 @@ function MerchantCard({
   merchant,
   rank,
   isCheapest,
+  defaultExpanded,
 }: {
   merchant: BasketAnalysis["merchants"][number];
   rank: number;
   isCheapest: boolean;
+  defaultExpanded: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const totalItems = merchant.availableCount + merchant.unavailableCount;
 
   return (
-    <Card
-      className={isCheapest ? "border-primary/30" : ""}
-    >
+    <Card className={isCheapest ? "border-primary/30" : ""}>
       <CardContent className="py-3 space-y-2">
         {/* Header */}
         <button
@@ -497,9 +661,16 @@ function MerchantCard({
               {merchant.availableCount}/{totalItems}
             </Badge>
           </div>
-          <span className="font-bold tabular-nums text-sm shrink-0 ml-2">
-            {formatCurrency(merchant.availableTotal)}
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            <span className="font-bold tabular-nums text-sm">
+              {formatCurrency(merchant.availableTotal)}
+            </span>
+            {expanded ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
         </button>
 
         {/* Expanded items */}
@@ -511,9 +682,9 @@ function MerchantCard({
                 className="flex items-center justify-between"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  {item.avgPrice === null ? (
+                  {item.avgPrice === null && (
                     <AlertTriangle className="h-3 w-3 text-yellow-500 shrink-0" />
-                  ) : null}
+                  )}
                   <span
                     className={`truncate ${item.avgPrice === null ? "text-muted-foreground" : ""}`}
                   >

@@ -156,6 +156,30 @@ export async function updateItemQuantity(
 }
 
 // ---------------------------------------------------------------------------
+// Autocomplete — search item names from purchase history
+// ---------------------------------------------------------------------------
+
+export async function searchItemNames(
+  query: string,
+): Promise<{ name: string; count: number }[]> {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+
+  const items = await prisma.transactionItem.groupBy({
+    by: ["name"],
+    _count: { name: true },
+    orderBy: { _count: { name: "desc" } },
+  });
+
+  const matches = items
+    .filter((i) => i.name.toLowerCase().includes(q))
+    .slice(0, 8)
+    .map((i) => ({ name: i.name, count: i._count.name }));
+
+  return matches;
+}
+
+// ---------------------------------------------------------------------------
 // Analyze Basket
 // ---------------------------------------------------------------------------
 

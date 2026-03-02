@@ -5,10 +5,13 @@ import { getDefaultAccount, sendTelegramMessage } from "@/lib/telegram";
 import { checkBudgetAlert } from "@/actions/budgets";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { resolveCategory } from "@/lib/auto-categorize";
+import { getSettings } from "@/actions/settings";
 
 export async function POST(request: NextRequest) {
-  // Authenticate with API key
-  const apiKey = process.env.SMS_API_KEY;
+  const settings = await getSettings();
+
+  // Authenticate with API key (DB settings first, env fallback)
+  const apiKey = settings.smsApiKey || process.env.SMS_API_KEY;
   if (apiKey) {
     const auth = request.headers.get("authorization");
     if (auth !== `Bearer ${apiKey}`) {
@@ -57,8 +60,9 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  // Send Telegram notification
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  // Send Telegram notification (DB settings first, env fallback)
+  const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+  const botToken = settings.telegramBotToken || undefined;
   if (chatId) {
     const typeIcon = parsed.type === "income" ? "💰" : "💳";
     const merchantLabel = parsed.merchant ? ` at ${parsed.merchant}` : "";
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
     );
     if (anomalyWarning) msg += anomalyWarning;
 
-    await sendTelegramMessage(chatId, msg);
+    await sendTelegramMessage(chatId, msg, undefined, botToken);
   }
 
   return NextResponse.json({

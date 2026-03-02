@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateMonthlyReport, sendTelegramMessage } from "@/lib/telegram";
+import { getSettings } from "@/actions/settings";
 
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -10,7 +11,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const settings = await getSettings();
+  const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+  const botToken = settings.telegramBotToken || undefined;
+
   if (!chatId) {
     return NextResponse.json(
       { error: "TELEGRAM_CHAT_ID not configured" },
@@ -25,7 +29,7 @@ export async function GET(request: NextRequest) {
     const monthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
 
     const report = await generateMonthlyReport(monthStr);
-    await sendTelegramMessage(chatId, report);
+    await sendTelegramMessage(chatId, report, undefined, botToken);
 
     return NextResponse.json({ ok: true, month: monthStr });
   } catch (err) {

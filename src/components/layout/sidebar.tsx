@@ -10,6 +10,7 @@ import {
   Landmark,
   Users,
   Merge,
+  Settings,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/persons", label: "Persons", icon: Users },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/merge-suggestions", label: "Merge Duplicates", icon: Merge },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 function NavLinks({ onClick }: { onClick?: () => void }) {

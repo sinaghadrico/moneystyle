@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
+import { SettingsProvider } from "@/components/settings/settings-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <SettingsProvider>
           <div className="flex h-screen overflow-hidden">
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden">
@@ -61,6 +63,7 @@ export default function RootLayout({
           </div>
           <BottomNav />
           <Toaster />
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

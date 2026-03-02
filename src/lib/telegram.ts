@@ -112,6 +112,13 @@ export async function getDefaultAccount(): Promise<{
   id: string;
   name: string;
 } | null> {
+  // Check DB settings first
+  const settings = await prisma.appSettings.findFirst({ where: { id: "default" } });
+  if (settings?.defaultAccountId) {
+    const acc = await prisma.account.findUnique({ where: { id: settings.defaultAccountId } });
+    if (acc) return { id: acc.id, name: acc.name };
+  }
+
   const account = await prisma.account.findFirst({
     where: { name: DEFAULT_ACCOUNT_NAME },
   });
@@ -765,8 +772,9 @@ export async function sendTelegramMessage(
   chatId: number | string,
   text: string,
   parseMode?: "HTML" | "Markdown",
+  botToken?: string,
 ): Promise<void> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     console.error("TELEGRAM_BOT_TOKEN not set");
     return;

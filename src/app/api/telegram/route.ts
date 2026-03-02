@@ -24,10 +24,13 @@ import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { resolveCategory } from "@/lib/auto-categorize";
 import { getOrCreatePerson } from "@/actions/persons";
 import { splitTransaction } from "@/actions/transactions";
+import { getSettings } from "@/actions/settings";
 
 export async function POST(request: NextRequest) {
-  // Validate webhook secret
-  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const settings = await getSettings();
+
+  // Validate webhook secret (DB settings first, env fallback)
+  const secret = settings.telegramWebhookSecret || process.env.TELEGRAM_WEBHOOK_SECRET;
   if (secret) {
     const headerSecret = request.headers.get(
       "x-telegram-bot-api-secret-token"
@@ -55,10 +58,14 @@ export async function POST(request: NextRequest) {
 
   const chatId = (message.chat as Record<string, unknown>)?.id as number;
   const text = message.text as string;
+  const botToken = settings.telegramBotToken || undefined;
+
+  // Wrapper that passes DB bot token to all replies
+  const reply = (msg: string) => sendTelegramMessage(chatId, msg, undefined, botToken);
 
   // /help or /start
   if (/^\/?(help|start|راهنما)$/i.test(text.trim())) {
-    await sendTelegramMessage(chatId, generateHelp());
+    await reply(generateHelp());
     return NextResponse.json({ ok: true });
   }
 
@@ -66,10 +73,10 @@ export async function POST(request: NextRequest) {
   if (/^\/?savings$/i.test(text.trim())) {
     try {
       const report = await generateSavingsReport();
-      await sendTelegramMessage(chatId, report);
+      await reply(report);
     } catch (err) {
       console.error("Telegram savings error:", err);
-      await sendTelegramMessage(chatId, "Failed to load savings goals.");
+      await reply("Failed to load savings goals.");
     }
     return NextResponse.json({ ok: true });
   }
@@ -78,10 +85,10 @@ export async function POST(request: NextRequest) {
   if (/^\/?report$/i.test(text.trim())) {
     try {
       const report = await generateMonthlyReport();
-      await sendTelegramMessage(chatId, report);
+      await reply(report);
     } catch (err) {
       console.error("Telegram report error:", err);
-      await sendTelegramMessage(chatId, "Failed to generate report.");
+      await reply("Failed to generate report.");
     }
     return NextResponse.json({ ok: true });
   }
@@ -90,10 +97,10 @@ export async function POST(request: NextRequest) {
   if (/^\/?debts$/i.test(text.trim())) {
     try {
       const report = await generateDebtsReport();
-      await sendTelegramMessage(chatId, report);
+      await reply(report);
     } catch (err) {
       console.error("Telegram debts error:", err);
-      await sendTelegramMessage(chatId, "Failed to load debts.");
+      await reply("Failed to load debts.");
     }
     return NextResponse.json({ ok: true });
   }
@@ -104,7 +111,7 @@ export async function POST(request: NextRequest) {
     try {
       const person = await getOrCreatePerson(settleCmd.personName);
       if (!person) {
-        await sendTelegramMessage(chatId, "Could not resolve person name.");
+        await reply("Could not resolve person name.");
         return NextResponse.json({ ok: true });
       }
       await prisma.settlement.create({
@@ -114,13 +121,12 @@ export async function POST(request: NextRequest) {
           source: "telegram",
         },
       });
-      await sendTelegramMessage(
-        chatId,
+      await reply(
         `✅ Settled ${settleCmd.amount} AED with ${person.name}`,
       );
     } catch (err) {
       console.error("Telegram settle error:", err);
-      await sendTelegramMessage(chatId, "Failed to record settlement.");
+      await reply("Failed to record settlement.");
     }
     return NextResponse.json({ ok: true });
   }
@@ -130,10 +136,10 @@ export async function POST(request: NextRequest) {
   if (statsCmd) {
     try {
       const report = await generateStats(statsCmd.month);
-      await sendTelegramMessage(chatId, report);
+      await reply(report);
     } catch (err) {
       console.error("Telegram stats error:", err);
-      await sendTelegramMessage(chatId, "Failed to generate stats.");
+      await reply("Failed to generate stats.");
     }
     return NextResponse.json({ ok: true });
   }
@@ -162,10 +168,10 @@ export async function POST(request: NextRequest) {
       if (lines.length === 0) {
         lines.push("Nothing to delete.");
       }
-      await sendTelegramMessage(chatId, lines.join("\n"));
+      await reply(lines.join("\n"));
     } catch (err) {
       console.error("Telegram delete error:", err);
-      await sendTelegramMessage(chatId, "Failed to delete.");
+      await reply("Failed to delete.");
     }
     return NextResponse.json({ ok: true });
   }
@@ -174,8 +180,7 @@ export async function POST(request: NextRequest) {
   if (!parsed) {
     // If it looks like a /command, reply with hint
     if (isUnknownCommand(text)) {
-      await sendTelegramMessage(
-        chatId,
+      await reply(
         "Unknown command. Send /help to see available commands.",
       );
     }
@@ -193,7 +198,7 @@ export async function POST(request: NextRequest) {
       account = await getDefaultAccount();
     }
     if (!account) {
-      await sendTelegramMessage(chatId, "No accounts found in the database.");
+      await reply("No accounts found in the database.");
       return NextResponse.json({ ok: true });
     }
 
@@ -279,11 +284,11 @@ export async function POST(request: NextRequest) {
     );
     if (anomalyWarning) confirmation += anomalyWarning;
 
-    await sendTelegramMessage(chatId, confirmation);
+    await reply(confirmation);
   } catch (err) {
     console.error("Telegram webhook error:", err);
     if (chatId) {
-      await sendTelegramMessage(chatId, "Failed to save transaction.");
+      await reply("Failed to save transaction.");
     }
   }
 

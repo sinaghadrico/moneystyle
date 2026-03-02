@@ -169,3 +169,22 @@ model TransactionSplit {
   @@index([personId])
   @@map("transaction_splits")
 }
+
+model AppSettings {
+  id                     String   @id @default("default")
+  currency               String   @default("AED")
+  defaultPageSize        Int      @default(20)
+  defaultAccountId       String?
+  defaultTransactionType String   @default("expense")
+  defaultDashboardPeriod String   @default("3m")
+  autoCategorize         Boolean  @default(true)
+  telegramEnabled        Boolean  @default(false)
+  telegramBotToken       String?
+  telegramWebhookSecret  String?
+  telegramChatId         String?
+  smsApiKey              String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("app_settings")
+}

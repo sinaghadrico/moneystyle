@@ -48,6 +48,7 @@ import type { Category, Account, Person } from "@prisma/client";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { useAppSettings } from "@/components/settings/settings-provider";
 import {
   ChevronLeft,
   ChevronRight,
@@ -117,6 +118,7 @@ function buildUrl(params: Record<string, string | number>) {
 export function TransactionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { settings } = useAppSettings();
 
   // Read initial state from URL
   const urlPage = Number(searchParams.get("page")) || 1;
@@ -220,6 +222,7 @@ export function TransactionsContent() {
       amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
       source: filters.source || undefined,
       page,
+      pageSize: settings.defaultPageSize,
       sortBy,
       sortOrder,
     });
@@ -231,6 +234,7 @@ export function TransactionsContent() {
     filters.categoryId,
     filters.accountId,
     filters.type,
+    settings.defaultPageSize,
     debouncedMerchant,
     debouncedSearch,
     filters.amountMin,

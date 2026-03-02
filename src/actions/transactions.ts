@@ -15,6 +15,7 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { getSettings } from "@/actions/settings";
 
 export async function getTransactions(
   filters: TransactionFilters = {},
@@ -160,7 +161,9 @@ export async function createTransaction(
 
   // Check anomaly and send Telegram alert for web-created transactions
   if (values.type === "expense" && values.amount && values.amount > 0) {
-    const chatId = process.env.TELEGRAM_CHAT_ID;
+    const settings = await getSettings();
+    const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+    const botToken = settings.telegramBotToken || undefined;
     if (chatId) {
       const warning = await checkTransactionAnomaly(
         values.amount,
@@ -172,6 +175,8 @@ export async function createTransaction(
         await sendTelegramMessage(
           chatId,
           `🔍 Web transaction alert: ${values.amount} AED${merchant}${warning}`,
+          undefined,
+          botToken,
         );
       }
     }

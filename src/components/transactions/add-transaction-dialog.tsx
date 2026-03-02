@@ -23,6 +23,7 @@ import { createTransaction } from "@/actions/transactions";
 import type { Category, Account } from "@prisma/client";
 import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
+import { useAppSettings } from "@/components/settings/settings-provider";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -48,14 +49,19 @@ export function AddTransactionDialog({
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }) {
+  const { settings } = useAppSettings();
   const [saving, setSaving] = useState(false);
+  const defaultAccId = settings.defaultAccountId
+    && accounts.some((a) => a.id === settings.defaultAccountId)
+    ? settings.defaultAccountId
+    : accounts[0]?.id ?? "";
   const [form, setForm] = useState({
     date: todayStr(),
     time: nowTimeStr(),
     amount: "",
-    type: "expense",
+    type: settings.defaultTransactionType || "expense",
     categoryId: "",
-    accountId: accounts[0]?.id ?? "",
+    accountId: defaultAccId,
     merchant: "",
     description: "",
     tagIds: [] as string[],

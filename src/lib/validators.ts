@@ -103,3 +103,18 @@ export const settlementCreateSchema = z.object({
 });
 
 export type SettlementCreateInput = z.infer<typeof settlementCreateSchema>;
+
+export const settingsUpdateSchema = z.object({
+  currency: z.string().min(1).max(5).optional(),
+  defaultPageSize: z.coerce.number().int().min(5).max(100).optional(),
+  defaultAccountId: z.string().nullable().optional(),
+  defaultTransactionType: z.enum(["income", "expense", "transfer", "other"]).optional(),
+  defaultDashboardPeriod: z.enum(["all", "3m", "6m", "1y"]).optional(),
+  autoCategorize: z.boolean().optional(),
+  telegramEnabled: z.boolean().optional(),
+  telegramBotToken: z.string().nullable().optional(),
+  telegramWebhookSecret: z.string().nullable().optional(),
+  telegramChatId: z.string().nullable().optional(),
+  smsApiKey: z.string().nullable().optional(),
+});
+export type SettingsUpdateInput = z.infer<typeof settingsUpdateSchema>;

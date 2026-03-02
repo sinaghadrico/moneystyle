@@ -50,9 +50,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAppSettings } from "@/components/settings/settings-provider";
 
 export function DashboardContent() {
-  const [period, setPeriod] = useState<PeriodFilter>("all");
+  const { settings } = useAppSettings();
+  const [period, setPeriod] = useState<PeriodFilter>(settings.defaultDashboardPeriod as PeriodFilter);
   const [accountId, setAccountId] = useState<string>("");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -100,6 +102,17 @@ export function DashboardContent() {
     setDailySpend(ds);
     setLoading(false);
   }, []);
+
+  // Sync period with settings when they load from DB
+  useEffect(() => {
+    const p = settings.defaultDashboardPeriod as PeriodFilter;
+    if (p && p !== period) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPeriod(p);
+    }
+  // Only run when settings change, not when period changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.defaultDashboardPeriod]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

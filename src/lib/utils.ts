@@ -6,10 +6,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number): string {
+let _currencyOverride: string | null = null;
+
+export function setCurrencyOverride(currency: string) {
+  _currencyOverride = currency;
+}
+
+export function formatCurrency(amount: number, currency?: string): string {
+  const cur = currency || _currencyOverride || CURRENCY;
   return new Intl.NumberFormat("en-AE", {
     style: "currency",
-    currency: CURRENCY,
+    currency: cur,
     minimumFractionDigits: 2,
   }).format(amount);
 }

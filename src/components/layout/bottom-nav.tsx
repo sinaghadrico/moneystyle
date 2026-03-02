@@ -10,6 +10,7 @@ import {
   Users,
   Tags,
   Merge,
+  Settings,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/persons", label: "Persons", icon: Users },
   { href: "/categories", label: "Categories", icon: Tags },
   { href: "/merge-suggestions", label: "Merge", icon: Merge },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function BottomNav() {
@@ -29,7 +31,7 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-50 border-t bg-card md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="grid grid-cols-6">
+      <div className="grid grid-cols-7">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive =

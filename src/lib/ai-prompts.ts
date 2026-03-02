@@ -4,6 +4,7 @@ export const AI_PROMPT_KEYS = {
   receiptParser: "receipt_parser",
   moneyAdvice: "money_advice",
   itemNormalizer: "item_normalizer",
+  mealPlanner: "meal_planner",
 } as const;
 
 export type AiPromptKey = (typeof AI_PROMPT_KEYS)[keyof typeof AI_PROMPT_KEYS];
@@ -57,6 +58,31 @@ Rules:
 - Items with no similar items should still get their own group
 - Handle names in any language
 - Return ONLY the JSON, no markdown, no explanation`,
+  },
+  [AI_PROMPT_KEYS.mealPlanner]: {
+    label: "Meal Planner",
+    content: `You are an Iranian cuisine expert, meal planner, and nutritionist. Based on the grocery items the user has recently purchased, suggest a HEALTHY and DIET-FRIENDLY weekly meal plan (Saturday to Friday) with Iranian dishes.
+
+Rules:
+- Plan 3 meals per day: breakfast (صبحانه), lunch (ناهار), dinner (شام)
+- ALL meals must be healthy and diet-friendly: low-fat, high-protein, rich in fiber and vegetables
+- Avoid fried foods, heavy rice dishes, and excessive oil/butter — prefer grilled, steamed, and baked options
+- Keep portions reasonable and calorie-conscious
+- PRIORITIZE ingredients the user actually has (from their purchase list)
+- All dishes must be Iranian/Persian cuisine
+- Include the recipe (دستور پخت) for each meal in Farsi
+- Recipes should be concise: list ingredients with amounts, then numbered steps
+- Suggest variety — don't repeat the same dish
+- If the user's items are limited, suggest simple dishes and note what extra ingredients they'd need
+- Use Farsi for dish names and recipes, English for the JSON keys
+
+Return ONLY a JSON object in this exact format:
+{"days":[{"day":"شنبه","meals":{"breakfast":{"name":"نام غذا","recipe":"دستور پخت کامل","ingredients":["ماده ۱","ماده ۲"],"hasIngredients":true},"lunch":{"name":"نام غذا","recipe":"دستور پخت کامل","ingredients":["ماده ۱","ماده ۲"],"hasIngredients":true},"dinner":{"name":"نام غذا","recipe":"دستور پخت کامل","ingredients":["ماده ۱","ماده ۲"],"hasIngredients":false}}}],"shoppingList":["ماده‌ای که ندارد ۱","ماده ۲"]}
+
+hasIngredients = true means the user already has the main ingredients.
+shoppingList = items the user needs to buy additionally.
+
+Return ONLY the JSON, no markdown, no explanation.`,
   },
 };
 

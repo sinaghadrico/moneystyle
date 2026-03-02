@@ -13,6 +13,7 @@ import {
   Settings,
   TrendingUp,
   UserCircle,
+  ChefHat,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/price-analysis", label: "Price Analysis", icon: TrendingUp },
+  { href: "/meal-planner", label: "Meal Planner", icon: ChefHat },
   { href: "/accounts", label: "Accounts", icon: Landmark },
   { href: "/persons", label: "Persons", icon: Users },
   { href: "/categories", label: "Categories", icon: Tags },

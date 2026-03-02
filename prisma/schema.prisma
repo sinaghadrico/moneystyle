@@ -337,6 +337,15 @@ model BillPayment {
   @@map("bill_payments")
 }
 
+model MealPlan {
+  id        String   @id @default(cuid())
+  weekLabel String
+  plan      Json
+  createdAt DateTime @default(now())
+
+  @@map("meal_plans")
+}
+
 model AiPrompt {
   id        String   @id @default(cuid())
   key       String   @unique

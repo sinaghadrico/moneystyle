@@ -33,17 +33,31 @@ const currencyFormatter = (value: number | undefined) =>
   `AED ${(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 const tooltipStyle = {
-  backgroundColor: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
+  backgroundColor: "var(--card)",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
   padding: "10px 14px",
   fontSize: "13px",
+  color: "var(--foreground)",
+  fill: "var(--foreground)",
+};
+
+const tooltipLabelStyle = {
+  color: "var(--foreground)",
+  fill: "var(--foreground)",
+};
+
+const legendStyle = {
+  fontSize: 12,
+  paddingTop: 12,
+  color: "var(--muted-foreground)",
+  fill: "var(--muted-foreground)",
 };
 
 const axisStyle = {
   fontSize: 11,
-  fill: "hsl(var(--muted-foreground))",
+  fill: "var(--muted-foreground)",
 };
 
 export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
@@ -55,7 +69,9 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Monthly Income vs Expense</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          Monthly Income vs Expense
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="h-[320px]">
@@ -71,13 +87,45 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
                   <stop offset="100%" stopColor="#ef4444" stopOpacity={0.6} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
-              <XAxis dataKey="label" tick={axisStyle} axisLine={false} tickLine={false} dy={8} />
-              <YAxis tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} dx={-4} />
-              <Tooltip formatter={currencyFormatter} contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }} />
-              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-              <Bar dataKey="income" fill="url(#incomeGrad)" radius={[6, 6, 0, 0]} name="Income" />
-              <Bar dataKey="expense" fill="url(#expenseGrad)" radius={[6, 6, 0, 0]} name="Expense" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="var(--border)"
+                opacity={0.5}
+              />
+              <XAxis
+                dataKey="label"
+                tick={axisStyle}
+                axisLine={false}
+                tickLine={false}
+                dy={8}
+              />
+              <YAxis
+                tickFormatter={currencyFormatter}
+                tick={axisStyle}
+                axisLine={false}
+                tickLine={false}
+                dx={-4}
+              />
+              <Tooltip
+                formatter={currencyFormatter}
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                cursor={{ fill: "var(--muted)", opacity: 0.3 }}
+              />
+              <Legend wrapperStyle={legendStyle} />
+              <Bar
+                dataKey="income"
+                fill="url(#incomeGrad)"
+                radius={[6, 6, 0, 0]}
+                name="Income"
+              />
+              <Bar
+                dataKey="expense"
+                fill="url(#expenseGrad)"
+                radius={[6, 6, 0, 0]}
+                name="Expense"
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -93,7 +141,9 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Expense by Category</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          Expense by Category
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="h-[320px] flex">
@@ -117,7 +167,9 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
                     <Cell
                       key={index}
                       fill={entry.color}
-                      opacity={activeIndex === null || activeIndex === index ? 1 : 0.4}
+                      opacity={
+                        activeIndex === null || activeIndex === index ? 1 : 0.4
+                      }
                       style={{ transition: "opacity 0.2s", cursor: "pointer" }}
                     />
                   ))}
@@ -125,12 +177,26 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
                 <Tooltip
                   formatter={currencyFormatter}
                   contentStyle={tooltipStyle}
+                  labelStyle={tooltipLabelStyle}
                 />
                 {/* Center label */}
-                <text x="50%" y="48%" textAnchor="middle" fill="hsl(var(--foreground))" fontSize={20} fontWeight={700}>
+                <text
+                  x="50%"
+                  y="48%"
+                  textAnchor="middle"
+                  fill="var(--foreground)"
+                  fontSize={20}
+                  fontWeight={700}
+                >
                   {currencyFormatter(total)}
                 </text>
-                <text x="50%" y="56%" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize={11}>
+                <text
+                  x="50%"
+                  y="56%"
+                  textAnchor="middle"
+                  fill="var(--muted-foreground)"
+                  fontSize={11}
+                >
                   Total
                 </text>
               </PieChart>
@@ -143,11 +209,22 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
                 className="flex items-center gap-2 text-xs"
                 onMouseEnter={() => setActiveIndex(i)}
                 onMouseLeave={() => setActiveIndex(null)}
-                style={{ opacity: activeIndex === null || activeIndex === i ? 1 : 0.4, transition: "opacity 0.2s", cursor: "pointer" }}
+                style={{
+                  opacity: activeIndex === null || activeIndex === i ? 1 : 0.4,
+                  transition: "opacity 0.2s",
+                  cursor: "pointer",
+                }}
               >
-                <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                <span className="truncate flex-1 text-muted-foreground">{entry.name}</span>
-                <span className="font-medium tabular-nums">{total > 0 ? ((entry.total / total) * 100).toFixed(0) : 0}%</span>
+                <div
+                  className="h-2.5 w-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="truncate flex-1 text-muted-foreground">
+                  {entry.name}
+                </span>
+                <span className="font-medium tabular-nums">
+                  {total > 0 ? ((entry.total / total) * 100).toFixed(0) : 0}%
+                </span>
               </div>
             ))}
           </div>
@@ -161,7 +238,9 @@ export function TopMerchantsChart({ data }: { data: MerchantTotal[] }) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Top 10 Merchants</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          Top 10 Merchants
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="h-[320px]">
@@ -173,8 +252,19 @@ export function TopMerchantsChart({ data }: { data: MerchantTotal[] }) {
                   <stop offset="100%" stopColor="#3b82f6" stopOpacity={1} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" opacity={0.5} />
-              <XAxis type="number" tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                horizontal={false}
+                stroke="var(--border)"
+                opacity={0.5}
+              />
+              <XAxis
+                type="number"
+                tickFormatter={currencyFormatter}
+                tick={axisStyle}
+                axisLine={false}
+                tickLine={false}
+              />
               <YAxis
                 type="category"
                 dataKey="merchant"
@@ -183,8 +273,17 @@ export function TopMerchantsChart({ data }: { data: MerchantTotal[] }) {
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip formatter={currencyFormatter} contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }} />
-              <Bar dataKey="total" fill="url(#merchantGrad)" radius={[0, 6, 6, 0]} />
+              <Tooltip
+                formatter={currencyFormatter}
+                contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                cursor={{ fill: "var(--muted)", opacity: 0.3 }}
+              />
+              <Bar
+                dataKey="total"
+                fill="url(#merchantGrad)"
+                radius={[0, 6, 6, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -201,7 +300,7 @@ export function MonthlyCategoryChart({
   categories: CategoryMeta[];
 }) {
   const [visible, setVisible] = useState<Set<string>>(
-    () => new Set(categories.map((c) => c.name))
+    () => new Set(categories.map((c) => c.name)),
   );
 
   const toggle = (name: string) => {
@@ -230,7 +329,9 @@ export function MonthlyCategoryChart({
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Monthly Expense by Category</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          Monthly Expense by Category
+        </CardTitle>
         <div className="flex flex-wrap gap-1.5 pt-2">
           <Badge
             variant={allSelected ? "default" : "outline"}
@@ -246,7 +347,11 @@ export function MonthlyCategoryChart({
               className="cursor-pointer select-none text-xs px-2.5 py-0.5 rounded-full transition-all"
               style={
                 visible.has(cat.name)
-                  ? { backgroundColor: cat.color, borderColor: cat.color, color: "#fff" }
+                  ? {
+                      backgroundColor: cat.color,
+                      borderColor: cat.color,
+                      color: "#fff",
+                    }
                   : { color: cat.color, borderColor: cat.color }
               }
               onClick={() => toggle(cat.name)}
@@ -260,15 +365,33 @@ export function MonthlyCategoryChart({
         <div className="h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barCategoryGap="15%">
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
-              <XAxis dataKey="label" tick={axisStyle} axisLine={false} tickLine={false} dy={8} />
-              <YAxis tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} dx={-4} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="var(--border)"
+                opacity={0.5}
+              />
+              <XAxis
+                dataKey="label"
+                tick={axisStyle}
+                axisLine={false}
+                tickLine={false}
+                dy={8}
+              />
+              <YAxis
+                tickFormatter={currencyFormatter}
+                tick={axisStyle}
+                axisLine={false}
+                tickLine={false}
+                dx={-4}
+              />
               <Tooltip
                 formatter={currencyFormatter}
                 contentStyle={tooltipStyle}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
+                labelStyle={tooltipLabelStyle}
+                cursor={{ fill: "var(--muted)", opacity: 0.3 }}
               />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 12 }} />
+              <Legend wrapperStyle={{ ...legendStyle, fontSize: 11 }} />
               {categories
                 .filter((cat) => visible.has(cat.name))
                 .map((cat) => (
@@ -314,15 +437,37 @@ export function MonthlyTrendChart({ data }: { data: MonthlyData[] }) {
                   <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
-              <XAxis dataKey="label" tick={axisStyle} axisLine={false} tickLine={false} dy={8} />
-              <YAxis tickFormatter={currencyFormatter} tick={axisStyle} axisLine={false} tickLine={false} dx={-4} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="var(--border)"
+                opacity={0.5}
+              />
+              <XAxis
+                dataKey="label"
+                tick={axisStyle}
+                axisLine={false}
+                tickLine={false}
+                dy={8}
+              />
+              <YAxis
+                tickFormatter={currencyFormatter}
+                tick={axisStyle}
+                axisLine={false}
+                tickLine={false}
+                dx={-4}
+              />
               <Tooltip
                 formatter={currencyFormatter}
                 contentStyle={tooltipStyle}
-                cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "4 4" }}
+                labelStyle={tooltipLabelStyle}
+                cursor={{
+                  stroke: "var(--muted-foreground)",
+                  strokeWidth: 1,
+                  strokeDasharray: "4 4",
+                }}
               />
-              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+              <Legend wrapperStyle={legendStyle} />
               <Area
                 type="monotone"
                 dataKey="income"

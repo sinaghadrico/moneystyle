@@ -7,6 +7,7 @@ import { IncomeSourcesSection } from "./income-sources-section";
 import { ReservesSection } from "./reserves-section";
 import { InstallmentsSection } from "./installments-section";
 import { BillsSection } from "./bills-section";
+import { PreferencesSection } from "./preferences-section";
 import { MoneyAdviceSection } from "./money-advice-section";
 import {
   getIncomeSources,
@@ -15,12 +16,14 @@ import {
   getBills,
   getFinancialOverview,
 } from "@/actions/profile";
+import { getUserPreferences } from "@/actions/weekend-planner";
 import type {
   IncomeSourceData,
   ReserveData,
   InstallmentData,
   BillData,
   FinancialOverview,
+  UserPreferenceData,
 } from "@/lib/types";
 
 export function ProfileContent() {
@@ -30,21 +33,28 @@ export function ProfileContent() {
   const [installments, setInstallments] = useState<InstallmentData[]>([]);
   const [bills, setBills] = useState<BillData[]>([]);
   const [overview, setOverview] = useState<FinancialOverview | null>(null);
+  const [preferences, setPreferences] = useState<UserPreferenceData>({
+    entertainment: [],
+    food: [],
+    likes: [],
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [sources, res, inst, bl, ov] = await Promise.all([
+    const [sources, res, inst, bl, ov, prefs] = await Promise.all([
       getIncomeSources(),
       getReserves(),
       getInstallments(),
       getBills(),
       getFinancialOverview(),
+      getUserPreferences(),
     ]);
     setIncomeSources(sources);
     setReserves(res);
     setInstallments(inst);
     setBills(bl);
     setOverview(ov);
+    setPreferences(prefs);
     setLoading(false);
   }, []);
 
@@ -92,6 +102,7 @@ export function ProfileContent() {
       <ReservesSection reserves={reserves} onRefresh={loadData} />
       <InstallmentsSection installments={installments} onRefresh={loadData} />
       <BillsSection bills={bills} onRefresh={loadData} />
+      <PreferencesSection preferences={preferences} onRefresh={loadData} />
       <MoneyAdviceSection />
     </div>
   );

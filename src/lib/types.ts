@@ -292,6 +292,53 @@ export type BasketAnalysis = {
   splitStrategy: SplitStrategy | null;
 };
 
+// Weekend Planner types
+
+export type UserPreferenceData = {
+  entertainment: string[];
+  food: string[];
+  likes: string[];
+};
+
+export type WeekendActivity = {
+  name: string;
+  description: string;
+  timeSlot: string;
+  duration: string;
+  estimatedCost: number;
+  category: string;
+  location: string;
+  area: string;
+  mapUrl: string;
+};
+
+export type WeekendFoodSuggestion = {
+  meal: string;
+  name: string;
+  restaurant: string;
+  type: string;
+  estimatedCost: number;
+  description: string;
+  area: string;
+  mapUrl: string;
+};
+
+export type WeekendOffer = {
+  title: string;
+  summary: string;
+  totalCost: number;
+  activities: WeekendActivity[];
+  food: WeekendFoodSuggestion[];
+  tips: string[];
+};
+
+export type WeekendPlanData = {
+  id: string;
+  weekLabel: string;
+  offers: WeekendOffer[];
+  createdAt: string;
+};
+
 // Currency types
 
 export type CurrencyData = {

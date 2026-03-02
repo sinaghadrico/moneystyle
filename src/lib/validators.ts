@@ -223,6 +223,16 @@ export const recordBillPaymentSchema = z.object({
   note: z.string().max(500).nullable().optional(),
 });
 
+// Weekend planner validators
+
+export const userPreferenceSchema = z.object({
+  entertainment: z.array(z.string().min(1).max(100)).default([]),
+  food: z.array(z.string().min(1).max(100)).default([]),
+  likes: z.array(z.string().min(1).max(100)).default([]),
+});
+
+export type UserPreferenceInput = z.infer<typeof userPreferenceSchema>;
+
 // Currency validators
 
 export const currencyCreateSchema = z.object({

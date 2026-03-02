@@ -367,6 +367,26 @@ model MoneyAdvice {
   @@map("money_advices")
 }
 
+model UserPreference {
+  id            String   @id @default("default")
+  entertainment String[]
+  food          String[]
+  likes         String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("user_preferences")
+}
+
+model WeekendPlan {
+  id        String   @id @default(cuid())
+  weekLabel String
+  plan      Json
+  createdAt DateTime @default(now())
+
+  @@map("weekend_plans")
+}
+
 model AppSettings {
   id                     String   @id @default("default")
   currency               String   @default("AED")

@@ -23,6 +23,7 @@ import { createTransaction } from "@/actions/transactions";
 import type { Category, Account } from "@prisma/client";
 import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
+import { CurrencySelect } from "@/components/ui/currency-select";
 import { useAppSettings } from "@/components/settings/settings-provider";
 
 function todayStr() {
@@ -59,6 +60,7 @@ export function AddTransactionDialog({
     date: todayStr(),
     time: nowTimeStr(),
     amount: "",
+    currency: settings.currency || "AED",
     type: settings.defaultTransactionType || "expense",
     categoryId: "",
     accountId: defaultAccId,
@@ -73,6 +75,7 @@ export function AddTransactionDialog({
       date: form.date,
       time: form.time || null,
       amount: form.amount ? Number(form.amount) : null,
+      currency: form.currency,
       type: form.type,
       categoryId: form.categoryId || null,
       accountId: form.accountId,
@@ -117,15 +120,24 @@ export function AddTransactionDialog({
               />
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Amount (AED)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              placeholder="0.00"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label>Amount</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Currency</Label>
+              <CurrencySelect
+                value={form.currency}
+                onValueChange={(v) => setForm({ ...form, currency: v })}
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label>Type</Label>

@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CurrencySelect } from "@/components/ui/currency-select";
 import { createReserve, updateReserve } from "@/actions/profile";
 import { toast } from "sonner";
 import type { ReserveData } from "@/lib/types";
@@ -117,11 +118,7 @@ export function ReserveDialog({
             </div>
             <div className="grid gap-2">
               <Label>Currency</Label>
-              <Input
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                placeholder="AED"
-              />
+              <CurrencySelect value={currency} onValueChange={setCurrency} />
             </div>
           </div>
           <div className="grid gap-2">

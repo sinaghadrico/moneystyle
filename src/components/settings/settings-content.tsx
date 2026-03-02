@@ -38,6 +38,8 @@ import {
 import { getAccountsList } from "@/actions/transactions";
 import { useAppSettings } from "@/components/settings/settings-provider";
 import { SmsPatternsSection } from "@/components/settings/sms-patterns-section";
+import { CurrencyManagementSection } from "@/components/settings/currency-management-section";
+import { CurrencySelect } from "@/components/ui/currency-select";
 
 type Settings = {
   currency: string;
@@ -183,13 +185,11 @@ export function SettingsContent() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Input
+              <Label htmlFor="currency">Primary Currency</Label>
+              <CurrencySelect
                 id="currency"
                 value={settings.currency}
-                onChange={(e) => update({ currency: e.target.value })}
-                maxLength={5}
-                placeholder="AED"
+                onValueChange={(v) => update({ currency: v })}
               />
             </div>
             <div className="space-y-2">
@@ -460,6 +460,9 @@ export function SettingsContent() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Currency Management */}
+        <CurrencyManagementSection />
 
         {/* SMS Patterns */}
         <SmsPatternsSection />

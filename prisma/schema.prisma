@@ -317,3 +317,16 @@ model AppSettings {
 
   @@map("app_settings")
 }
+
+model Currency {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  symbol    String
+  rateToUsd Float    @default(1.0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("currencies")
+}

@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     data: {
       date: parsed.date ?? new Date(),
       amount: parsed.amount,
-      currency: "AED",
+      currency: settings.currency,
       type: parsed.type,
       categoryId,
       accountId: account.id,
@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
       ? (await prisma.category.findUnique({ where: { id: categoryId } }))?.name
       : null;
     const catLabel = catName ? ` (${catName})` : "";
-    let msg = `${typeIcon} SMS: ${parsed.amount.toLocaleString()} AED ${parsed.type}${merchantLabel}${catLabel} [${account.name}] #${transaction.id.slice(-6)}`;
+    let msg = `${typeIcon} SMS: ${parsed.amount.toLocaleString()} ${settings.currency} ${parsed.type}${merchantLabel}${catLabel} [${account.name}] #${transaction.id.slice(-6)}`;
 
     if (parsed.balance !== undefined) {
-      msg += `\n💰 Balance: ${parsed.balance.toLocaleString()} AED`;
+      msg += `\n💰 Balance: ${parsed.balance.toLocaleString()} ${settings.currency}`;
     }
 
     // Budget check for expenses

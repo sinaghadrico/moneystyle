@@ -516,7 +516,7 @@ export function TransactionsContent() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">
-                          {tx.amount != null ? formatCurrency(Number(tx.amount)) : "-"}
+                          {tx.amount != null ? formatCurrency(Number(tx.amount), tx.currency) : "-"}
                         </span>
                         <Badge
                           variant="secondary"
@@ -549,7 +549,7 @@ export function TransactionsContent() {
                                 {s.personName}
                               </span>
                             )}
-                            <span className="text-muted-foreground">({formatCurrency(s.amount)})</span>
+                            <span className="text-muted-foreground">({formatCurrency(s.amount, tx.currency)})</span>
                           </div>
                         ))}
                       </div>
@@ -678,7 +678,7 @@ export function TransactionsContent() {
                     </TableCell>
                     <TableCell className="font-medium whitespace-nowrap">
                       {tx.amount != null
-                        ? formatCurrency(Number(tx.amount))
+                        ? formatCurrency(Number(tx.amount), tx.currency)
                         : "-"}
                     </TableCell>
                     <TableCell>
@@ -708,7 +708,7 @@ export function TransactionsContent() {
                                 </span>
                               )}
                               <span className="text-muted-foreground">
-                                ({formatCurrency(s.amount)})
+                                ({formatCurrency(s.amount, tx.currency)})
                               </span>
                             </div>
                           ))}

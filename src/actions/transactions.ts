@@ -208,6 +208,9 @@ export async function updateTransaction(
   if (values.amount !== undefined) {
     updateData.amount = values.amount;
   }
+  if (values.currency !== undefined) {
+    updateData.currency = values.currency;
+  }
   if (values.type !== undefined) {
     updateData.type = values.type;
   }

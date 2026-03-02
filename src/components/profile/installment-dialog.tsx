@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { CurrencySelect } from "@/components/ui/currency-select";
 import { createInstallment, updateInstallment } from "@/actions/profile";
 import { toast } from "sonner";
 import type { InstallmentData } from "@/lib/types";
@@ -115,11 +116,7 @@ export function InstallmentDialog({
             </div>
             <div className="grid gap-2">
               <Label>Currency</Label>
-              <Input
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                placeholder="AED"
-              />
+              <CurrencySelect value={currency} onValueChange={setCurrency} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

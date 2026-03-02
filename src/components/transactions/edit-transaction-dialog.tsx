@@ -24,6 +24,7 @@ import type { TransactionWithCategory } from "@/lib/types";
 import type { Category, Account } from "@prisma/client";
 import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
+import { CurrencySelect } from "@/components/ui/currency-select";
 import { Upload, X, Loader2, FileIcon, ImageIcon } from "lucide-react";
 
 function isImage(path: string): boolean {
@@ -51,6 +52,7 @@ export function EditTransactionDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     amount: transaction.amount?.toString() ?? "",
+    currency: transaction.currency ?? "AED",
     type: transaction.type,
     categoryId: transaction.categoryId ?? "",
     accountId: transaction.accountId,
@@ -63,6 +65,7 @@ export function EditTransactionDialog({
     setSaving(true);
     const result = await updateTransaction(transaction.id, {
       amount: form.amount ? Number(form.amount) : null,
+      currency: form.currency,
       type: form.type,
       categoryId: form.categoryId || null,
       accountId: form.accountId,
@@ -125,14 +128,23 @@ export function EditTransactionDialog({
           <ResponsiveDialogTitle>Edit Transaction</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label>Amount (AED)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label>Amount</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Currency</Label>
+              <CurrencySelect
+                value={form.currency}
+                onValueChange={(v) => setForm({ ...form, currency: v })}
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label>Type</Label>

@@ -13,8 +13,15 @@ import type {
 } from "@/lib/types";
 import { getDateRange } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
+import { getCurrencyRates } from "@/actions/currencies";
+import { convertAmount } from "@/lib/currency";
 
 const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null };
+
+async function getPrimaryCurrency(): Promise<string> {
+  const settings = await prisma.appSettings.findFirst();
+  return settings?.currency ?? "AED";
+}
 
 function getDateFilter(period: string, accountId?: string): Prisma.TransactionWhereInput {
   const fromDate = getDateRange(period);
@@ -25,29 +32,39 @@ function getDateFilter(period: string, accountId?: string): Prisma.TransactionWh
 }
 
 /**
- * Split-aware expense calculation helper.
- * Returns total expense = unsplit txs amount + my splits (personId IS NULL) from split txs.
+ * Split-aware expense calculation helper with multi-currency conversion.
+ * Returns total expense converted to the target currency.
  */
-async function getMyExpense(baseWhere: Prisma.TransactionWhereInput): Promise<number> {
+async function getMyExpense(
+  baseWhere: Prisma.TransactionWhereInput,
+  targetCurrency: string,
+  rates: Map<string, number>
+): Promise<number> {
   const expenseWhere = { ...baseWhere, type: "expense" as const, amount: { not: null } };
 
-  const [unsplitAgg, mySplitsAgg] = await Promise.all([
-    // Unsplit transactions: full amount counts
-    prisma.transaction.aggregate({
-      where: { ...expenseWhere, splits: { none: {} } },
-      _sum: { amount: true },
-    }),
-    // Split transactions: only my splits (personId IS NULL)
-    prisma.transactionSplit.aggregate({
-      where: {
-        personId: null,
-        transaction: { ...expenseWhere, splits: { some: {} } },
-      },
-      _sum: { amount: true },
-    }),
-  ]);
+  const transactions = await prisma.transaction.findMany({
+    where: expenseWhere,
+    select: {
+      amount: true,
+      currency: true,
+      splits: { select: { amount: true, personId: true } },
+    },
+  });
 
-  return Number(unsplitAgg._sum.amount ?? 0) + Number(mySplitsAgg._sum.amount ?? 0);
+  let total = 0;
+  for (const t of transactions) {
+    if (t.splits.length > 0) {
+      for (const s of t.splits) {
+        if (s.personId === null) {
+          total += convertAmount(Number(s.amount), t.currency, targetCurrency, rates);
+        }
+      }
+    } else {
+      total += convertAmount(Number(t.amount), t.currency, targetCurrency, rates);
+    }
+  }
+
+  return total;
 }
 
 export async function getDashboardStats(
@@ -55,22 +72,29 @@ export async function getDashboardStats(
   accountId?: string
 ): Promise<DashboardStats> {
   const where = getDateFilter(period, accountId);
+  const [primaryCurrency, rates] = await Promise.all([
+    getPrimaryCurrency(),
+    getCurrencyRates(),
+  ]);
 
-  const [income, myExpense, count] = await Promise.all([
-    prisma.transaction.aggregate({
+  const [incomeRows, myExpense, count] = await Promise.all([
+    prisma.transaction.findMany({
       where: { ...where, type: "income", amount: { not: null } },
-      _sum: { amount: true },
+      select: { amount: true, currency: true },
     }),
-    getMyExpense(where),
+    getMyExpense(where, primaryCurrency, rates),
     prisma.transaction.count({ where }),
   ]);
 
-  const totalIncome = Number(income._sum.amount ?? 0);
+  let totalIncome = 0;
+  for (const row of incomeRows) {
+    totalIncome += convertAmount(Number(row.amount), row.currency, primaryCurrency, rates);
+  }
 
   return {
-    totalIncome,
-    totalExpense: myExpense,
-    balance: totalIncome - myExpense,
+    totalIncome: Math.round(totalIncome * 100) / 100,
+    totalExpense: Math.round(myExpense * 100) / 100,
+    balance: Math.round((totalIncome - myExpense) * 100) / 100,
     transactionCount: count,
   };
 }
@@ -80,13 +104,17 @@ export async function getMonthlyData(
   accountId?: string
 ): Promise<MonthlyData[]> {
   const where = getDateFilter(period, accountId);
+  const [primaryCurrency, rates] = await Promise.all([
+    getPrimaryCurrency(),
+    getCurrencyRates(),
+  ]);
 
-  // Fetch all transactions with splits to calculate per-month split-aware totals
   const transactions = await prisma.transaction.findMany({
     where: { ...where, amount: { not: null } },
     select: {
       date: true,
       amount: true,
+      currency: true,
       type: true,
       splits: { select: { amount: true, personId: true } },
     },
@@ -100,17 +128,16 @@ export async function getMonthlyData(
     const current = monthMap.get(month) || { income: 0, expense: 0 };
 
     if (t.type === "income") {
-      current.income += Number(t.amount);
+      current.income += convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
     } else if (t.type === "expense") {
       if (t.splits.length > 0) {
-        // Only count my splits (personId IS NULL)
         for (const s of t.splits) {
           if (s.personId === null) {
-            current.expense += Number(s.amount);
+            current.expense += convertAmount(Number(s.amount), t.currency, primaryCurrency, rates);
           }
         }
       } else {
-        current.expense += Number(t.amount);
+        current.expense += convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
       }
     }
 
@@ -131,12 +158,17 @@ export async function getCategoryBreakdown(
   accountId?: string
 ): Promise<CategoryBreakdown[]> {
   const where = getDateFilter(period, accountId);
+  const [primaryCurrency, rates] = await Promise.all([
+    getPrimaryCurrency(),
+    getCurrencyRates(),
+  ]);
 
   const transactions = await prisma.transaction.findMany({
     where: { ...where, type: "expense", amount: { not: null } },
     select: {
       categoryId: true,
       amount: true,
+      currency: true,
       splits: { select: { categoryId: true, amount: true, personId: true } },
     },
   });
@@ -148,19 +180,18 @@ export async function getCategoryBreakdown(
 
   for (const tx of transactions) {
     if (tx.splits.length > 0) {
-      // Only count my splits (personId IS NULL)
       for (const s of tx.splits) {
         if (s.personId !== null) continue;
         const key = s.categoryId;
         const entry = catTotals.get(key) ?? { total: 0, count: 0 };
-        entry.total += Number(s.amount);
+        entry.total += convertAmount(Number(s.amount), tx.currency, primaryCurrency, rates);
         entry.count += 1;
         catTotals.set(key, entry);
       }
     } else {
       const key = tx.categoryId;
       const entry = catTotals.get(key) ?? { total: 0, count: 0 };
-      entry.total += Number(tx.amount ?? 0);
+      entry.total += convertAmount(Number(tx.amount ?? 0), tx.currency, primaryCurrency, rates);
       entry.count += 1;
       catTotals.set(key, entry);
     }
@@ -185,26 +216,38 @@ export async function getTopMerchants(
   accountId?: string
 ): Promise<MerchantTotal[]> {
   const where = getDateFilter(period, accountId);
+  const [primaryCurrency, rates] = await Promise.all([
+    getPrimaryCurrency(),
+    getCurrencyRates(),
+  ]);
 
-  const results = await prisma.transaction.groupBy({
-    by: ["merchant"],
+  const transactions = await prisma.transaction.findMany({
     where: {
       ...where,
       type: "expense",
       amount: { not: null },
       merchant: { not: null },
     },
-    _sum: { amount: true },
-    _count: true,
-    orderBy: { _sum: { amount: "desc" } },
-    take: limit,
+    select: { merchant: true, amount: true, currency: true },
   });
 
-  return results.map((r) => ({
-    merchant: r.merchant ?? "Unknown",
-    total: Math.round(Number(r._sum.amount ?? 0) * 100) / 100,
-    count: r._count,
-  }));
+  const merchantMap = new Map<string, { total: number; count: number }>();
+  for (const t of transactions) {
+    const key = t.merchant ?? "Unknown";
+    const entry = merchantMap.get(key) ?? { total: 0, count: 0 };
+    entry.total += convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
+    entry.count += 1;
+    merchantMap.set(key, entry);
+  }
+
+  return Array.from(merchantMap.entries())
+    .map(([merchant, data]) => ({
+      merchant,
+      total: Math.round(data.total * 100) / 100,
+      count: data.count,
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, limit);
 }
 
 export async function getMonthlyCategoryBreakdown(
@@ -212,12 +255,17 @@ export async function getMonthlyCategoryBreakdown(
   accountId?: string
 ): Promise<{ data: MonthlyCategoryData[]; categories: CategoryMeta[] }> {
   const where = getDateFilter(period, accountId);
+  const [primaryCurrency, rates] = await Promise.all([
+    getPrimaryCurrency(),
+    getCurrencyRates(),
+  ]);
 
   const transactions = await prisma.transaction.findMany({
     where: { ...where, type: "expense", amount: { not: null } },
     select: {
       date: true,
       amount: true,
+      currency: true,
       categoryId: true,
       splits: { select: { categoryId: true, amount: true, personId: true } },
     },
@@ -234,7 +282,6 @@ export async function getMonthlyCategoryBreakdown(
     const month = t.date.toISOString().slice(0, 7);
 
     if (t.splits.length > 0) {
-      // Only my splits
       for (const s of t.splits) {
         if (s.personId !== null) continue;
         const cat = s.categoryId ? categoryLookup.get(s.categoryId) : null;
@@ -242,7 +289,7 @@ export async function getMonthlyCategoryBreakdown(
         allCatNames.add(catName);
         if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
         const catTotals = monthCatMap.get(month)!;
-        catTotals.set(catName, (catTotals.get(catName) ?? 0) + Number(s.amount));
+        catTotals.set(catName, (catTotals.get(catName) ?? 0) + convertAmount(Number(s.amount), t.currency, primaryCurrency, rates));
       }
     } else {
       const cat = t.categoryId ? categoryLookup.get(t.categoryId) : null;
@@ -250,7 +297,7 @@ export async function getMonthlyCategoryBreakdown(
       allCatNames.add(catName);
       if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
       const catTotals = monthCatMap.get(month)!;
-      catTotals.set(catName, (catTotals.get(catName) ?? 0) + Number(t.amount));
+      catTotals.set(catName, (catTotals.get(catName) ?? 0) + convertAmount(Number(t.amount), t.currency, primaryCurrency, rates));
     }
   }
 
@@ -293,7 +340,11 @@ export async function getExpensePrediction(): Promise<ExpensePrediction> {
     amount: { not: null },
   };
 
-  const spent = await getMyExpense(dateWhere);
+  const [primaryCurrency, rates] = await Promise.all([
+    getPrimaryCurrency(),
+    getCurrencyRates(),
+  ]);
+  const spent = await getMyExpense(dateWhere, primaryCurrency, rates);
   const daysInMonth = endOfMonth.getDate();
   const daysElapsed = Math.max(now.getDate(), 1);
   const dailyAverage = spent / daysElapsed;
@@ -305,6 +356,10 @@ export async function getExpensePrediction(): Promise<ExpensePrediction> {
 export async function getDailySpendData(): Promise<DailySpend[]> {
   const now = new Date();
   const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+  const [primaryCurrency, rates] = await Promise.all([
+    getPrimaryCurrency(),
+    getCurrencyRates(),
+  ]);
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -316,6 +371,7 @@ export async function getDailySpendData(): Promise<DailySpend[]> {
     select: {
       date: true,
       amount: true,
+      currency: true,
       splits: { select: { amount: true, personId: true } },
     },
     orderBy: { date: "asc" },
@@ -330,11 +386,11 @@ export async function getDailySpendData(): Promise<DailySpend[]> {
     if (t.splits.length > 0) {
       for (const s of t.splits) {
         if (s.personId === null) {
-          dayMap.set(day, current + Number(s.amount));
+          dayMap.set(day, current + convertAmount(Number(s.amount), t.currency, primaryCurrency, rates));
         }
       }
     } else {
-      dayMap.set(day, current + Number(t.amount));
+      dayMap.set(day, current + convertAmount(Number(t.amount), t.currency, primaryCurrency, rates));
     }
   }
 

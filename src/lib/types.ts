@@ -292,6 +292,17 @@ export type BasketAnalysis = {
   splitStrategy: SplitStrategy | null;
 };
 
+// Currency types
+
+export type CurrencyData = {
+  id: string;
+  code: string;
+  name: string;
+  symbol: string;
+  rateToUsd: number;
+  isActive: boolean;
+};
+
 // Profile types
 
 export type IncomeSourceData = {

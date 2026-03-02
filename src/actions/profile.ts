@@ -11,6 +11,8 @@ import {
   installmentUpdateSchema,
 } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
+import { getCurrencyRates } from "@/actions/currencies";
+import { convertAmount } from "@/lib/currency";
 import type {
   IncomeSourceData,
   ReserveData,
@@ -253,22 +255,26 @@ export async function incrementPaidCount(id: string) {
 // ── Financial Overview ──
 
 export async function getFinancialOverview(): Promise<FinancialOverview> {
-  const [incomeSources, installments, reserves] = await Promise.all([
+  const [incomeSources, installments, reserves, settings, rates] = await Promise.all([
     prisma.incomeSource.findMany({ where: { isActive: true } }),
     prisma.installment.findMany({ where: { isActive: true } }),
     prisma.reserve.findMany(),
+    prisma.appSettings.findFirst(),
+    getCurrencyRates(),
   ]);
 
+  const primaryCurrency = settings?.currency ?? "AED";
+
   const totalMonthlyIncome = incomeSources.reduce(
-    (sum, s) => sum + Number(s.amount),
+    (sum, s) => sum + convertAmount(Number(s.amount), s.currency, primaryCurrency, rates),
     0
   );
   const totalMonthlyInstallments = installments.reduce(
-    (sum, i) => sum + Number(i.amount),
+    (sum, i) => sum + convertAmount(Number(i.amount), i.currency, primaryCurrency, rates),
     0
   );
   const totalReserves = reserves.reduce(
-    (sum, r) => sum + Number(r.amount),
+    (sum, r) => sum + convertAmount(Number(r.amount), r.currency, primaryCurrency, rates),
     0
   );
 
@@ -276,10 +282,10 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
   const typeMap = new Map<string, number>();
   for (const r of reserves) {
     const current = typeMap.get(r.type) ?? 0;
-    typeMap.set(r.type, current + Number(r.amount));
+    typeMap.set(r.type, current + convertAmount(Number(r.amount), r.currency, primaryCurrency, rates));
   }
   const reservesByType = [...typeMap.entries()]
-    .map(([type, total]) => ({ type, total }))
+    .map(([type, total]) => ({ type, total: Math.round(total * 100) / 100 }))
     .sort((a, b) => b.total - a.total);
 
   // Upcoming installments (due within 7 days)
@@ -289,7 +295,6 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
     .map((inst) => {
       let daysUntilDue = inst.dueDay - currentDay;
       if (daysUntilDue < 0) {
-        // Next month
         const daysInMonth = new Date(
           today.getFullYear(),
           today.getMonth() + 1,
@@ -300,7 +305,7 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
       return {
         id: inst.id,
         name: inst.name,
-        amount: Number(inst.amount),
+        amount: Math.round(convertAmount(Number(inst.amount), inst.currency, primaryCurrency, rates) * 100) / 100,
         dueDay: inst.dueDay,
         daysUntilDue,
       };
@@ -309,10 +314,10 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
     .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
 
   return {
-    totalMonthlyIncome,
-    totalMonthlyInstallments,
-    netMonthlyCashflow: totalMonthlyIncome - totalMonthlyInstallments,
-    totalReserves,
+    totalMonthlyIncome: Math.round(totalMonthlyIncome * 100) / 100,
+    totalMonthlyInstallments: Math.round(totalMonthlyInstallments * 100) / 100,
+    netMonthlyCashflow: Math.round((totalMonthlyIncome - totalMonthlyInstallments) * 100) / 100,
+    totalReserves: Math.round(totalReserves * 100) / 100,
     reservesByType,
     upcomingInstallments,
   };

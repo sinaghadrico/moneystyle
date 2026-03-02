@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const transactionUpdateSchema = z.object({
   amount: z.coerce.number().nullable().optional(),
+  currency: z.string().min(1).max(5).optional(),
   type: z.enum(["income", "expense", "transfer", "other"]).optional(),
   categoryId: z.string().nullable().optional(),
   accountId: z.string().optional(),
@@ -196,6 +197,21 @@ export const installmentSchema = z.object({
 export const installmentUpdateSchema = installmentSchema.partial();
 
 export type InstallmentInput = z.infer<typeof installmentSchema>;
+
+// Currency validators
+
+export const currencyCreateSchema = z.object({
+  code: z.string().min(1, "Code is required").max(5).toUpperCase(),
+  name: z.string().min(1, "Name is required").max(100),
+  symbol: z.string().min(1, "Symbol is required").max(10),
+  rateToUsd: z.coerce.number().positive("Rate must be positive"),
+  isActive: z.boolean().default(true),
+});
+
+export const currencyUpdateSchema = currencyCreateSchema.partial();
+
+export type CurrencyCreateInput = z.infer<typeof currencyCreateSchema>;
+export type CurrencyUpdateInput = z.infer<typeof currencyUpdateSchema>;
 
 export const settingsUpdateSchema = z.object({
   currency: z.string().min(1).max(5).optional(),

@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         },
       });
       await reply(
-        `✅ Settled ${settleCmd.amount} AED with ${person.name}`,
+        `✅ Settled ${settleCmd.amount} ${settings.currency} with ${person.name}`,
       );
     } catch (err) {
       console.error("Telegram settle error:", err);
@@ -222,11 +222,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create transaction
+    const settings = await getSettings();
     const transaction = await prisma.transaction.create({
       data: {
         date: new Date(),
         amount: parsed.amount,
-        currency: "AED",
+        currency: settings.currency,
         type: parsed.type,
         categoryId: category?.id ?? null,
         accountId: account.id,
@@ -266,7 +267,7 @@ export async function POST(request: NextRequest) {
     const merchantLabel = parsed.merchant ? ` at ${parsed.merchant}` : "";
     const tagLabel = tags.length > 0 ? ` [${tags.map((t) => t.name).join(", ")}]` : "";
     let confirmation =
-      `Saved: ${parsed.amount} AED ${typeLabel}${merchantLabel}${catLabel}${tagLabel} [${account.name}]` +
+      `Saved: ${parsed.amount} ${settings.currency} ${typeLabel}${merchantLabel}${catLabel}${tagLabel} [${account.name}]` +
       (transaction.id ? ` #${transaction.id.slice(-6)}` : "") +
       splitInfo;
 

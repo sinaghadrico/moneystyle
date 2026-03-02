@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogClose,
@@ -44,9 +45,23 @@ function ResponsiveDialogContent({
     )
   }
 
+  // Separate footer from other children so it stays fixed at the bottom
+  const childArray = React.Children.toArray(children)
+  const footer: React.ReactNode[] = []
+  const rest: React.ReactNode[] = []
+
+  for (const child of childArray) {
+    if (React.isValidElement(child) && child.type === ResponsiveDialogFooter) {
+      footer.push(child)
+    } else {
+      rest.push(child)
+    }
+  }
+
   return (
     <DrawerContent>
-      <div className="overflow-y-auto px-4 pb-4">{children}</div>
+      <div className="flex-1 overflow-y-auto px-4 pb-4">{rest}</div>
+      {footer}
     </DrawerContent>
   )
 }
@@ -72,11 +87,11 @@ function ResponsiveDialogDescription(props: React.ComponentProps<typeof DialogDe
   return <DrawerDescription {...props} />
 }
 
-function ResponsiveDialogFooter(props: React.ComponentProps<typeof DialogFooter>) {
+function ResponsiveDialogFooter({ className, ...props }: React.ComponentProps<typeof DialogFooter>) {
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
-  if (isDesktop) return <DialogFooter {...props} />
-  return <DrawerFooter {...props} />
+  if (isDesktop) return <DialogFooter className={className} {...props} />
+  return <DrawerFooter className={cn("border-t pt-4", className)} {...props} />
 }
 
 function ResponsiveDialogClose(props: React.ComponentProps<typeof DialogClose>) {

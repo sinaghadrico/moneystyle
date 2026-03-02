@@ -369,7 +369,7 @@ export function TransactionsContent() {
                 <DrawerHeader>
                   <DrawerTitle>Filters</DrawerTitle>
                 </DrawerHeader>
-                <div className="overflow-y-auto px-4 pb-4">
+                <div className="flex-1 overflow-y-auto px-4 pb-4">
                   <TransactionFilters
                     showAll
                     filters={filters}
@@ -394,11 +394,11 @@ export function TransactionsContent() {
                       setPage(1);
                     }}
                   />
-                  <div className="mt-4">
-                    <DrawerClose asChild>
-                      <Button className="w-full">Apply</Button>
-                    </DrawerClose>
-                  </div>
+                </div>
+                <div className="border-t p-4">
+                  <DrawerClose asChild>
+                    <Button className="w-full">Apply</Button>
+                  </DrawerClose>
                 </div>
               </DrawerContent>
             </Drawer>

@@ -134,6 +134,13 @@ export const saveTransactionItemsSchema = z.object({
 
 export type SaveTransactionItemsInput = z.infer<typeof saveTransactionItemsSchema>;
 
+export const itemGroupUpdateSchema = z.object({
+  canonicalName: z.string().min(1, "Name is required").max(200),
+  rawNames: z.array(z.string().min(1)).min(1, "At least one item name required"),
+});
+
+export type ItemGroupUpdateInput = z.infer<typeof itemGroupUpdateSchema>;
+
 export const settingsUpdateSchema = z.object({
   currency: z.string().min(1).max(5).optional(),
   defaultPageSize: z.coerce.number().int().min(5).max(100).optional(),

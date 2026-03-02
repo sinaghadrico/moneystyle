@@ -178,3 +178,57 @@ export type SavingsProgress = {
   status: string;
   percentage: number;
 };
+
+// Price Analysis types
+
+export type PriceAnalysisFilters = {
+  search?: string;
+  fuzzy?: boolean;
+  sortBy?: "name" | "avgPrice" | "totalPurchases" | "lastDate";
+  sortOrder?: "asc" | "desc";
+};
+
+export type ItemPriceSummary = {
+  normalizedName: string;
+  displayName: string;
+  isGroup: boolean;
+  rawNames: string[];
+  merchantNames: string[];
+  avgPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  totalPurchases: number;
+  cheapestMerchant: string | null;
+  lastDate: string;
+  priceChangePercent: number | null;
+};
+
+export type ItemMerchantStats = {
+  merchant: string;
+  avgPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  count: number;
+  lastDate: string;
+};
+
+export type ItemPricePoint = {
+  date: string;
+  price: number;
+  merchant: string;
+  transactionId: string;
+};
+
+export type ItemDetail = {
+  normalizedName: string;
+  displayName: string;
+  merchantStats: ItemMerchantStats[];
+  priceHistory: ItemPricePoint[];
+};
+
+export type ItemGroupData = {
+  id: string;
+  canonicalName: string;
+  rawNames: string[];
+  source: string;
+};

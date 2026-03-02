@@ -19,6 +19,7 @@ import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getSettings } from "@/actions/settings";
 import { storage } from "@/lib/storage";
+import { basicNormalize } from "@/lib/item-normalization";
 
 export async function getTransactions(
   filters: TransactionFilters = {},
@@ -351,6 +352,7 @@ export async function saveTransactionItems(
       data: items.map((item, idx) => ({
         transactionId,
         name: item.name,
+        normalizedName: basicNormalize(item.name),
         quantity: item.quantity,
         unitPrice: item.unitPrice ?? null,
         totalPrice: item.totalPrice,

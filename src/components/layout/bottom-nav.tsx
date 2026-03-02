@@ -11,11 +11,13 @@ import {
   Tags,
   Merge,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
+  { href: "/price-analysis", label: "Prices", icon: TrendingUp },
   { href: "/accounts", label: "Accounts", icon: Landmark },
   { href: "/persons", label: "Persons", icon: Users },
   { href: "/categories", label: "Categories", icon: Tags },
@@ -31,7 +33,7 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-50 border-t bg-card md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-8">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive =

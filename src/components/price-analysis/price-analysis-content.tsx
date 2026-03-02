@@ -23,6 +23,7 @@ import type { ItemPriceSummary, PriceAnalysisFilters } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { ItemDetailDialog } from "./item-detail-dialog";
 import { ItemGroupsDialog } from "./item-groups-dialog";
+import { ShoppingBasketDialog } from "./shopping-basket-dialog";
 import { toast } from "sonner";
 import {
   Search,
@@ -52,6 +53,7 @@ export function PriceAnalysisContent() {
   const [detailMode, setDetailMode] = useState<"group" | "item">("group");
   const [detailOpen, setDetailOpen] = useState(false);
   const [groupsOpen, setGroupsOpen] = useState(false);
+  const [basketOpen, setBasketOpen] = useState(false);
 
   // AI normalization
   const [aiPending, startAiTransition] = useTransition();
@@ -113,6 +115,10 @@ export function PriceAnalysisContent() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Price Analysis</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setBasketOpen(true)}>
+            <ShoppingCart className="h-4 w-4 mr-1" />
+            Basket
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setGroupsOpen(true)}>
             <Layers className="h-4 w-4 mr-1" />
             Groups
@@ -370,6 +376,10 @@ export function PriceAnalysisContent() {
           setGroupsOpen(open);
           if (!open) loadData();
         }}
+      />
+      <ShoppingBasketDialog
+        open={basketOpen}
+        onOpenChange={setBasketOpen}
       />
     </div>
   );

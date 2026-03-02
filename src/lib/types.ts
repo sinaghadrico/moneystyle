@@ -232,3 +232,47 @@ export type ItemGroupData = {
   rawNames: string[];
   source: string;
 };
+
+// Shopping Basket types
+
+export type ShoppingListData = {
+  id: string;
+  name: string;
+  itemCount: number;
+  createdAt: string;
+};
+
+export type ShoppingListDetail = {
+  id: string;
+  name: string;
+  items: ShoppingListItemData[];
+};
+
+export type ShoppingListItemData = {
+  id: string;
+  itemName: string;
+  normalizedName: string;
+  quantity: number;
+};
+
+export type BasketMerchantResult = {
+  merchant: string;
+  items: BasketItemResult[];
+  availableTotal: number;
+  availableCount: number;
+  unavailableCount: number;
+};
+
+export type BasketItemResult = {
+  itemName: string;
+  quantity: number;
+  avgPrice: number | null;
+  totalPrice: number | null;
+  purchaseCount: number;
+};
+
+export type BasketAnalysis = {
+  merchants: BasketMerchantResult[];
+  cheapestMerchant: string | null;
+  cheapestTotal: number | null;
+};

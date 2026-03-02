@@ -141,6 +141,15 @@ export const itemGroupUpdateSchema = z.object({
 
 export type ItemGroupUpdateInput = z.infer<typeof itemGroupUpdateSchema>;
 
+export const shoppingListSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+});
+
+export const shoppingListItemSchema = z.object({
+  itemName: z.string().min(1).max(200),
+  quantity: z.coerce.number().positive().default(1),
+});
+
 export const settingsUpdateSchema = z.object({
   currency: z.string().min(1).max(5).optional(),
   defaultPageSize: z.coerce.number().int().min(5).max(100).optional(),

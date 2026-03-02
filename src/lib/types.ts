@@ -119,6 +119,46 @@ export type DebtSummary = {
 
 export type DailySpend = { date: string; amount: number };
 
+export type WrappedData = {
+  month: string;
+  monthLabel: string;
+  totalSpent: number;
+  totalIncome: number;
+  netBalance: number;
+  transactionCount: number;
+  vsLastMonthPercent: number | null;
+  topCategory: {
+    name: string;
+    color: string;
+    amount: number;
+    percentOfTotal: number;
+    count: number;
+  } | null;
+  biggestExpense: {
+    merchant: string;
+    amount: number;
+    date: string;
+    category: string;
+  } | null;
+  favoriteMerchant: {
+    merchant: string;
+    visitCount: number;
+    totalSpent: number;
+  } | null;
+  spendingPattern: {
+    busiestDay: string;
+    lightestDay: string;
+    dailyAmounts: number[];
+  };
+  funFacts: {
+    noSpendDays: number;
+    totalDaysInMonth: number;
+    avgDailySpend: number;
+    longestNoSpendStreak: number;
+  };
+  categoryBreakdown: { name: string; color: string; amount: number }[];
+};
+
 export type SavingsProgress = {
   id: string;
   name: string;

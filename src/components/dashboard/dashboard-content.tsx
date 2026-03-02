@@ -50,7 +50,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 import { useAppSettings } from "@/components/settings/settings-provider";
+import { SpendingWrapped } from "./spending-wrapped";
 
 export function DashboardContent() {
   const { settings } = useAppSettings();
@@ -69,6 +72,7 @@ export function DashboardContent() {
   const [prediction, setPrediction] = useState<ExpensePrediction | null>(null);
   const [dailySpend, setDailySpend] = useState<DailySpend[]>([]);
   const [loading, setLoading] = useState(true);
+  const [wrappedOpen, setWrappedOpen] = useState(false);
 
   useEffect(() => {
     getAccountsList().then(setAccounts);
@@ -127,6 +131,14 @@ export function DashboardContent() {
           <p className="text-muted-foreground">Financial overview</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setWrappedOpen(true)}
+          >
+            <Sparkles className="mr-1.5 h-4 w-4" />
+            Wrapped
+          </Button>
           {accounts.length > 1 && (
             <Select
               value={accountId || "all"}
@@ -181,6 +193,8 @@ export function DashboardContent() {
           </div>
         </>
       )}
+
+      <SpendingWrapped open={wrappedOpen} onOpenChange={setWrappedOpen} />
     </div>
   );
 }

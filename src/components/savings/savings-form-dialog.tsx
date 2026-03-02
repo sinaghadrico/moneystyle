@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,11 +69,11 @@ export function SavingsFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{goal ? "Edit" : "New"} Savings Goal</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{goal ? "Edit" : "New"} Savings Goal</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label>Name</Label>
@@ -120,7 +120,7 @@ export function SavingsFormDialog({
             </div>
           </div>
         </div>
-        <DialogFooter className="flex justify-between">
+        <ResponsiveDialogFooter className="flex justify-between">
           {goal && (
             <Button
               variant="destructive"
@@ -141,8 +141,8 @@ export function SavingsFormDialog({
               {saving ? "Saving..." : "Save"}
             </Button>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,11 +87,11 @@ export function AddTransactionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Transaction</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Add Transaction</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
@@ -204,7 +204,7 @@ export function AddTransactionDialog({
             />
           </div>
         </div>
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -214,8 +214,8 @@ export function AddTransactionDialog({
           >
             {saving ? "Creating..." : "Create"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,13 +72,13 @@ export function CategoryFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
             {isEdit ? "Edit Category" : "New Category"}
-          </DialogTitle>
-        </DialogHeader>
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label>Name</Label>
@@ -122,15 +122,15 @@ export function CategoryFormDialog({
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={saving || !name.trim()}>
             {saving ? "Saving..." : isEdit ? "Update" : "Create"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

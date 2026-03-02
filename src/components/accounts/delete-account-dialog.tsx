@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -66,36 +66,36 @@ export function DeleteAccountDialog({
 
   if (otherAccounts.length === 0) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cannot Delete</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Cannot Delete</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               You must have at least one account. Create another account before
               deleting this one.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete &ldquo;{account.name}&rdquo;?</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Delete &ldquo;{account.name}&rdquo;?</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {account.transactionCount > 0
               ? `This account has ${account.transactionCount} transactions. They will be reassigned to the selected account.`
               : "This account has no transactions. Its transactions (if any) will be reassigned."}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <div className="py-4">
           <label className="text-sm font-medium">
@@ -118,7 +118,7 @@ export function DeleteAccountDialog({
           </Select>
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -129,8 +129,8 @@ export function DeleteAccountDialog({
           >
             {deleting ? "Deleting..." : "Delete"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

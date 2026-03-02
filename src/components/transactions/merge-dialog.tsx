@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mergeTransactions } from "@/actions/merge";
@@ -51,15 +51,15 @@ export function MergeDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Merge Transactions</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-w-lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Merge Transactions</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Select the primary transaction. Others will be merged into it (their
             files will be combined, and they will be hidden from calculations).
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <div className="space-y-2 max-h-[50vh] overflow-y-auto py-2">
           {transactions.map((tx) => (
@@ -114,15 +114,15 @@ export function MergeDialog({
           ))}
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleMerge} disabled={merging}>
             {merging ? "Merging..." : `Merge ${transactions.length} into 1`}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

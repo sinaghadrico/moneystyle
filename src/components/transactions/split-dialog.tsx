@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -139,13 +139,13 @@ export function SplitDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
             Split Transaction — {formatCurrency(totalAmount)}
-          </DialogTitle>
-        </DialogHeader>
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <div className="space-y-3 py-4">
           {rows.map((row, idx) => (
             <div key={idx} className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -261,7 +261,7 @@ export function SplitDialog({
             )}
           </div>
         </div>
-        <DialogFooter className="flex justify-between">
+        <ResponsiveDialogFooter className="flex justify-between">
           {hasSplits && (
             <Button
               variant="destructive"
@@ -279,8 +279,8 @@ export function SplitDialog({
               {saving ? "Saving..." : "Save Split"}
             </Button>
           </div>
-        </DialogFooter>
-      </DialogContent>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
 
       {showPersonCreate !== null && (
         <PersonFormDialog
@@ -298,6 +298,6 @@ export function SplitDialog({
           }}
         />
       )}
-    </Dialog>
+    </ResponsiveDialog>
   );
 }

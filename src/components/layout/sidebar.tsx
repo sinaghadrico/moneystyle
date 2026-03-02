@@ -10,11 +10,7 @@ import {
   Landmark,
   Users,
   Merge,
-  Menu,
 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const NAV_ITEMS = [
@@ -74,23 +70,3 @@ export function Sidebar() {
   );
 }
 
-export function MobileNav() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-56 p-4">
-        <div className="mb-6">
-          <h1 className="text-lg font-bold tracking-tight">Revenue</h1>
-          <p className="text-xs text-muted-foreground">Finance Tracker</p>
-        </div>
-        <NavLinks onClick={() => setOpen(false)} />
-      </SheetContent>
-    </Sheet>
-  );
-}

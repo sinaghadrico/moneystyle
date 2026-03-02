@@ -33,14 +33,17 @@ export function TransactionFilters({
   accounts,
   onChange,
   onReset,
+  showAll,
 }: {
   filters: FiltersState;
   categories: Category[];
   accounts: Account[];
   onChange: (key: string, value: string) => void;
   onReset: () => void;
+  showAll?: boolean;
 }) {
   const [showMore, setShowMore] = useState(false);
+  const expanded = showAll || showMore;
   const hasFilters = Object.values(filters).some((v) => v !== "");
 
   return (
@@ -131,14 +134,16 @@ export function TransactionFilters({
           </Select>
         </div>
         <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowMore((v) => !v)}
-          >
-            {showMore ? <ChevronUp className="mr-1 h-3 w-3" /> : <ChevronDown className="mr-1 h-3 w-3" />}
-            More Filters
-          </Button>
+          {!showAll && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMore((v) => !v)}
+            >
+              {showMore ? <ChevronUp className="mr-1 h-3 w-3" /> : <ChevronDown className="mr-1 h-3 w-3" />}
+              More Filters
+            </Button>
+          )}
           {hasFilters && (
             <Button variant="ghost" size="sm" onClick={onReset}>
               <X className="mr-1 h-3 w-3" />
@@ -147,7 +152,7 @@ export function TransactionFilters({
           )}
         </div>
       </div>
-      {showMore && (
+      {expanded && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Merchant</label>

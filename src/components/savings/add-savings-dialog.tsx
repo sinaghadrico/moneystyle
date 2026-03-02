@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,11 +54,11 @@ export function AddSavingsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add to {goal.name}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Add to {goal.name}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>Current: {formatCurrency(goal.currentAmount)}</span>
@@ -93,7 +93,7 @@ export function AddSavingsDialog({
             </Button>
           )}
         </div>
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -103,8 +103,8 @@ export function AddSavingsDialog({
           >
             {saving ? "Adding..." : "Add"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

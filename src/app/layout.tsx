@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 
@@ -36,11 +37,12 @@ export default function RootLayout({
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden">
               <Header />
-              <main className="flex-1 overflow-y-auto p-4 md:p-6">
+              <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6">
                 {children}
               </main>
             </div>
           </div>
+          <BottomNav />
           <Toaster />
         </ThemeProvider>
       </body>

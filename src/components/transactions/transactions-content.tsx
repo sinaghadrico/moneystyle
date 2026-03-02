@@ -15,13 +15,21 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionFilters } from "./transaction-filters";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+} from "@/components/ui/drawer";
+import { SlidersHorizontal } from "lucide-react";
 import { EditTransactionDialog } from "./edit-transaction-dialog";
 import { AddTransactionDialog } from "./add-transaction-dialog";
 import { MediaViewerDialog } from "./media-viewer-dialog";
@@ -151,6 +159,7 @@ export function TransactionsContent() {
   const [splitTx, setSplitTx] = useState<TransactionWithCategory | null>(null);
   const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   const debouncedMerchant = useDebounce(filters.merchant, 300);
   const debouncedSearch = useDebounce(filters.search, 300);
@@ -328,29 +337,94 @@ export function TransactionsContent() {
         </div>
       </div>
 
-      <TransactionFilters
-        filters={filters}
-        categories={categories}
-        accounts={accounts}
-        onChange={handleFilterChange}
-        onReset={() => {
-          setFilters({
-            dateFrom: "",
-            dateTo: "",
-            categoryId: "",
-            accountId: "",
-            type: "",
-            merchant: "",
-            search: "",
-            amountMin: "",
-            amountMax: "",
-            source: "",
-          });
-          setSortBy("date");
-          setSortOrder("desc");
-          setPage(1);
-        }}
-      />
+      {/* Mobile: filter button + drawer */}
+      {(() => {
+        const activeFilterCount = Object.entries(filters).filter(
+          ([, v]) => v !== "",
+        ).length;
+        return (
+          <div className="md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilterDrawerOpen(true)}
+            >
+              <SlidersHorizontal className="mr-1.5 h-4 w-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-1.5 px-1.5 text-[10px]">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+            <Drawer open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Filters</DrawerTitle>
+                </DrawerHeader>
+                <div className="overflow-y-auto px-4 pb-4">
+                  <TransactionFilters
+                    showAll
+                    filters={filters}
+                    categories={categories}
+                    accounts={accounts}
+                    onChange={handleFilterChange}
+                    onReset={() => {
+                      setFilters({
+                        dateFrom: "",
+                        dateTo: "",
+                        categoryId: "",
+                        accountId: "",
+                        type: "",
+                        merchant: "",
+                        search: "",
+                        amountMin: "",
+                        amountMax: "",
+                        source: "",
+                      });
+                      setSortBy("date");
+                      setSortOrder("desc");
+                      setPage(1);
+                    }}
+                  />
+                  <div className="mt-4">
+                    <DrawerClose asChild>
+                      <Button className="w-full">Apply</Button>
+                    </DrawerClose>
+                  </div>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
+        );
+      })()}
+
+      {/* Desktop: inline filters */}
+      <div className="hidden md:block">
+        <TransactionFilters
+          filters={filters}
+          categories={categories}
+          accounts={accounts}
+          onChange={handleFilterChange}
+          onReset={() => {
+            setFilters({
+              dateFrom: "",
+              dateTo: "",
+              categoryId: "",
+              accountId: "",
+              type: "",
+              merchant: "",
+              search: "",
+              amountMin: "",
+              amountMax: "",
+              source: "",
+            });
+            setSortBy("date");
+            setSortOrder("desc");
+            setPage(1);
+          }}
+        />
+      </div>
 
       {/* Mobile card view */}
       <div className="space-y-3 md:hidden">
@@ -764,24 +838,24 @@ export function TransactionsContent() {
         />
       )}
 
-      <Dialog
+      <ResponsiveDialog
         open={deleteIds.length > 0}
         onOpenChange={(open) => !open && setDeleteIds([])}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>
               Delete Transaction{deleteIds.length > 1 ? "s" : ""}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Are you sure you want to delete{" "}
               {deleteIds.length === 1
                 ? "this transaction"
                 : `${deleteIds.length} transactions`}
               ? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => setDeleteIds([])}>
               Cancel
             </Button>
@@ -792,9 +866,9 @@ export function TransactionsContent() {
             >
               {deleting ? "Deleting..." : "Delete"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

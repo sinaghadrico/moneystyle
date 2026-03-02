@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -59,16 +59,16 @@ export function DeleteCategoryDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete &quot;{category.name}&quot;?</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Delete &quot;{category.name}&quot;?</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {category.transactionCount > 0
               ? `This category has ${category.transactionCount} transactions. You can reassign them to another category or leave them uncategorized.`
               : "This category has no transactions and can be safely deleted."}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         {category.transactionCount > 0 && otherCategories.length > 0 && (
           <div className="py-4">
@@ -94,7 +94,7 @@ export function DeleteCategoryDialog({
           </div>
         )}
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -105,8 +105,8 @@ export function DeleteCategoryDialog({
           >
             {deleting ? "Deleting..." : "Delete"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

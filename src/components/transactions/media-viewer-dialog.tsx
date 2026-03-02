@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useState } from "react";
@@ -39,10 +39,10 @@ export function MediaViewerDialog({
   const filename = current.split("/").pop() ?? current;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between pr-6">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="flex items-center justify-between pr-6">
             <span className="truncate text-sm font-medium">{filename}</span>
             <div className="flex items-center gap-2 shrink-0">
               {files.length > 1 && (
@@ -56,8 +56,8 @@ export function MediaViewerDialog({
                 </a>
               </Button>
             </div>
-          </DialogTitle>
-        </DialogHeader>
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
 
         <div className="flex-1 min-h-0 flex items-center justify-center relative">
           {files.length > 1 && (
@@ -117,7 +117,7 @@ export function MediaViewerDialog({
             ))}
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

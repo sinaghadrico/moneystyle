@@ -477,3 +477,216 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
     upcomingPayments,
   };
 }
+
+// ── Money Advice (AI) ──
+
+export type MoneyAdviceSuggestion = {
+  title: string;
+  description: string;
+  potentialMonthly: number | null;
+  potentialYearly: number | null;
+  risk: "low" | "medium" | "high";
+  relatedReserve: string | null;
+};
+
+export type MoneyAdviceResult = {
+  summary: string;
+  emergencyFundNeeded: number;
+  emergencyFundCurrent: number;
+  investableAmount: number;
+  suggestions: MoneyAdviceSuggestion[];
+};
+
+export type MoneyAdviceHistoryItem = MoneyAdviceResult & {
+  id: string;
+  createdAt: string;
+};
+
+export async function getMoneyAdvice(): Promise<
+  { data: MoneyAdviceResult } | { error: string }
+> {
+  const settings = await prisma.appSettings.findFirst({
+    where: { id: "default" },
+  });
+
+  if (!settings?.aiEnabled) {
+    return { error: "AI is not enabled. Enable it in Settings." };
+  }
+
+  const apiKey = settings.openaiApiKey || process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return { error: "OpenAI API key is not configured." };
+  }
+
+  const primaryCurrency = settings.currency ?? "AED";
+  const rates = await getCurrencyRates();
+
+  // Gather all financial data
+  const [incomeSources, reserves, installments, bills] = await Promise.all([
+    prisma.incomeSource.findMany({ where: { isActive: true } }),
+    prisma.reserve.findMany({
+      include: {
+        snapshots: { orderBy: { recordedAt: "desc" }, take: 3 },
+      },
+    }),
+    prisma.installment.findMany({ where: { isActive: true } }),
+    prisma.bill.findMany({ where: { isActive: true } }),
+  ]);
+
+  const totalMonthlyIncome = incomeSources.reduce(
+    (sum, s) =>
+      sum + convertAmount(Number(s.amount), s.currency, primaryCurrency, rates),
+    0
+  );
+  const totalMonthlyInstallments = installments.reduce(
+    (sum, i) =>
+      sum + convertAmount(Number(i.amount), i.currency, primaryCurrency, rates),
+    0
+  );
+  const totalMonthlyBills = bills.reduce(
+    (sum, b) =>
+      sum + convertAmount(Number(b.amount), b.currency, primaryCurrency, rates),
+    0
+  );
+  const totalMonthlyExpenses = totalMonthlyInstallments + totalMonthlyBills;
+  const netCashflow = totalMonthlyIncome - totalMonthlyExpenses;
+
+  // Build context for AI
+  const reserveLines = reserves.map((r) => {
+    const amt = convertAmount(Number(r.amount), r.currency, primaryCurrency, rates);
+    const trend =
+      r.snapshots.length >= 2
+        ? Number(r.snapshots[0].amount) >= Number(r.snapshots[1].amount)
+          ? "stable/growing"
+          : "declining"
+        : "no history";
+    return `- "${r.name}": ${Math.round(amt)} ${primaryCurrency} (type: ${r.type}, location: ${r.location}, trend: ${trend}${r.note ? `, note: ${r.note}` : ""})`;
+  });
+
+  const incomeLines = incomeSources.map(
+    (s) =>
+      `- "${s.name}": ${Math.round(convertAmount(Number(s.amount), s.currency, primaryCurrency, rates))} ${primaryCurrency}/month (day ${s.depositDay})`
+  );
+
+  const obligationLines = [
+    ...installments.map((i) => {
+      const remaining =
+        i.totalCount !== null ? `${i.totalCount - i.paidCount} payments left` : "ongoing";
+      return `- Installment "${i.name}": ${Math.round(convertAmount(Number(i.amount), i.currency, primaryCurrency, rates))} ${primaryCurrency}/month (${remaining})`;
+    }),
+    ...bills.map(
+      (b) =>
+        `- Bill "${b.name}": ~${Math.round(convertAmount(Number(b.amount), b.currency, primaryCurrency, rates))} ${primaryCurrency}/month`
+    ),
+  ];
+
+  const userContext = `
+FINANCIAL PROFILE (all amounts in ${primaryCurrency}):
+
+INCOME SOURCES:
+${incomeLines.length > 0 ? incomeLines.join("\n") : "- None"}
+Total monthly income: ${Math.round(totalMonthlyIncome)} ${primaryCurrency}
+
+MONTHLY OBLIGATIONS:
+${obligationLines.length > 0 ? obligationLines.join("\n") : "- None"}
+Total monthly obligations: ${Math.round(totalMonthlyExpenses)} ${primaryCurrency}
+
+NET MONTHLY CASHFLOW: ${Math.round(netCashflow)} ${primaryCurrency}
+
+RESERVES & SAVINGS:
+${reserveLines.length > 0 ? reserveLines.join("\n") : "- None"}
+Total reserves: ${Math.round(reserves.reduce((s, r) => s + convertAmount(Number(r.amount), r.currency, primaryCurrency, rates), 0))} ${primaryCurrency}
+`.trim();
+
+  const { default: OpenAI } = await import("openai");
+  const openai = new OpenAI({ apiKey });
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_tokens: 2048,
+      messages: [
+        {
+          role: "system",
+          content: `You are a personal finance advisor. Analyze the user's financial data and suggest how they can generate income from their reserves and savings.
+
+Rules:
+- Be specific: use the actual amounts, types, and locations from their data
+- Calculate emergency fund needed (3 months of expenses)
+- Calculate how much is actually investable (total reserves minus emergency fund)
+- Give 3-5 concrete suggestions based on their reserve types and locations
+- For each suggestion, estimate potential monthly and yearly returns
+- Consider the reserve type: cash → savings accounts/deposits, gold → hold or diversify, crypto → staking/yield, family loans → N/A
+- Risk levels: low (savings accounts, deposits), medium (bonds, funds), high (stocks, crypto yield)
+- Be practical for someone in the UAE/Middle East region
+- Respond in the user's currency
+- Be concise and actionable
+
+Return ONLY a JSON object in this exact format:
+{"summary":"Brief 1-2 sentence overview","emergencyFundNeeded":NUMBER,"emergencyFundCurrent":NUMBER,"investableAmount":NUMBER,"suggestions":[{"title":"Short title","description":"2-3 sentence explanation with specific numbers","potentialMonthly":NUMBER_OR_NULL,"potentialYearly":NUMBER_OR_NULL,"risk":"low|medium|high","relatedReserve":"name of reserve or null"}]}
+
+Return ONLY the JSON, no markdown, no explanation.`,
+        },
+        {
+          role: "user",
+          content: userContext,
+        },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content?.trim();
+    if (!content) {
+      return { error: "No response from AI" };
+    }
+
+    const jsonStr = content
+      .replace(/^```(?:json)?\n?/, "")
+      .replace(/\n?```$/, "");
+
+    const parsed = JSON.parse(jsonStr) as MoneyAdviceResult;
+
+    if (!parsed.summary || !Array.isArray(parsed.suggestions)) {
+      return { error: "AI returned an unexpected format" };
+    }
+
+    // Save to history
+    await prisma.moneyAdvice.create({
+      data: {
+        summary: parsed.summary,
+        emergencyFundNeeded: parsed.emergencyFundNeeded,
+        emergencyFundCurrent: parsed.emergencyFundCurrent,
+        investableAmount: parsed.investableAmount,
+        suggestions: JSON.parse(JSON.stringify(parsed.suggestions)),
+      },
+    });
+
+    return { data: parsed };
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      return { error: "AI returned invalid JSON. Please try again." };
+    }
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return { error: `AI analysis failed: ${msg}` };
+  }
+}
+
+export async function getMoneyAdviceHistory(): Promise<MoneyAdviceHistoryItem[]> {
+  const rows = await prisma.moneyAdvice.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    summary: r.summary,
+    emergencyFundNeeded: r.emergencyFundNeeded,
+    emergencyFundCurrent: r.emergencyFundCurrent,
+    investableAmount: r.investableAmount,
+    suggestions: r.suggestions as unknown as MoneyAdviceSuggestion[],
+    createdAt: r.createdAt.toISOString(),
+  }));
+}
+
+export async function deleteMoneyAdvice(id: string) {
+  await prisma.moneyAdvice.delete({ where: { id } });
+  return { success: true };
+}

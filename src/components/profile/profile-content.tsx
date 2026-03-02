@@ -7,6 +7,7 @@ import { IncomeSourcesSection } from "./income-sources-section";
 import { ReservesSection } from "./reserves-section";
 import { InstallmentsSection } from "./installments-section";
 import { BillsSection } from "./bills-section";
+import { MoneyAdviceSection } from "./money-advice-section";
 import {
   getIncomeSources,
   getReserves,
@@ -91,6 +92,7 @@ export function ProfileContent() {
       <ReservesSection reserves={reserves} onRefresh={loadData} />
       <InstallmentsSection installments={installments} onRefresh={loadData} />
       <BillsSection bills={bills} onRefresh={loadData} />
+      <MoneyAdviceSection />
     </div>
   );
 }

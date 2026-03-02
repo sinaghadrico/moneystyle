@@ -337,6 +337,18 @@ model BillPayment {
   @@map("bill_payments")
 }
 
+model MoneyAdvice {
+  id                   String   @id @default(cuid())
+  summary              String
+  emergencyFundNeeded  Float
+  emergencyFundCurrent Float
+  investableAmount     Float
+  suggestions          Json
+  createdAt            DateTime @default(now())
+
+  @@map("money_advices")
+}
+
 model AppSettings {
   id                     String   @id @default("default")
   currency               String   @default("AED")

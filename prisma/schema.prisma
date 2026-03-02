@@ -216,6 +216,8 @@ model AppSettings {
   telegramWebhookSecret  String?
   telegramChatId         String?
   smsApiKey              String?
+  aiEnabled              Boolean  @default(false)
+  openaiApiKey           String?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

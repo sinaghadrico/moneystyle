@@ -24,6 +24,8 @@ const DEFAULTS = {
   telegramWebhookSecret: null,
   telegramChatId: null,
   smsApiKey: null,
+  aiEnabled: false,
+  openaiApiKey: null,
 };
 
 export async function getSettings() {

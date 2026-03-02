@@ -18,6 +18,7 @@ import { revalidatePath } from "next/cache";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getSettings } from "@/actions/settings";
+import { storage } from "@/lib/storage";
 
 export async function getTransactions(
   filters: TransactionFilters = {},
@@ -356,6 +357,59 @@ export async function saveTransactionItems(
         sortOrder: idx,
       })),
     });
+  }
+
+  revalidatePath("/transactions");
+  return { success: true };
+}
+
+export async function addTransactionMedia(
+  transactionId: string,
+  filePath: string,
+): Promise<{ success: true } | { error: string }> {
+  const tx = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    select: { mediaFiles: true },
+  });
+  if (!tx) return { error: "Transaction not found" };
+
+  await prisma.transaction.update({
+    where: { id: transactionId },
+    data: {
+      mediaFiles: { push: filePath },
+      hasReceipt: true,
+    },
+  });
+
+  revalidatePath("/transactions");
+  return { success: true };
+}
+
+export async function removeTransactionMedia(
+  transactionId: string,
+  filePath: string,
+): Promise<{ success: true } | { error: string }> {
+  const tx = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    select: { mediaFiles: true },
+  });
+  if (!tx) return { error: "Transaction not found" };
+
+  const updated = tx.mediaFiles.filter((f) => f !== filePath);
+
+  await prisma.transaction.update({
+    where: { id: transactionId },
+    data: {
+      mediaFiles: updated,
+      hasReceipt: updated.length > 0,
+    },
+  });
+
+  // Delete from storage (best-effort)
+  try {
+    await storage.delete(filePath);
+  } catch {
+    // File may not exist in storage (legacy files)
   }
 
   revalidatePath("/transactions");

@@ -146,5 +146,7 @@ export const settingsUpdateSchema = z.object({
   telegramWebhookSecret: z.string().nullable().optional(),
   telegramChatId: z.string().nullable().optional(),
   smsApiKey: z.string().nullable().optional(),
+  aiEnabled: z.boolean().optional(),
+  openaiApiKey: z.string().nullable().optional(),
 });
 export type SettingsUpdateInput = z.infer<typeof settingsUpdateSchema>;

@@ -10,6 +10,9 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {},
+  images: {
+    remotePatterns: [],
+  },
 };
 
 export default withSerwist(nextConfig);

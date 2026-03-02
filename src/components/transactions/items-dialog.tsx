@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -15,9 +15,10 @@ import {
   getTransactionItems,
   saveTransactionItems,
 } from "@/actions/transactions";
+import { parseReceiptFromUpload } from "@/actions/ai";
 import type { TransactionWithCategory } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Upload, Sparkles, X, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 type ItemRow = {
@@ -29,6 +30,10 @@ type ItemRow = {
 
 function emptyRow(): ItemRow {
   return { name: "", quantity: "1", unitPrice: "", totalPrice: "" };
+}
+
+function isImage(path: string): boolean {
+  return /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(path);
 }
 
 export function ItemsDialog({
@@ -46,9 +51,14 @@ export function ItemsDialog({
   const [rows, setRows] = useState<ItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<string[]>(transaction.mediaFiles ?? []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    setMediaFiles(transaction.mediaFiles ?? []);
     setLoading(true);
     getTransactionItems(transaction.id).then((items) => {
       if (items.length > 0) {
@@ -65,7 +75,7 @@ export function ItemsDialog({
       }
       setLoading(false);
     });
-  }, [open, transaction.id]);
+  }, [open, transaction.id, transaction.mediaFiles]);
 
   const updateRow = (idx: number, field: keyof ItemRow, value: string) => {
     setRows((prev) => {
@@ -92,6 +102,70 @@ export function ItemsDialog({
     setRows((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("transactionId", transaction.id);
+
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error || "Upload failed");
+        } else {
+          setMediaFiles((prev) => [...prev, data.path]);
+          toast.success(`Uploaded ${file.name}`);
+        }
+      } catch {
+        toast.error(`Failed to upload ${file.name}`);
+      }
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleExtract = async () => {
+    const images = mediaFiles.filter(isImage);
+    if (images.length === 0) {
+      toast.error("No image files to extract from");
+      return;
+    }
+
+    setExtracting(true);
+    const result = await parseReceiptFromUpload(transaction.id);
+
+    if ("error" in result) {
+      toast.error(result.error);
+    } else if (result.items.length === 0) {
+      toast.error("No items found in the receipt");
+    } else {
+      const newRows: ItemRow[] = result.items.map((item) => ({
+        name: item.name,
+        quantity: item.quantity.toString(),
+        unitPrice: item.unitPrice != null ? item.unitPrice.toString() : "",
+        totalPrice: item.totalPrice.toString(),
+      }));
+
+      if (rows.length === 0 || rows.every((r) => !r.name.trim())) {
+        setRows(newRows);
+      } else {
+        setRows((prev) => [...prev, ...newRows]);
+      }
+      toast.success(`Extracted ${result.items.length} item(s) from receipt`);
+    }
+
+    setExtracting(false);
+  };
+
+  const handleRemoveMedia = async (filePath: string) => {
+    setMediaFiles((prev) => prev.filter((f) => f !== filePath));
+  };
+
   const itemsTotal = rows.reduce(
     (sum, r) => sum + (parseFloat(r.totalPrice) || 0),
     0,
@@ -101,6 +175,8 @@ export function ItemsDialog({
   const isValid = rows.every(
     (r) => r.name.trim() !== "" && parseFloat(r.totalPrice) > 0,
   );
+
+  const imageFiles = mediaFiles.filter(isImage);
 
   const handleSave = async () => {
     setSaving(true);
@@ -145,6 +221,72 @@ export function ItemsDialog({
           </div>
         ) : (
           <div className="space-y-3 py-4">
+            {/* Receipt upload section */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="mr-1 h-3.5 w-3.5" />
+                  )}
+                  Upload receipt
+                </Button>
+                {imageFiles.length > 0 && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleExtract}
+                    disabled={extracting}
+                  >
+                    {extracting ? (
+                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-1 h-3.5 w-3.5" />
+                    )}
+                    Extract Items
+                  </Button>
+                )}
+              </div>
+
+              {mediaFiles.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {mediaFiles.map((file) => {
+                    const name = file.split("/").pop() ?? file;
+                    return (
+                      <span
+                        key={file}
+                        className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+                      >
+                        <ImageIcon className="h-3 w-3 shrink-0" />
+                        <span className="max-w-[120px] truncate">{name}</span>
+                        <button
+                          onClick={() => handleRemoveMedia(file)}
+                          className="ml-0.5 text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Item rows */}
             {rows.map((row, idx) => (
               <div
                 key={idx}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -19,11 +19,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TRANSACTION_TYPES } from "@/lib/constants";
-import { updateTransaction } from "@/actions/transactions";
+import { updateTransaction, removeTransactionMedia } from "@/actions/transactions";
 import type { TransactionWithCategory } from "@/lib/types";
 import type { Category, Account } from "@prisma/client";
 import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
+import { Upload, X, Loader2, FileIcon, ImageIcon } from "lucide-react";
+
+function isImage(path: string): boolean {
+  return /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(path);
+}
 
 export function EditTransactionDialog({
   transaction,
@@ -41,6 +46,9 @@ export function EditTransactionDialog({
   onSuccess: () => void;
 }) {
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<string[]>(transaction.mediaFiles ?? []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     amount: transaction.amount?.toString() ?? "",
     type: transaction.type,
@@ -71,6 +79,43 @@ export function EditTransactionDialog({
       onSuccess();
     }
     setSaving(false);
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("transactionId", transaction.id);
+
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error || "Upload failed");
+        } else {
+          setMediaFiles((prev) => [...prev, data.path]);
+          toast.success(`Uploaded ${file.name}`);
+        }
+      } catch {
+        toast.error(`Failed to upload ${file.name}`);
+      }
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveFile = async (filePath: string) => {
+    const result = await removeTransactionMedia(transaction.id, filePath);
+    if ("error" in result) {
+      toast.error(result.error);
+    } else {
+      setMediaFiles((prev) => prev.filter((f) => f !== filePath));
+      toast.success("File removed");
+    }
   };
 
   return (
@@ -168,6 +213,60 @@ export function EditTransactionDialog({
               value={form.tagIds}
               onChange={(tagIds) => setForm({ ...form, tagIds })}
             />
+          </div>
+
+          {/* Files section */}
+          <div className="grid gap-2">
+            <Label>Files</Label>
+            {mediaFiles.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {mediaFiles.map((file) => {
+                  const name = file.split("/").pop() ?? file;
+                  return (
+                    <span
+                      key={file}
+                      className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+                    >
+                      {isImage(file) ? (
+                        <ImageIcon className="h-3 w-3 shrink-0" />
+                      ) : (
+                        <FileIcon className="h-3 w-3 shrink-0" />
+                      )}
+                      <span className="max-w-[120px] truncate">{name}</span>
+                      <button
+                        onClick={() => handleRemoveFile(file)}
+                        className="ml-0.5 text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                multiple
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="mr-1 h-3.5 w-3.5" />
+                )}
+                Add File
+              </Button>
+            </div>
           </div>
         </div>
         <ResponsiveDialogFooter>

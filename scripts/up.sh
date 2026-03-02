@@ -3,14 +3,18 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "==> Starting database..."
-docker compose up db -d
+echo "==> Starting database + MinIO..."
+docker compose up db minio -d
 
 echo "==> Waiting for database to be healthy..."
 until docker compose exec db pg_isready -U revenue -q 2>/dev/null; do
   sleep 1
 done
 echo "    Database ready."
+
+echo "==> Initializing MinIO bucket..."
+docker compose up minio-init --wait 2>/dev/null || docker compose run --rm minio-init
+echo "    MinIO ready (console at http://localhost:9001)"
 
 echo "==> Running migrations..."
 npx prisma migrate deploy
@@ -84,6 +88,6 @@ echo "============================================"
 echo ""
 echo "Press Ctrl+C to stop everything."
 
-trap "echo '==> Shutting down...'; kill $DEV_PID $TUNNEL_PID 2>/dev/null; docker compose stop db; echo 'Done.'; exit 0" INT TERM
+trap "echo '==> Shutting down...'; kill $DEV_PID $TUNNEL_PID 2>/dev/null; docker compose stop db minio; echo 'Done.'; exit 0" INT TERM
 
 wait

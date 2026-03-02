@@ -162,6 +162,7 @@ export function TransactionsContent() {
   const [editTx, setEditTx] = useState<TransactionWithCategory | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [viewMedia, setViewMedia] = useState<string[]>([]);
+  const [viewMediaTxId, setViewMediaTxId] = useState<string | undefined>();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showMerge, setShowMerge] = useState(false);
   const [splitTx, setSplitTx] = useState<TransactionWithCategory | null>(null);
@@ -590,7 +591,7 @@ export function TransactionsContent() {
                         variant="ghost"
                         size="sm"
                         className="h-6 gap-1 px-1.5 text-xs"
-                        onClick={() => setViewMedia(tx.mediaFiles)}
+                        onClick={() => { setViewMedia(tx.mediaFiles); setViewMediaTxId(tx.id); }}
                       >
                         {tx.mediaFiles.some((f) => /\.(jpg|jpeg|png)$/i.test(f)) ? (
                           <ImageIcon className="h-3.5 w-3.5" />
@@ -761,7 +762,7 @@ export function TransactionsContent() {
                           variant="ghost"
                           size="sm"
                           className="h-7 gap-1 px-2 text-xs"
-                          onClick={() => setViewMedia(tx.mediaFiles)}
+                          onClick={() => { setViewMedia(tx.mediaFiles); setViewMediaTxId(tx.id); }}
                         >
                           {tx.mediaFiles.some((f) =>
                             /\.(jpg|jpeg|png)$/i.test(f),
@@ -884,8 +885,10 @@ export function TransactionsContent() {
 
       <MediaViewerDialog
         files={viewMedia}
+        transactionId={viewMediaTxId}
         open={viewMedia.length > 0}
-        onOpenChange={(open) => !open && setViewMedia([])}
+        onOpenChange={(open) => { if (!open) { setViewMedia([]); setViewMediaTxId(undefined); } }}
+        onFileDeleted={loadData}
       />
 
       {itemsTx && (

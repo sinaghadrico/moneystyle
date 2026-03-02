@@ -17,6 +17,7 @@ import {
   getTopMerchants,
   getMonthlyCategoryBreakdown,
   getExpensePrediction,
+  getDailySpendData,
 } from "@/actions/dashboard";
 import { getAccountsList } from "@/actions/transactions";
 import { getBudgetProgress, type BudgetProgress } from "@/actions/budgets";
@@ -26,6 +27,7 @@ import { BudgetProgressCard } from "./budget-progress";
 import { PredictionCard } from "./prediction-card";
 import { SavingsCard } from "./savings-card";
 import { DebtsCard } from "./debts-card";
+import { SpendingHeatmap } from "./spending-heatmap";
 import type {
   DashboardStats,
   MonthlyData,
@@ -37,6 +39,7 @@ import type {
   ExpensePrediction,
   SavingsProgress,
   DebtSummary,
+  DailySpend,
 } from "@/lib/types";
 import type { Account } from "@prisma/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,6 +65,7 @@ export function DashboardContent() {
   const [savings, setSavings] = useState<SavingsProgress[]>([]);
   const [debts, setDebts] = useState<DebtSummary[]>([]);
   const [prediction, setPrediction] = useState<ExpensePrediction | null>(null);
+  const [dailySpend, setDailySpend] = useState<DailySpend[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,7 +75,7 @@ export function DashboardContent() {
   const loadData = useCallback(async (p: PeriodFilter, accId: string) => {
     setLoading(true);
     const aid = accId || undefined;
-    const [s, m, c, t, mc, bp, sp, pred, d] = await Promise.all([
+    const [s, m, c, t, mc, bp, sp, pred, d, ds] = await Promise.all([
       getDashboardStats(p, aid),
       getMonthlyData(p, aid),
       getCategoryBreakdown(p, aid),
@@ -81,6 +85,7 @@ export function DashboardContent() {
       getSavingsProgress(),
       getExpensePrediction(),
       getDebtSummary(),
+      getDailySpendData(),
     ]);
     setStats(s);
     setMonthly(m);
@@ -92,6 +97,7 @@ export function DashboardContent() {
     setSavings(sp);
     setPrediction(pred);
     setDebts(d);
+    setDailySpend(ds);
     setLoading(false);
   }, []);
 
@@ -153,6 +159,7 @@ export function DashboardContent() {
             <DebtsCard data={debts} />
           </div>
           <MonthlyCategoryChart data={monthlyCat} categories={catMeta} />
+          <SpendingHeatmap data={dailySpend} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <MonthlyBarChart data={monthly} />
             <CategoryDonut data={categories} />

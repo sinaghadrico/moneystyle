@@ -9,6 +9,7 @@ import type {
   MonthlyCategoryData,
   CategoryMeta,
   ExpensePrediction,
+  DailySpend,
 } from "@/lib/types";
 import { getDateRange } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
@@ -299,4 +300,45 @@ export async function getExpensePrediction(): Promise<ExpensePrediction> {
   const predicted = Math.round(dailyAverage * daysInMonth * 100) / 100;
 
   return { spent, predicted, daysElapsed, daysInMonth, dailyAverage };
+}
+
+export async function getDailySpendData(): Promise<DailySpend[]> {
+  const now = new Date();
+  const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      ...NOT_MERGED,
+      type: "expense",
+      amount: { not: null },
+      date: { gte: threeMonthsAgo },
+    },
+    select: {
+      date: true,
+      amount: true,
+      splits: { select: { amount: true, personId: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  const dayMap = new Map<string, number>();
+
+  for (const t of transactions) {
+    const day = t.date.toISOString().slice(0, 10);
+    const current = dayMap.get(day) ?? 0;
+
+    if (t.splits.length > 0) {
+      for (const s of t.splits) {
+        if (s.personId === null) {
+          dayMap.set(day, current + Number(s.amount));
+        }
+      }
+    } else {
+      dayMap.set(day, current + Number(t.amount));
+    }
+  }
+
+  return Array.from(dayMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, amount]) => ({ date, amount: Math.round(amount * 100) / 100 }));
 }

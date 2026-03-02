@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DebtSummary } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import Link from "next/link";
 
 export function DebtsCard({ data }: { data: DebtSummary[] }) {
   if (data.length === 0) return null;
@@ -22,7 +23,12 @@ export function DebtsCard({ data }: { data: DebtSummary[] }) {
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: d.personColor }}
               />
-              <span className="text-sm font-medium">{d.personName}</span>
+              <Link
+                href={`/persons/${d.personId}/summary`}
+                className="text-sm font-medium hover:underline"
+              >
+                {d.personName}
+              </Link>
             </div>
             <div className="text-right">
               <span

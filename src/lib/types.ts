@@ -117,6 +117,8 @@ export type DebtSummary = {
   balance: number;
 };
 
+export type DailySpend = { date: string; amount: number };
+
 export type SavingsProgress = {
   id: string;
   name: string;

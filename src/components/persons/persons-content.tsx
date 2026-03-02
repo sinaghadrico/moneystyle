@@ -19,6 +19,7 @@ import { getPersonsWithDebt, deletePerson } from "@/actions/persons";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Pencil, Trash2, Phone } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 type PersonWithDebt = {
   id: string;
@@ -92,7 +93,12 @@ export function PersonsContent() {
                       style={{ backgroundColor: p.color }}
                     />
                     <div>
-                      <h3 className="font-semibold">{p.name}</h3>
+                      <Link
+                        href={`/persons/${p.id}/summary`}
+                        className="font-semibold hover:underline"
+                      >
+                        {p.name}
+                      </Link>
                       {p.phone && (
                         <p className="flex items-center gap-1 text-sm text-muted-foreground">
                           <Phone className="h-3 w-3" />

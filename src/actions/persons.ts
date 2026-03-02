@@ -149,6 +149,62 @@ export async function getDebtSummary(): Promise<DebtSummary[]> {
     .sort((a, b) => b.balance - a.balance);
 }
 
+export async function getPersonSummary(personId: string) {
+  const person = await prisma.person.findUnique({
+    where: { id: personId },
+    include: {
+      splits: {
+        include: {
+          transaction: {
+            select: { date: true, merchant: true, amount: true },
+          },
+        },
+        orderBy: { transaction: { date: "desc" } },
+        take: 20,
+      },
+      settlements: {
+        orderBy: { date: "desc" },
+        take: 20,
+      },
+    },
+  });
+
+  if (!person) return null;
+
+  const totalSplits = person.splits.reduce(
+    (s, sp) => s + Number(sp.amount),
+    0,
+  );
+  const totalSettled = person.settlements.reduce(
+    (s, st) => s + Number(st.amount),
+    0,
+  );
+  const balance = Math.round((totalSplits - totalSettled) * 100) / 100;
+
+  return {
+    id: person.id,
+    name: person.name,
+    phone: person.phone,
+    color: person.color,
+    totalSplits,
+    totalSettled,
+    balance,
+    recentSplits: person.splits.map((s) => ({
+      id: s.id,
+      amount: Number(s.amount),
+      description: s.description,
+      date: s.transaction.date.toISOString().slice(0, 10),
+      merchant: s.transaction.merchant,
+    })),
+    recentSettlements: person.settlements.map((s) => ({
+      id: s.id,
+      amount: Number(s.amount),
+      note: s.note,
+      date: s.date.toISOString().slice(0, 10),
+    })),
+  };
+}
+
 export async function createSettlement(data: Record<string, unknown>) {
   const parsed = settlementCreateSchema.safeParse(data);
   if (!parsed.success) {

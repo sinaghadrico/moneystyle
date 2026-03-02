@@ -35,6 +35,7 @@ import { AddTransactionDialog } from "./add-transaction-dialog";
 import { MediaViewerDialog } from "./media-viewer-dialog";
 import { MergeDialog } from "./merge-dialog";
 import { SplitDialog } from "./split-dialog";
+import { SwipeableCard } from "./swipeable-card";
 import {
   getTransactions,
   getCategories,
@@ -46,6 +47,7 @@ import type { TransactionWithCategory, PaginatedResult } from "@/lib/types";
 import type { Category, Account, Person } from "@prisma/client";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import {
   ChevronLeft,
   ChevronRight,
@@ -57,6 +59,8 @@ import {
   Plus,
   Trash2,
   Split,
+  Loader2,
+  ArrowDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -160,6 +164,9 @@ export function TransactionsContent() {
   const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  const { containerRef, pullDistance, refreshing, onTouchStart, onTouchEnd } =
+    usePullToRefresh(async () => { await loadData(); });
 
   const debouncedMerchant = useDebounce(filters.merchant, 300);
   const debouncedSearch = useDebounce(filters.search, 300);
@@ -426,18 +433,56 @@ export function TransactionsContent() {
         />
       </div>
 
-      {/* Mobile card view */}
-      <div className="space-y-3 md:hidden">
+      {/* Mobile card view with pull-to-refresh */}
+      <div
+        ref={containerRef}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        className="space-y-3 md:hidden"
+      >
+        {/* Pull-to-refresh indicator */}
+        {(pullDistance > 0 || refreshing) && (
+          <div
+            className="flex items-center justify-center overflow-hidden transition-all"
+            style={{ height: refreshing ? 40 : pullDistance }}
+          >
+            {refreshing ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : (
+              <ArrowDown
+                className="h-5 w-5 text-muted-foreground transition-transform"
+                style={{ transform: `rotate(${pullDistance >= 72 ? 180 : 0}deg)` }}
+              />
+            )}
+          </div>
+        )}
         {loading
           ? [...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-[120px] rounded-xl" />
             ))
           : result?.data.map((tx) => (
-              <div
+              <SwipeableCard
                 key={tx.id}
-                className={`rounded-lg border p-3 space-y-2 ${selected.has(tx.id) ? "bg-primary/5 border-primary/20" : ""}`}
+                actions={
+                  <div className="flex h-full items-stretch">
+                    <button
+                      className="flex w-[70px] items-center justify-center bg-blue-500 text-white"
+                      onClick={() => setEditTx(tx)}
+                    >
+                      <Pencil className="h-5 w-5" />
+                    </button>
+                    <button
+                      className="flex w-[70px] items-center justify-center bg-red-500 text-white"
+                      onClick={() => setDeleteIds([tx.id])}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </div>
+                }
               >
-                <div className="flex items-start justify-between gap-2">
+                <div
+                  className={`border p-3 space-y-2 ${selected.has(tx.id) ? "bg-primary/5 border-primary/20" : ""}`}
+                >
                   <div className="flex items-start gap-2 min-w-0">
                     <input
                       type="checkbox"
@@ -445,7 +490,7 @@ export function TransactionsContent() {
                       checked={selected.has(tx.id)}
                       onChange={() => toggleSelect(tx.id)}
                     />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">
                           {tx.amount != null ? formatCurrency(Number(tx.amount)) : "-"}
@@ -463,91 +508,73 @@ export function TransactionsContent() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-0.5 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditTx(tx)}>
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    {tx.amount != null && tx.amount > 0 && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Split" onClick={() => setSplitTx(tx)}>
-                        <Split className="h-3 w-3" />
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm pl-6">
+                    {tx.splits && tx.splits.length > 0 ? (
+                      <div className="space-y-0.5 w-full">
+                        {tx.splits.map((s, i) => (
+                          <div key={i} className="flex items-center gap-1.5 text-xs">
+                            <div
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: s.categoryColor ?? "#6b7280" }}
+                            />
+                            <span>{s.categoryName ?? "None"}</span>
+                            {s.personName && (
+                              <span
+                                className="rounded px-1 text-[10px]"
+                                style={{ backgroundColor: (s.personColor ?? "#6b7280") + "20", color: s.personColor ?? "#6b7280" }}
+                              >
+                                {s.personName}
+                              </span>
+                            )}
+                            <span className="text-muted-foreground">({formatCurrency(s.amount)})</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : tx.category ? (
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.category.color }} />
+                        <span>{tx.category.name}</span>
+                      </div>
+                    ) : null}
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.account.color }} />
+                      <span>{tx.account.name}</span>
+                    </div>
+                    {tx.merchant && (
+                      <span className="text-muted-foreground truncate">{tx.merchant}</span>
+                    )}
+                    {tx.tags && tx.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {tx.tags.map((tag) => (
+                          <Badge
+                            key={tag.id}
+                            variant="secondary"
+                            className="text-[10px] px-1.5 py-0"
+                            style={{ backgroundColor: tag.color + "20", color: tag.color, borderColor: tag.color }}
+                          >
+                            {tag.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {tx.mediaFiles.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 gap-1 px-1.5 text-xs"
+                        onClick={() => setViewMedia(tx.mediaFiles)}
+                      >
+                        {tx.mediaFiles.some((f) => /\.(jpg|jpeg|png)$/i.test(f)) ? (
+                          <ImageIcon className="h-3.5 w-3.5" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5" />
+                        )}
+                        {tx.mediaFiles.length > 1 && tx.mediaFiles.length}
                       </Button>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => setDeleteIds([tx.id])}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm pl-6">
-                  {tx.splits && tx.splits.length > 0 ? (
-                    <div className="space-y-0.5 w-full">
-                      {tx.splits.map((s, i) => (
-                        <div key={i} className="flex items-center gap-1.5 text-xs">
-                          <div
-                            className="h-2 w-2 rounded-full"
-                            style={{ backgroundColor: s.categoryColor ?? "#6b7280" }}
-                          />
-                          <span>{s.categoryName ?? "None"}</span>
-                          {s.personName && (
-                            <span
-                              className="rounded px-1 text-[10px]"
-                              style={{ backgroundColor: (s.personColor ?? "#6b7280") + "20", color: s.personColor ?? "#6b7280" }}
-                            >
-                              {s.personName}
-                            </span>
-                          )}
-                          <span className="text-muted-foreground">({formatCurrency(s.amount)})</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : tx.category ? (
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.category.color }} />
-                      <span>{tx.category.name}</span>
-                    </div>
-                  ) : null}
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.account.color }} />
-                    <span>{tx.account.name}</span>
-                  </div>
-                  {tx.merchant && (
-                    <span className="text-muted-foreground truncate">{tx.merchant}</span>
-                  )}
-                  {tx.tags && tx.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {tx.tags.map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          variant="secondary"
-                          className="text-[10px] px-1.5 py-0"
-                          style={{ backgroundColor: tag.color + "20", color: tag.color, borderColor: tag.color }}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  {tx.mediaFiles.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 gap-1 px-1.5 text-xs"
-                      onClick={() => setViewMedia(tx.mediaFiles)}
-                    >
-                      {tx.mediaFiles.some((f) => /\.(jpg|jpeg|png)$/i.test(f)) ? (
-                        <ImageIcon className="h-3.5 w-3.5" />
-                      ) : (
-                        <FileText className="h-3.5 w-3.5" />
-                      )}
-                      {tx.mediaFiles.length > 1 && tx.mediaFiles.length}
-                    </Button>
-                  )}
-                </div>
-              </div>
+              </SwipeableCard>
             ))}
       </div>
 
@@ -783,6 +810,14 @@ export function TransactionsContent() {
           </div>
         </div>
       )}
+
+      {/* Quick-Add FAB (mobile only) */}
+      <button
+        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 md:hidden"
+        onClick={() => setShowAdd(true)}
+      >
+        <Plus className="h-6 w-6" />
+      </button>
 
       {editTx && (
         <EditTransactionDialog

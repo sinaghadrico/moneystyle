@@ -7,8 +7,12 @@ import {
   reserveSchema,
   reserveUpdateSchema,
   recordReserveValueSchema,
+  recordInstallmentPaymentSchema,
   installmentSchema,
   installmentUpdateSchema,
+  billSchema,
+  billUpdateSchema,
+  recordBillPaymentSchema,
 } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
 import { getCurrencyRates } from "@/actions/currencies";
@@ -18,6 +22,9 @@ import type {
   ReserveData,
   ReserveSnapshotData,
   InstallmentData,
+  InstallmentPaymentData,
+  BillData,
+  BillPaymentData,
   FinancialOverview,
 } from "@/lib/types";
 
@@ -189,6 +196,13 @@ export async function getReserveHistory(
 export async function getInstallments(): Promise<InstallmentData[]> {
   const rows = await prisma.installment.findMany({
     orderBy: { createdAt: "desc" },
+    include: {
+      payments: {
+        orderBy: { paidAt: "desc" },
+        take: 1,
+        select: { paidAt: true },
+      },
+    },
   });
   return rows.map((r) => ({
     id: r.id,
@@ -200,6 +214,7 @@ export async function getInstallments(): Promise<InstallmentData[]> {
     paidCount: r.paidCount,
     isActive: r.isActive,
     reminderDays: r.reminderDays,
+    lastPaidAt: r.payments[0]?.paidAt?.toISOString() ?? null,
   }));
 }
 
@@ -232,7 +247,15 @@ export async function deleteInstallment(id: string) {
   return { success: true };
 }
 
-export async function incrementPaidCount(id: string) {
+export async function incrementPaidCount(
+  id: string,
+  data: Record<string, unknown>
+) {
+  const parsed = recordInstallmentPaymentSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
   const inst = await prisma.installment.findUnique({ where: { id } });
   if (!inst) return { error: "Not found" };
 
@@ -240,24 +263,135 @@ export async function incrementPaidCount(id: string) {
   const shouldDeactivate =
     inst.totalCount !== null && newPaidCount >= inst.totalCount;
 
-  await prisma.installment.update({
-    where: { id },
-    data: {
-      paidCount: newPaidCount,
-      isActive: shouldDeactivate ? false : inst.isActive,
-    },
-  });
+  await prisma.$transaction([
+    prisma.installmentPayment.create({
+      data: {
+        installmentId: id,
+        amount: parsed.data.amount,
+        note: parsed.data.note ?? null,
+      },
+    }),
+    prisma.installment.update({
+      where: { id },
+      data: {
+        paidCount: newPaidCount,
+        isActive: shouldDeactivate ? false : inst.isActive,
+      },
+    }),
+  ]);
 
   revalidatePath("/profile");
   return { success: true, completed: shouldDeactivate };
 }
 
+export async function getInstallmentHistory(
+  installmentId: string
+): Promise<InstallmentPaymentData[]> {
+  const rows = await prisma.installmentPayment.findMany({
+    where: { installmentId },
+    orderBy: { paidAt: "desc" },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    amount: Number(r.amount),
+    note: r.note,
+    paidAt: r.paidAt.toISOString(),
+  }));
+}
+
+// ── Bills ──
+
+export async function getBills(): Promise<BillData[]> {
+  const rows = await prisma.bill.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      payments: {
+        orderBy: { paidAt: "desc" },
+        take: 1,
+        select: { paidAt: true, amount: true },
+      },
+    },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    amount: Number(r.amount),
+    currency: r.currency,
+    dueDay: r.dueDay,
+    isActive: r.isActive,
+    reminderDays: r.reminderDays,
+    lastPaidAt: r.payments[0]?.paidAt?.toISOString() ?? null,
+    lastPaidAmount: r.payments[0] ? Number(r.payments[0].amount) : null,
+  }));
+}
+
+export async function createBill(data: Record<string, unknown>) {
+  const parsed = billSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+  await prisma.bill.create({ data: parsed.data });
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function updateBill(id: string, data: Record<string, unknown>) {
+  const parsed = billUpdateSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+  await prisma.bill.update({ where: { id }, data: parsed.data });
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function deleteBill(id: string) {
+  await prisma.bill.delete({ where: { id } });
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function recordBillPayment(
+  billId: string,
+  data: Record<string, unknown>
+) {
+  const parsed = recordBillPaymentSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+  await prisma.billPayment.create({
+    data: {
+      billId,
+      amount: parsed.data.amount,
+      note: parsed.data.note ?? null,
+    },
+  });
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function getBillHistory(
+  billId: string
+): Promise<BillPaymentData[]> {
+  const rows = await prisma.billPayment.findMany({
+    where: { billId },
+    orderBy: { paidAt: "desc" },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    amount: Number(r.amount),
+    note: r.note,
+    paidAt: r.paidAt.toISOString(),
+  }));
+}
+
 // ── Financial Overview ──
 
 export async function getFinancialOverview(): Promise<FinancialOverview> {
-  const [incomeSources, installments, reserves, settings, rates] = await Promise.all([
+  const [incomeSources, installments, bills, reserves, settings, rates] = await Promise.all([
     prisma.incomeSource.findMany({ where: { isActive: true } }),
     prisma.installment.findMany({ where: { isActive: true } }),
+    prisma.bill.findMany({ where: { isActive: true } }),
     prisma.reserve.findMany(),
     prisma.appSettings.findFirst(),
     getCurrencyRates(),
@@ -271,6 +405,10 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
   );
   const totalMonthlyInstallments = installments.reduce(
     (sum, i) => sum + convertAmount(Number(i.amount), i.currency, primaryCurrency, rates),
+    0
+  );
+  const totalMonthlyBills = bills.reduce(
+    (sum, b) => sum + convertAmount(Number(b.amount), b.currency, primaryCurrency, rates),
     0
   );
   const totalReserves = reserves.reduce(
@@ -288,37 +426,54 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
     .map(([type, total]) => ({ type, total: Math.round(total * 100) / 100 }))
     .sort((a, b) => b.total - a.total);
 
-  // Upcoming installments (due within 7 days)
+  // Upcoming payments (due within 7 days) — both installments and bills
   const today = new Date();
   const currentDay = today.getDate();
-  const upcomingInstallments = installments
-    .map((inst) => {
-      let daysUntilDue = inst.dueDay - currentDay;
-      if (daysUntilDue < 0) {
-        const daysInMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() + 1,
-          0
-        ).getDate();
-        daysUntilDue += daysInMonth;
-      }
-      return {
-        id: inst.id,
-        name: inst.name,
-        amount: Math.round(convertAmount(Number(inst.amount), inst.currency, primaryCurrency, rates) * 100) / 100,
-        dueDay: inst.dueDay,
-        daysUntilDue,
-      };
-    })
+
+  const calcDaysUntilDue = (dueDay: number) => {
+    let days = dueDay - currentDay;
+    if (days < 0) {
+      const daysInMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      ).getDate();
+      days += daysInMonth;
+    }
+    return days;
+  };
+
+  const upcomingFromInstallments = installments.map((inst) => ({
+    id: inst.id,
+    name: inst.name,
+    amount: Math.round(convertAmount(Number(inst.amount), inst.currency, primaryCurrency, rates) * 100) / 100,
+    dueDay: inst.dueDay,
+    daysUntilDue: calcDaysUntilDue(inst.dueDay),
+    kind: "installment" as const,
+  }));
+
+  const upcomingFromBills = bills.map((bill) => ({
+    id: bill.id,
+    name: bill.name,
+    amount: Math.round(convertAmount(Number(bill.amount), bill.currency, primaryCurrency, rates) * 100) / 100,
+    dueDay: bill.dueDay,
+    daysUntilDue: calcDaysUntilDue(bill.dueDay),
+    kind: "bill" as const,
+  }));
+
+  const upcomingPayments = [...upcomingFromInstallments, ...upcomingFromBills]
     .filter((i) => i.daysUntilDue <= 7)
     .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+
+  const totalOutgoing = totalMonthlyInstallments + totalMonthlyBills;
 
   return {
     totalMonthlyIncome: Math.round(totalMonthlyIncome * 100) / 100,
     totalMonthlyInstallments: Math.round(totalMonthlyInstallments * 100) / 100,
-    netMonthlyCashflow: Math.round((totalMonthlyIncome - totalMonthlyInstallments) * 100) / 100,
+    totalMonthlyBills: Math.round(totalMonthlyBills * 100) / 100,
+    netMonthlyCashflow: Math.round((totalMonthlyIncome - totalOutgoing) * 100) / 100,
     totalReserves: Math.round(totalReserves * 100) / 100,
     reservesByType,
-    upcomingInstallments,
+    upcomingPayments,
   };
 }

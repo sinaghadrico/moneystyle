@@ -282,19 +282,59 @@ model ReserveSnapshot {
 }
 
 model Installment {
-  id           String   @id @default(cuid())
+  id           String               @id @default(cuid())
   name         String
-  amount       Decimal  @db.Decimal(12, 2)
-  currency     String   @default("AED")
-  dueDay       Int      @default(1)
+  amount       Decimal              @db.Decimal(12, 2)
+  currency     String               @default("AED")
+  dueDay       Int                  @default(1)
   totalCount   Int?
-  paidCount    Int      @default(0)
-  isActive     Boolean  @default(true)
-  reminderDays Int      @default(2)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  paidCount    Int                  @default(0)
+  isActive     Boolean              @default(true)
+  reminderDays Int                  @default(2)
+  payments     InstallmentPayment[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
 
   @@map("installments")
+}
+
+model InstallmentPayment {
+  id            String      @id @default(cuid())
+  installmentId String
+  installment   Installment @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+  amount        Decimal     @db.Decimal(12, 2)
+  note          String?
+  paidAt        DateTime    @default(now())
+
+  @@index([installmentId])
+  @@map("installment_payments")
+}
+
+model Bill {
+  id           String        @id @default(cuid())
+  name         String
+  amount       Decimal       @db.Decimal(12, 2)
+  currency     String        @default("AED")
+  dueDay       Int           @default(1)
+  isActive     Boolean       @default(true)
+  reminderDays Int           @default(2)
+  payments     BillPayment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("bills")
+}
+
+model BillPayment {
+  id     String   @id @default(cuid())
+  billId String
+  bill   Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
+  amount Decimal  @db.Decimal(12, 2)
+  note   String?
+  paidAt DateTime @default(now())
+
+  @@index([billId])
+  @@map("bill_payments")
 }
 
 model AppSettings {

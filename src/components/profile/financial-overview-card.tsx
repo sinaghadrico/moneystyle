@@ -47,7 +47,7 @@ export function FinancialOverviewCard({
               Monthly Bills
             </div>
             <p className="mt-1 text-xl font-bold">
-              {formatCurrency(overview.totalMonthlyInstallments)}
+              {formatCurrency(overview.totalMonthlyInstallments + overview.totalMonthlyBills)}
             </p>
           </CardContent>
         </Card>
@@ -79,29 +79,29 @@ export function FinancialOverviewCard({
         </Card>
       </div>
 
-      {(overview.upcomingInstallments.length > 0 ||
+      {(overview.upcomingPayments.length > 0 ||
         overview.reservesByType.length > 0) && (
         <Card>
           <CardContent className="pt-4 pb-4 space-y-2">
-            {overview.upcomingInstallments.map((inst) => (
+            {overview.upcomingPayments.map((item) => (
               <div
-                key={inst.id}
+                key={item.id}
                 className="flex items-center gap-2 text-sm"
               >
                 <Clock className="h-4 w-4 text-orange-500 shrink-0" />
                 <span>
-                  {inst.daysUntilDue === 0 ? (
+                  {item.daysUntilDue === 0 ? (
                     <span className="font-semibold text-red-600">
-                      TODAY: {inst.name} — {formatCurrency(inst.amount)}
+                      TODAY: {item.name} — {formatCurrency(item.amount)}
                     </span>
                   ) : (
                     <span>
-                      {inst.name} due in{" "}
+                      {item.name} due in{" "}
                       <span className="font-semibold">
-                        {inst.daysUntilDue} day
-                        {inst.daysUntilDue !== 1 ? "s" : ""}
+                        {item.daysUntilDue} day
+                        {item.daysUntilDue !== 1 ? "s" : ""}
                       </span>{" "}
-                      ({formatCurrency(inst.amount)})
+                      ({formatCurrency(item.amount)})
                     </span>
                   )}
                 </span>

@@ -183,6 +183,11 @@ export const recordReserveValueSchema = z.object({
   note: z.string().max(500).nullable().optional(),
 });
 
+export const recordInstallmentPaymentSchema = z.object({
+  amount: z.coerce.number().positive("Amount must be positive"),
+  note: z.string().max(500).nullable().optional(),
+});
+
 export const installmentSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   amount: z.coerce.number().positive("Amount must be positive"),
@@ -197,6 +202,26 @@ export const installmentSchema = z.object({
 export const installmentUpdateSchema = installmentSchema.partial();
 
 export type InstallmentInput = z.infer<typeof installmentSchema>;
+
+// Bill validators
+
+export const billSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  amount: z.coerce.number().positive("Amount must be positive"),
+  currency: z.string().min(1).max(5).default("AED"),
+  dueDay: z.coerce.number().int().min(1).max(31).default(1),
+  isActive: z.boolean().default(true),
+  reminderDays: z.coerce.number().int().min(0).max(30).default(2),
+});
+
+export const billUpdateSchema = billSchema.partial();
+
+export type BillInput = z.infer<typeof billSchema>;
+
+export const recordBillPaymentSchema = z.object({
+  amount: z.coerce.number().positive("Amount must be positive"),
+  note: z.string().max(500).nullable().optional(),
+});
 
 // Currency validators
 

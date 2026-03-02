@@ -6,16 +6,19 @@ import { FinancialOverviewCard } from "./financial-overview-card";
 import { IncomeSourcesSection } from "./income-sources-section";
 import { ReservesSection } from "./reserves-section";
 import { InstallmentsSection } from "./installments-section";
+import { BillsSection } from "./bills-section";
 import {
   getIncomeSources,
   getReserves,
   getInstallments,
+  getBills,
   getFinancialOverview,
 } from "@/actions/profile";
 import type {
   IncomeSourceData,
   ReserveData,
   InstallmentData,
+  BillData,
   FinancialOverview,
 } from "@/lib/types";
 
@@ -24,19 +27,22 @@ export function ProfileContent() {
   const [incomeSources, setIncomeSources] = useState<IncomeSourceData[]>([]);
   const [reserves, setReserves] = useState<ReserveData[]>([]);
   const [installments, setInstallments] = useState<InstallmentData[]>([]);
+  const [bills, setBills] = useState<BillData[]>([]);
   const [overview, setOverview] = useState<FinancialOverview | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [sources, res, inst, ov] = await Promise.all([
+    const [sources, res, inst, bl, ov] = await Promise.all([
       getIncomeSources(),
       getReserves(),
       getInstallments(),
+      getBills(),
       getFinancialOverview(),
     ]);
     setIncomeSources(sources);
     setReserves(res);
     setInstallments(inst);
+    setBills(bl);
     setOverview(ov);
     setLoading(false);
   }, []);
@@ -84,6 +90,7 @@ export function ProfileContent() {
       <IncomeSourcesSection sources={incomeSources} onRefresh={loadData} />
       <ReservesSection reserves={reserves} onRefresh={loadData} />
       <InstallmentsSection installments={installments} onRefresh={loadData} />
+      <BillsSection bills={bills} onRefresh={loadData} />
     </div>
   );
 }

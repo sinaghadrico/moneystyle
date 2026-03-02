@@ -1,0 +1,106 @@
+"use client";
+
+import { useState } from "react";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { incrementPaidCount } from "@/actions/profile";
+import { toast } from "sonner";
+import type { InstallmentData } from "@/lib/types";
+
+export function RecordPaymentDialog({
+  installment,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  installment: InstallmentData;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+}) {
+  const [amount, setAmount] = useState(installment.amount.toString());
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    setError("");
+    setSaving(true);
+
+    const result = await incrementPaidCount(installment.id, {
+      amount: parseFloat(amount),
+      note: note.trim() || null,
+    });
+
+    if (result.error) {
+      const errors = result.error;
+      if (typeof errors === "string") {
+        setError(errors);
+      } else {
+        setError(
+          Object.values(errors as Record<string, string[]>)
+            .flat()
+            .join(", ")
+        );
+      }
+    } else if (result.completed) {
+      toast.success("All installments paid! Marked as inactive.");
+      onOpenChange(false);
+      onSuccess();
+    } else {
+      toast.success("Payment recorded");
+      onOpenChange(false);
+      onSuccess();
+    }
+    setSaving(false);
+  };
+
+  return (
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
+            Record Payment — {installment.name}
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label>Amount ({installment.currency})</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Note (optional)</Label>
+            <Input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. March bill"
+            />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={saving || !amount}>
+            {saving ? "Saving..." : "Record Payment"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
+  );
+}

@@ -24,29 +24,32 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const installments = await prisma.installment.findMany({
-      where: { isActive: true },
-    });
+    const [installments, bills] = await Promise.all([
+      prisma.installment.findMany({ where: { isActive: true } }),
+      prisma.bill.findMany({ where: { isActive: true } }),
+    ]);
 
-    if (installments.length === 0) {
+    if (installments.length === 0 && bills.length === 0) {
       return NextResponse.json({ ok: true, reminders: 0 });
     }
 
     const today = new Date();
     const currentDay = today.getDate();
+    const daysInMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0
+    ).getDate();
     const lines: string[] = [];
 
-    for (const inst of installments) {
-      let daysUntilDue = inst.dueDay - currentDay;
-      if (daysUntilDue < 0) {
-        const daysInMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() + 1,
-          0
-        ).getDate();
-        daysUntilDue += daysInMonth;
-      }
+    const calcDaysUntilDue = (dueDay: number) => {
+      let days = dueDay - currentDay;
+      if (days < 0) days += daysInMonth;
+      return days;
+    };
 
+    for (const inst of installments) {
+      const daysUntilDue = calcDaysUntilDue(inst.dueDay);
       const amount = Number(inst.amount);
       const progress =
         inst.totalCount !== null
@@ -63,16 +66,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    for (const bill of bills) {
+      const daysUntilDue = calcDaysUntilDue(bill.dueDay);
+      const amount = Number(bill.amount);
+      const amtStr = `~${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })} ${bill.currency}`;
+
+      if (daysUntilDue === 0) {
+        lines.push(`🔴 TODAY: ${bill.name} — ${amtStr}`);
+      } else if (daysUntilDue === bill.reminderDays) {
+        lines.push(
+          `⏰ ${bill.name} due in ${daysUntilDue} day${daysUntilDue !== 1 ? "s" : ""} — ${amtStr}`
+        );
+      }
+    }
+
     if (lines.length === 0) {
       return NextResponse.json({ ok: true, reminders: 0 });
     }
 
-    const message = `📋 Installment Reminders\n\n${lines.join("\n")}`;
+    const message = `📋 Payment Reminders\n\n${lines.join("\n")}`;
     await sendTelegramMessage(chatId, message, undefined, botToken);
 
     return NextResponse.json({ ok: true, reminders: lines.length });
   } catch (err) {
-    console.error("Installment reminders cron error:", err);
+    console.error("Payment reminders cron error:", err);
     return NextResponse.json(
       { error: "Failed to send reminders" },
       { status: 500 }

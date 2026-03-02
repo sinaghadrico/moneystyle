@@ -342,19 +342,48 @@ export type InstallmentData = {
   paidCount: number;
   isActive: boolean;
   reminderDays: number;
+  lastPaidAt: string | null;
+};
+
+export type InstallmentPaymentData = {
+  id: string;
+  amount: number;
+  note: string | null;
+  paidAt: string;
+};
+
+export type BillData = {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  dueDay: number;
+  isActive: boolean;
+  reminderDays: number;
+  lastPaidAt: string | null;
+  lastPaidAmount: number | null;
+};
+
+export type BillPaymentData = {
+  id: string;
+  amount: number;
+  note: string | null;
+  paidAt: string;
 };
 
 export type FinancialOverview = {
   totalMonthlyIncome: number;
   totalMonthlyInstallments: number;
+  totalMonthlyBills: number;
   netMonthlyCashflow: number;
   totalReserves: number;
   reservesByType: { type: string; total: number }[];
-  upcomingInstallments: {
+  upcomingPayments: {
     id: string;
     name: string;
     amount: number;
     dueDay: number;
     daysUntilDue: number;
+    kind: "installment" | "bill";
   }[];
 };

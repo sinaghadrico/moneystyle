@@ -120,6 +120,20 @@ export const smsPatternUpdateSchema = smsPatternCreateSchema.partial();
 export type SmsPatternCreateInput = z.infer<typeof smsPatternCreateSchema>;
 export type SmsPatternUpdateInput = z.infer<typeof smsPatternUpdateSchema>;
 
+export const transactionItemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  quantity: z.coerce.number().positive("Quantity must be positive").default(1),
+  unitPrice: z.coerce.number().nullable().optional(),
+  totalPrice: z.coerce.number().positive("Total price must be positive"),
+});
+
+export const saveTransactionItemsSchema = z.object({
+  transactionId: z.string().min(1),
+  items: z.array(transactionItemSchema),
+});
+
+export type SaveTransactionItemsInput = z.infer<typeof saveTransactionItemsSchema>;
+
 export const settingsUpdateSchema = z.object({
   currency: z.string().min(1).max(5).optional(),
   defaultPageSize: z.coerce.number().int().min(5).max(100).optional(),

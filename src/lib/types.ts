@@ -24,6 +24,7 @@ export type TransactionWithCategory = Omit<Transaction, "amount"> & {
   account: Account;
   tags: TagData[];
   splits?: TransactionSplitData[];
+  lineItemCount?: number;
 };
 
 export type AccountWithStats = {
@@ -157,6 +158,14 @@ export type WrappedData = {
     longestNoSpendStreak: number;
   };
   categoryBreakdown: { name: string; color: string; amount: number }[];
+};
+
+export type TransactionItemData = {
+  id: string;
+  name: string;
+  quantity: number;
+  unitPrice: number | null;
+  totalPrice: number;
 };
 
 export type SavingsProgress = {

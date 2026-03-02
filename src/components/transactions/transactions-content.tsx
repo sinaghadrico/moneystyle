@@ -35,6 +35,7 @@ import { AddTransactionDialog } from "./add-transaction-dialog";
 import { MediaViewerDialog } from "./media-viewer-dialog";
 import { MergeDialog } from "./merge-dialog";
 import { SplitDialog } from "./split-dialog";
+import { ItemsDialog } from "./items-dialog";
 import { SwipeableCard } from "./swipeable-card";
 import {
   getTransactions,
@@ -60,6 +61,7 @@ import {
   Plus,
   Trash2,
   Split,
+  List,
   Loader2,
   ArrowDown,
 } from "lucide-react";
@@ -163,6 +165,7 @@ export function TransactionsContent() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showMerge, setShowMerge] = useState(false);
   const [splitTx, setSplitTx] = useState<TransactionWithCategory | null>(null);
+  const [itemsTx, setItemsTx] = useState<TransactionWithCategory | null>(null);
   const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -467,7 +470,7 @@ export function TransactionsContent() {
           : result?.data.map((tx) => (
               <SwipeableCard
                 key={tx.id}
-                actionWidth={tx.amount != null && tx.amount > 0 ? 210 : 140}
+                actionWidth={tx.amount != null && tx.amount > 0 ? 280 : 210}
                 actions={
                   <div className="flex h-full items-stretch">
                     <button
@@ -475,6 +478,12 @@ export function TransactionsContent() {
                       onClick={() => setEditTx(tx)}
                     >
                       <Pencil className="h-5 w-5" />
+                    </button>
+                    <button
+                      className="flex w-[70px] items-center justify-center bg-violet-500 text-white"
+                      onClick={() => setItemsTx(tx)}
+                    >
+                      <List className="h-5 w-5" />
                     </button>
                     {tx.amount != null && tx.amount > 0 && (
                       <button
@@ -569,6 +578,12 @@ export function TransactionsContent() {
                           </Badge>
                         ))}
                       </div>
+                    )}
+                    {(tx.lineItemCount ?? 0) > 0 && (
+                      <Badge variant="secondary" className="text-[10px] gap-1 px-1.5 py-0">
+                        <List className="h-3 w-3" />
+                        {tx.lineItemCount}
+                      </Badge>
                     )}
                     {tx.mediaFiles.length > 0 && (
                       <Button
@@ -769,6 +784,20 @@ export function TransactionsContent() {
                         >
                           <Pencil className="h-3 w-3" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 relative"
+                          title="Line items"
+                          onClick={() => setItemsTx(tx)}
+                        >
+                          <List className="h-3 w-3" />
+                          {(tx.lineItemCount ?? 0) > 0 && (
+                            <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-500 text-[9px] text-white">
+                              {tx.lineItemCount}
+                            </span>
+                          )}
+                        </Button>
                         {tx.amount != null && tx.amount > 0 && (
                           <Button
                             variant="ghost"
@@ -858,6 +887,15 @@ export function TransactionsContent() {
         open={viewMedia.length > 0}
         onOpenChange={(open) => !open && setViewMedia([])}
       />
+
+      {itemsTx && (
+        <ItemsDialog
+          transaction={itemsTx}
+          open={!!itemsTx}
+          onOpenChange={(open) => !open && setItemsTx(null)}
+          onSaved={loadData}
+        />
+      )}
 
       {splitTx && (
         <SplitDialog

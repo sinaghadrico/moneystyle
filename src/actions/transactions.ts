@@ -5,10 +5,12 @@ import type {
   TransactionFilters,
   PaginatedResult,
   TransactionWithCategory,
+  TransactionItemData,
 } from "@/lib/types";
 import {
   transactionUpdateSchema,
   transactionCreateSchema,
+  saveTransactionItemsSchema,
 } from "@/lib/validators";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { Prisma } from "@prisma/client";
@@ -92,6 +94,7 @@ export async function getTransactions(
         account: true,
         tags: { include: { tag: true } },
         splits: { include: { category: true, person: true } },
+        _count: { select: { lineItems: true } },
       },
       orderBy,
       skip: (page - 1) * pageSize,
@@ -120,6 +123,7 @@ export async function getTransactions(
         amount: Number(s.amount),
         description: s.description,
       })),
+      lineItemCount: tx._count.lineItems,
     })),
     total,
     page,
@@ -307,4 +311,53 @@ export async function getCategories() {
 
 export async function getAccountsList() {
   return prisma.account.findMany({ orderBy: { name: "asc" } });
+}
+
+export async function getTransactionItems(
+  transactionId: string,
+): Promise<TransactionItemData[]> {
+  const items = await prisma.transactionItem.findMany({
+    where: { transactionId },
+    orderBy: { sortOrder: "asc" },
+  });
+
+  return items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    totalPrice: item.totalPrice,
+  }));
+}
+
+export async function saveTransactionItems(
+  transactionId: string,
+  items: { name: string; quantity: number; unitPrice?: number | null; totalPrice: number }[],
+) {
+  const parsed = saveTransactionItemsSchema.safeParse({ transactionId, items });
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId } });
+  if (!tx) return { error: "Transaction not found" };
+
+  // Delete existing items then bulk create (same pattern as splitTransaction)
+  await prisma.transactionItem.deleteMany({ where: { transactionId } });
+
+  if (items.length > 0) {
+    await prisma.transactionItem.createMany({
+      data: items.map((item, idx) => ({
+        transactionId,
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice ?? null,
+        totalPrice: item.totalPrice,
+        sortOrder: idx,
+      })),
+    });
+  }
+
+  revalidatePath("/transactions");
+  return { success: true };
 }

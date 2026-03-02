@@ -463,6 +463,7 @@ export function TransactionsContent() {
           : result?.data.map((tx) => (
               <SwipeableCard
                 key={tx.id}
+                actionWidth={tx.amount != null && tx.amount > 0 ? 210 : 140}
                 actions={
                   <div className="flex h-full items-stretch">
                     <button
@@ -471,6 +472,14 @@ export function TransactionsContent() {
                     >
                       <Pencil className="h-5 w-5" />
                     </button>
+                    {tx.amount != null && tx.amount > 0 && (
+                      <button
+                        className="flex w-[70px] items-center justify-center bg-amber-500 text-white"
+                        onClick={() => setSplitTx(tx)}
+                      >
+                        <Split className="h-5 w-5" />
+                      </button>
+                    )}
                     <button
                       className="flex w-[70px] items-center justify-center bg-red-500 text-white"
                       onClick={() => setDeleteIds([tx.id])}

@@ -1,4 +1,10 @@
 import { Client as MinioClient } from "minio";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 
 export interface StorageProvider {
   upload(path: string, buffer: Buffer, contentType: string): Promise<void>;
@@ -46,5 +52,64 @@ class MinioStorageProvider implements StorageProvider {
   }
 }
 
-export const storage: StorageProvider = new MinioStorageProvider();
-export const BUCKET = process.env.MINIO_BUCKET || "transaction-media";
+class S3StorageProvider implements StorageProvider {
+  private client: S3Client;
+  private bucket: string;
+
+  constructor() {
+    this.bucket = process.env.AWS_S3_BUCKET || "transaction-media";
+    this.client = new S3Client({
+      region: process.env.AWS_REGION || "me-south-1",
+    });
+  }
+
+  async upload(path: string, buffer: Buffer, contentType: string): Promise<void> {
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: path,
+        Body: buffer,
+        ContentType: contentType,
+      })
+    );
+  }
+
+  async delete(path: string): Promise<void> {
+    await this.client.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: path,
+      })
+    );
+  }
+
+  getPublicUrl(path: string): string {
+    return `/api/media/${path}`;
+  }
+
+  async getBuffer(path: string): Promise<Buffer> {
+    const res = await this.client.send(
+      new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: path,
+      })
+    );
+    const stream = res.Body as AsyncIterable<Uint8Array>;
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+}
+
+function createStorageProvider(): StorageProvider {
+  if (process.env.AWS_S3_BUCKET) {
+    return new S3StorageProvider();
+  }
+  return new MinioStorageProvider();
+}
+
+export const storage: StorageProvider = createStorageProvider();
+export const BUCKET =
+  process.env.AWS_S3_BUCKET || process.env.MINIO_BUCKET || "transaction-media";

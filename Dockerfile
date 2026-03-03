@@ -15,6 +15,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
+ENV NODE_OPTIONS="--max-old-space-size=460"
 RUN pnpm next build
 
 # --- Runner ---

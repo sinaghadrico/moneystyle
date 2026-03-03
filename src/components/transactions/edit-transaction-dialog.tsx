@@ -26,6 +26,8 @@ import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { Upload, X, Loader2, FileIcon, ImageIcon } from "lucide-react";
+import { FeatureInfo } from "@/components/ui/feature-info";
+import { SPREAD_MONTHS_INFO } from "@/lib/feature-info-content";
 
 function isImage(path: string): boolean {
   return /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(path);
@@ -233,6 +235,7 @@ export function EditTransactionDialog({
                 }
               />
               <Label htmlFor="edit-spread-toggle" className="mb-0">Spread across months</Label>
+              <FeatureInfo content={SPREAD_MONTHS_INFO} />
             </div>
             {form.spreadMonths && (
               <div className="space-y-1">

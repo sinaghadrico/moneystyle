@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { useAppSettings } from "@/components/settings/settings-provider";
+import { FeatureInfo } from "@/components/ui/feature-info";
+import { SPREAD_MONTHS_INFO } from "@/lib/feature-info-content";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -228,6 +230,7 @@ export function AddTransactionDialog({
                 }
               />
               <Label htmlFor="spread-toggle" className="mb-0">Spread across months</Label>
+              <FeatureInfo content={SPREAD_MONTHS_INFO} />
             </div>
             {form.spreadMonths && (
               <div className="space-y-1">

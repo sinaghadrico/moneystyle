@@ -138,16 +138,16 @@ export function SettingsContent() {
     const result = await updateSettings(settings);
     setSaving(false);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error(`❌ ${result.error}`);
     } else {
-      toast.success("Settings saved");
+      toast.success("✅ Settings saved");
       await refreshAppSettings();
     }
   };
 
   const handleTestTelegram = async () => {
     if (!settings?.telegramBotToken || !settings?.telegramChatId) {
-      toast.error("Bot token and chat ID are required");
+      toast.error("❌ Bot token and chat ID are required");
       return;
     }
     setTestingTelegram(true);
@@ -157,9 +157,9 @@ export function SettingsContent() {
     );
     setTestingTelegram(false);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error(`❌ ${result.error}`);
     } else {
-      toast.success("Test message sent! Check your Telegram.");
+      toast.success("📨 Test message sent! Check your Telegram.");
     }
   };
 
@@ -180,7 +180,7 @@ export function SettingsContent() {
 
     if (format === "csv") setExportingCsv(false);
     else setExportingJson(false);
-    toast.success(`Exported as ${format.toUpperCase()}`);
+    toast.success(`📤 Exported as ${format.toUpperCase()}`);
   };
 
   const update = (patch: Partial<Settings>) => {
@@ -190,7 +190,7 @@ export function SettingsContent() {
   if (loading || !settings) {
     return (
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">⚙️ Settings</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-48 rounded-xl" />
@@ -203,7 +203,7 @@ export function SettingsContent() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">⚙️ Settings</h2>
         <Button onClick={handleSave} disabled={saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Save Changes

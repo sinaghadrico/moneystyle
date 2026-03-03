@@ -44,14 +44,14 @@ export function ReservesSection({
 
   const handleDelete = async (id: string) => {
     await deleteReserve(id);
-    toast.success("Reserve deleted");
+    toast.success("🗑️ Reserve deleted");
     onRefresh();
   };
 
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Reserves & Savings</h3>
+        <h3 className="text-lg font-semibold">💰 Reserves & Savings</h3>
         <Button size="sm" variant="outline" onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-4 w-4" />
           Add
@@ -61,7 +61,7 @@ export function ReservesSection({
       {reserves.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            No reserves yet. Track cash, gold, crypto, or family savings.
+            💰 No reserves yet. Track cash, gold, crypto, or family savings.
           </CardContent>
         </Card>
       ) : (

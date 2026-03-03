@@ -66,7 +66,7 @@ export function AccountFormDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Account updated" : "Account created");
+      toast.success(isEdit ? "✅ Account updated" : "✅ Account created");
       onOpenChange(false);
       onSuccess();
     }

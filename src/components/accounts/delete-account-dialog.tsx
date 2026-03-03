@@ -47,17 +47,17 @@ export function DeleteAccountDialog({
 
   const handleDelete = async () => {
     if (!reassignId) {
-      toast.error("Select an account to reassign transactions to");
+      toast.error("❌ Select an account to reassign transactions to");
       return;
     }
     setDeleting(true);
     const result = await deleteAccount(account.id, reassignId);
     if (result.error) {
       toast.error(
-        typeof result.error === "string" ? result.error : "Failed to delete"
+        "❌ " + (typeof result.error === "string" ? result.error : "Failed to delete")
       );
     } else {
-      toast.success("Account deleted");
+      toast.success("🗑️ Account deleted");
       onOpenChange(false);
       onSuccess();
     }

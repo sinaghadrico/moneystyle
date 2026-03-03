@@ -39,7 +39,7 @@ export function SpendingComparison({
     setLoading(true);
     const res = await getWeekendSpendingComparison(planId, offerIndex);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error("❌ " + res.error);
     } else {
       setData(res);
     }
@@ -55,10 +55,10 @@ export function SpendingComparison({
   const handleUnlink = async (txId: string) => {
     const res = await unlinkTransactionFromWeekendPlan(planId, txId);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error("❌ " + res.error);
     } else {
       onUnlink(res.linkedTransactionIds);
-      toast.success("Transaction unlinked");
+      toast.success("✅ Transaction unlinked");
     }
   };
 

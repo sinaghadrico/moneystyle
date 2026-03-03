@@ -62,9 +62,9 @@ export function MediaViewerDialog({
     setDeleting(true);
     const result = await removeTransactionMedia(transactionId, current);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error(`❌ ${result.error}`);
     } else {
-      toast.success("File deleted");
+      toast.success("🗑️ File deleted");
       const newFiles = localFiles.filter((f) => f !== current);
       setLocalFiles(newFiles);
       if (newFiles.length === 0) {

@@ -302,7 +302,7 @@ export function TransactionsContent() {
     setDeleting(false);
     if ("success" in res) {
       toast.success(
-        `Deleted ${res.count} transaction${res.count > 1 ? "s" : ""}`,
+        `🗑️ Deleted ${res.count} transaction${res.count > 1 ? "s" : ""}`,
       );
       setSelected((prev) => {
         const next = new Set(prev);
@@ -311,7 +311,7 @@ export function TransactionsContent() {
       });
       loadData();
     } else {
-      toast.error(res.error);
+      toast.error(`❌ ${res.error}`);
     }
     setDeleteIds([]);
   };
@@ -323,7 +323,7 @@ export function TransactionsContent() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Transactions</h2>
+          <h2 className="text-2xl font-bold tracking-tight">💳 Transactions</h2>
           <p className="text-muted-foreground">
             {result ? `${result.total} transactions` : "Loading..."}
           </p>

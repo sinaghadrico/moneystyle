@@ -79,9 +79,9 @@ export function EditTransactionDialog({
     });
 
     if (result.error) {
-      toast.error("Failed to update transaction");
+      toast.error("❌ Failed to update transaction");
     } else {
-      toast.success("Transaction updated");
+      toast.success("✅ Transaction updated");
       onOpenChange(false);
       onSuccess();
     }
@@ -101,13 +101,13 @@ export function EditTransactionDialog({
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         const data = await res.json();
         if (!res.ok) {
-          toast.error(data.error || "Upload failed");
+          toast.error(`❌ ${data.error || "Upload failed"}`);
         } else {
           setMediaFiles((prev) => [...prev, data.path]);
-          toast.success(`Uploaded ${file.name}`);
+          toast.success(`📎 Uploaded ${file.name}`);
         }
       } catch {
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(`❌ Failed to upload ${file.name}`);
       }
     }
 
@@ -118,10 +118,10 @@ export function EditTransactionDialog({
   const handleRemoveFile = async (filePath: string) => {
     const result = await removeTransactionMedia(transaction.id, filePath);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error(`❌ ${result.error}`);
     } else {
       setMediaFiles((prev) => prev.filter((f) => f !== filePath));
-      toast.success("File removed");
+      toast.success("🗑️ File removed");
     }
   };
 

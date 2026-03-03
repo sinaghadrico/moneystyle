@@ -69,7 +69,7 @@ export function BillDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Bill updated" : "Bill added");
+      toast.success(isEdit ? "✅ Bill updated" : "✅ Bill added");
       onOpenChange(false);
       onSuccess();
     }

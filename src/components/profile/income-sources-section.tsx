@@ -23,14 +23,14 @@ export function IncomeSourcesSection({
 
   const handleDelete = async (id: string) => {
     await deleteIncomeSource(id);
-    toast.success("Income source deleted");
+    toast.success("🗑️ Income source deleted");
     onRefresh();
   };
 
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Income Sources</h3>
+        <h3 className="text-lg font-semibold">💵 Income Sources</h3>
         <Button size="sm" variant="outline" onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-4 w-4" />
           Add
@@ -40,7 +40,7 @@ export function IncomeSourcesSection({
       {sources.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            No income sources yet. Add your salary, freelance income, etc.
+            💵 No income sources yet. Add your salary, freelance income, etc.
           </CardContent>
         </Card>
       ) : (

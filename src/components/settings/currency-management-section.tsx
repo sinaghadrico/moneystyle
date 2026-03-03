@@ -55,7 +55,7 @@ export function CurrencyManagementSection() {
   const handleDelete = async (id: string) => {
     setDeleting(id);
     await deleteCurrency(id);
-    toast.success("Currency deleted");
+    toast.success("🗑️ Currency deleted");
     setDeleting(null);
     loadCurrencies();
   };
@@ -205,7 +205,7 @@ function CurrencyDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Currency updated" : "Currency added");
+      toast.success(isEdit ? "✅ Currency updated" : "✅ Currency added");
       onOpenChange(false);
       onSuccess();
     }

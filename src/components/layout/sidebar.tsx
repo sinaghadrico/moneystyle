@@ -58,7 +58,7 @@ export function Sidebar() {
     <aside className="hidden md:flex h-screen w-56 flex-col border-r bg-card px-3 py-4">
       <div className="mb-6 px-3">
         <h1 className="text-lg font-bold tracking-tight">Revenue</h1>
-        <p className="text-xs text-muted-foreground">Finance Tracker</p>
+        <p className="text-xs text-muted-foreground">💰 Finance Tracker</p>
       </div>
       <NavLinks />
       <div className="mt-auto pt-4 border-t">

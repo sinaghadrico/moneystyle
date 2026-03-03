@@ -73,10 +73,10 @@ export function ItemGroupsDialog({ open, onOpenChange }: Props) {
       rawNames: editRawNames,
     });
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
       return;
     }
-    toast.success("Group updated");
+    toast.success("✅ Group updated");
     cancelEdit();
     loadGroups();
   }
@@ -84,10 +84,10 @@ export function ItemGroupsDialog({ open, onOpenChange }: Props) {
   async function handleDelete(id: string) {
     const result = await deleteItemGroup(id);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
       return;
     }
-    toast.success("Group deleted");
+    toast.success("🗑️ Group deleted");
     loadGroups();
   }
 
@@ -109,10 +109,10 @@ export function ItemGroupsDialog({ open, onOpenChange }: Props) {
       rawNames: createMembers,
     });
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
       return;
     }
-    toast.success("Group created");
+    toast.success("✅ Group created");
     setCreating(false);
     setCreateName("");
     setCreateMembers([]);

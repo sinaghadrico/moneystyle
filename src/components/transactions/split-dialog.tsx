@@ -116,9 +116,9 @@ export function SplitDialog({
     });
 
     if ("error" in result) {
-      toast.error(typeof result.error === "string" ? result.error : "Failed to split");
+      toast.error(`❌ ${typeof result.error === "string" ? result.error : "Failed to split"}`);
     } else {
-      toast.success("Transaction split");
+      toast.success("✂️ Transaction split");
       onOpenChange(false);
       onSuccess();
     }
@@ -129,9 +129,9 @@ export function SplitDialog({
     setSaving(true);
     const result = await unsplitTransaction(transaction.id);
     if ("error" in result) {
-      toast.error(String(result.error));
+      toast.error(`❌ ${String(result.error)}`);
     } else {
-      toast.success("Split removed");
+      toast.success("🗑️ Split removed");
       onOpenChange(false);
       onSuccess();
     }

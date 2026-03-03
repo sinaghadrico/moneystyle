@@ -40,13 +40,13 @@ export function AddSavingsDialog({
     const result = await addToSavings(goal.id, num);
 
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
     } else if (result.completed) {
-      toast.success(`Goal "${goal.name}" completed!`);
+      toast.success(`🎯 Goal "${goal.name}" completed!`);
       onOpenChange(false);
       onSuccess();
     } else {
-      toast.success(`Added ${formatCurrency(num)} to ${goal.name}`);
+      toast.success(`✅ Added ${formatCurrency(num)} to ${goal.name}`);
       onOpenChange(false);
       onSuccess();
     }

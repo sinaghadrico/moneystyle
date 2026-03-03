@@ -27,7 +27,7 @@ export function BillsSection({
 
   const handleDelete = async (id: string) => {
     await deleteBill(id);
-    toast.success("Bill deleted");
+    toast.success("🗑️ Bill deleted");
     onRefresh();
   };
 
@@ -37,7 +37,7 @@ export function BillsSection({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Bills</h3>
+        <h3 className="text-lg font-semibold">📄 Bills</h3>
         <Button size="sm" variant="outline" onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-4 w-4" />
           Add
@@ -47,7 +47,7 @@ export function BillsSection({
       {bills.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            No bills yet. Track recurring bills like electricity, water, and
+            📄 No bills yet. Track recurring bills like electricity, water, and
             internet.
           </CardContent>
         </Card>

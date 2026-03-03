@@ -13,7 +13,7 @@ export function DebtsCard({ data }: { data: DebtSummary[] }) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Shared Expenses</CardTitle>
+        <CardTitle className="text-base font-semibold">🤝 Shared Expenses</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {data.map((d) => (

@@ -66,7 +66,7 @@ export function ShoppingBasketsSection() {
     if (!name) return;
     const result = await createShoppingList(name);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
       return;
     }
     setNewListName("");
@@ -95,7 +95,7 @@ export function ShoppingBasketsSection() {
     const qty = parseFloat(newItemQty) || 1;
     const result = await addItemToList(activeList.id, name, qty);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
       return;
     }
     setNewItemName("");
@@ -127,7 +127,7 @@ export function ShoppingBasketsSection() {
     startAnalyzing(async () => {
       const result = await analyzeBasket(activeList.id);
       if ("error" in result) {
-        toast.error(result.error);
+        toast.error("❌ " + result.error);
         return;
       }
       setAnalysis(result);
@@ -386,7 +386,7 @@ function DetailView({
     navigator.clipboard.writeText(lines.join("\n"));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast.success("Copied to clipboard");
+    toast.success("📋 Copied to clipboard");
   }
 
   return (

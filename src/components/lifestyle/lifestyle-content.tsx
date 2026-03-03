@@ -24,7 +24,7 @@ export function LifestyleContent({ initialTab }: { initialTab?: string }) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Lifestyle</h2>
+        <h2 className="text-2xl font-bold tracking-tight">🌟 Lifestyle</h2>
         <p className="text-muted-foreground">
           AI-powered planning and smart shopping
         </p>

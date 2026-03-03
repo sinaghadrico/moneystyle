@@ -71,9 +71,9 @@ export function MergeSuggestionsContent() {
 
     const result = await mergeTransactions(primaryId, mergeIds);
     if (result.error) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
     } else {
-      toast.success(`Merged ${result.mergedCount} duplicate(s)`);
+      toast.success(`✅ Merged ${result.mergedCount} duplicate(s)`);
       setMergedCount((c) => c + (result.mergedCount ?? 0));
       router.refresh();
       goNext();

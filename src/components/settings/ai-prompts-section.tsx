@@ -47,12 +47,12 @@ export function AiPromptsSection() {
   const handleSave = async (key: string) => {
     const content = editValues[key];
     if (!content?.trim()) {
-      toast.error("Prompt cannot be empty");
+      toast.error("❌ Prompt cannot be empty");
       return;
     }
     setSavingKey(key);
     await updateAiPrompt(key, content);
-    toast.success("Prompt saved");
+    toast.success("✅ Prompt saved");
     await load();
     setSavingKey(null);
   };
@@ -60,7 +60,7 @@ export function AiPromptsSection() {
   const handleReset = async (key: string) => {
     setSavingKey(key);
     await resetAiPrompt(key);
-    toast.success("Reset to default");
+    toast.success("🔄 Reset to default");
     await load();
     setSavingKey(null);
   };

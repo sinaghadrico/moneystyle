@@ -66,7 +66,7 @@ export function MoneyAdviceSection() {
 
   const handleDelete = async (id: string) => {
     await deleteMoneyAdvice(id);
-    toast.success("Advice deleted");
+    toast.success("🗑️ Advice deleted");
     await loadHistory();
   };
 

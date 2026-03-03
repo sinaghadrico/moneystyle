@@ -233,9 +233,9 @@ export function SmsPatternsSection() {
 
     setSaving(false);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
     } else {
-      toast.success(editingId ? "Pattern updated" : "Pattern created");
+      toast.success(editingId ? "✅ Pattern updated" : "✅ Pattern created");
       setDialogOpen(false);
       await loadPatterns();
     }
@@ -246,9 +246,9 @@ export function SmsPatternsSection() {
     const result = await deleteSmsPattern(id);
     setDeleting(null);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
     } else {
-      toast.success("Pattern deleted");
+      toast.success("🗑️ Pattern deleted");
       await loadPatterns();
     }
   };
@@ -256,7 +256,7 @@ export function SmsPatternsSection() {
   const handleToggle = async (p: SmsPattern) => {
     const result = await updateSmsPattern(p.id, { enabled: !p.enabled });
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
     } else {
       await loadPatterns();
     }
@@ -288,9 +288,9 @@ export function SmsPatternsSection() {
     });
     setSavingKey(false);
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error("❌ " + result.error);
     } else {
-      toast.success("API key saved");
+      toast.success("✅ API key saved");
     }
   };
 

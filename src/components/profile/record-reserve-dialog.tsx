@@ -52,7 +52,7 @@ export function RecordReserveDialog({
         );
       }
     } else {
-      toast.success("Value recorded");
+      toast.success("✅ Value recorded");
       onOpenChange(false);
       onSuccess();
     }

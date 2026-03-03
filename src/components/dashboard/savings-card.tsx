@@ -43,7 +43,7 @@ export function SavingsCard({
         <CardContent className="space-y-4">
           {data.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No savings goals yet. Create one to start tracking!
+              🎯 No savings goals yet. Create one to start tracking!
             </p>
           ) : (
             data.map((goal) => (

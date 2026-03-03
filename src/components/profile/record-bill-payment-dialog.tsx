@@ -52,7 +52,7 @@ export function RecordBillPaymentDialog({
         );
       }
     } else {
-      toast.success("Payment recorded");
+      toast.success("✅ Payment recorded");
       onOpenChange(false);
       onSuccess();
     }

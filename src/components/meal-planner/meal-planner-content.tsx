@@ -76,7 +76,7 @@ export function MealPlannerContent() {
 
   const handleDelete = async (id: string) => {
     await deleteMealPlan(id);
-    toast.success("Meal plan deleted");
+    toast.success("🗑️ Meal plan deleted");
     await loadHistory();
   };
 

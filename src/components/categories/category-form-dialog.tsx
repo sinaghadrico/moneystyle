@@ -64,7 +64,7 @@ export function CategoryFormDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Category updated" : "Category created");
+      toast.success(isEdit ? "✅ Category updated" : "✅ Category created");
       onOpenChange(false);
       onSuccess();
     }

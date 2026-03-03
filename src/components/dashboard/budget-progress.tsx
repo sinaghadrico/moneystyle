@@ -17,7 +17,7 @@ export function BudgetProgressCard({ data }: { data: BudgetProgress[] }) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Budget Progress</CardTitle>
+        <CardTitle className="text-base font-semibold">📊 Budget Progress</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {data.map((b) => (

@@ -90,9 +90,9 @@ export function AddTransactionDialog({
 
     if ("error" in result) {
       const msg = Object.values(result.error).flat().join(", ");
-      toast.error(msg);
+      toast.error(`❌ ${msg}`);
     } else {
-      toast.success("Transaction created");
+      toast.success("✅ Transaction created");
       onOpenChange(false);
       onSuccess();
     }

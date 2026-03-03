@@ -69,7 +69,7 @@ export function PersonSummaryContent({ summary }: { summary: PersonSummary }) {
       }
     } else {
       await navigator.clipboard.writeText(text);
-      toast.success("Summary copied to clipboard");
+      toast.success("📋 Summary copied to clipboard");
     }
   };
 
@@ -83,10 +83,10 @@ export function PersonSummaryContent({ summary }: { summary: PersonSummary }) {
     });
     setSettling(false);
     if ("success" in res) {
-      toast.success("Settlement recorded");
+      toast.success("✅ Settlement recorded");
       router.refresh();
     } else {
-      toast.error("Failed to settle");
+      toast.error("❌ Failed to settle");
     }
   };
 

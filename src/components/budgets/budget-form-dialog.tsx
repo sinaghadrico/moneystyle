@@ -50,9 +50,9 @@ export function BudgetFormDialog({
 
     if ("error" in result && result.error) {
       const msg = Object.values(result.error as Record<string, string[]>).flat().join(", ");
-      toast.error(msg);
+      toast.error("❌ " + msg);
     } else {
-      toast.success(`Budget set for ${categoryName}`);
+      toast.success(`🎯 Budget set for ${categoryName}`);
       onOpenChange(false);
       onSuccess();
     }
@@ -62,7 +62,7 @@ export function BudgetFormDialog({
     setSaving(true);
     await deleteBudget(categoryId);
     setSaving(false);
-    toast.success(`Budget removed for ${categoryName}`);
+    toast.success(`🗑️ Budget removed for ${categoryName}`);
     onOpenChange(false);
     onSuccess();
   };

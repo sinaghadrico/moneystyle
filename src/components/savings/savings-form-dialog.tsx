@@ -49,9 +49,9 @@ export function SavingsFormDialog({
     );
 
     if ("error" in result) {
-      toast.error("Failed to save goal");
+      toast.error("❌ Failed to save goal");
     } else {
-      toast.success(goal ? "Goal updated" : "Goal created");
+      toast.success(goal ? "✅ Goal updated" : "✅ Goal created");
       onOpenChange(false);
       onSuccess();
     }
@@ -62,7 +62,7 @@ export function SavingsFormDialog({
     if (!goal) return;
     setSaving(true);
     await deleteSavingsGoal(goal.id);
-    toast.success("Goal deleted");
+    toast.success("🗑️ Goal deleted");
     onOpenChange(false);
     onSuccess();
     setSaving(false);

@@ -57,7 +57,7 @@ export function CategoriesContent() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Categories</h2>
+          <h2 className="text-2xl font-bold tracking-tight">🏷️ Categories</h2>
           <p className="text-muted-foreground">
             {categories.length} categories
           </p>

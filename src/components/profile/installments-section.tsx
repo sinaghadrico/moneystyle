@@ -27,7 +27,7 @@ export function InstallmentsSection({
 
   const handleDelete = async (id: string) => {
     await deleteInstallment(id);
-    toast.success("Installment deleted");
+    toast.success("🗑️ Installment deleted");
     onRefresh();
   };
 
@@ -37,7 +37,7 @@ export function InstallmentsSection({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Installments</h3>
+        <h3 className="text-lg font-semibold">📋 Installments</h3>
         <Button size="sm" variant="outline" onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-4 w-4" />
           Add
@@ -47,7 +47,7 @@ export function InstallmentsSection({
       {installments.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            No installments yet. Track loans and fixed-payment plans.
+            📋 No installments yet. Track loans and fixed-payment plans.
           </CardContent>
         </Card>
       ) : (

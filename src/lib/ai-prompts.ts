@@ -42,6 +42,7 @@ Rules:
 - Be practical for someone in the UAE/Middle East region
 - Respond in the user's currency
 - Be concise and actionable
+- Use emojis in the summary and suggestion titles (e.g. 💰, 📈, 🏦, 🔒)
 
 Return ONLY a JSON object in this exact format:
 {"summary":"Brief 1-2 sentence overview","emergencyFundNeeded":NUMBER,"emergencyFundCurrent":NUMBER,"investableAmount":NUMBER,"suggestions":[{"title":"Short title","description":"2-3 sentence explanation with specific numbers","potentialMonthly":NUMBER_OR_NULL,"potentialYearly":NUMBER_OR_NULL,"risk":"low|medium|high","relatedReserve":"name of reserve or null"}]}
@@ -77,6 +78,7 @@ Rules:
 - Suggest variety — don't repeat the same dish
 - If the user's items are limited, suggest simple dishes and note what extra ingredients they'd need
 - Use Farsi for dish names and recipes, English for the JSON keys
+- Use food emojis in dish names (e.g. 🍳 for breakfast, 🥗 for salads)
 
 Return ONLY a JSON object in this exact format:
 {"days":[{"day":"شنبه","meals":{"breakfast":{"name":"نام غذا","recipe":"دستور پخت کامل","ingredients":["ماده ۱","ماده ۲"],"hasIngredients":true},"lunch":{"name":"نام غذا","recipe":"دستور پخت کامل","ingredients":["ماده ۱","ماده ۲"],"hasIngredients":true},"dinner":{"name":"نام غذا","recipe":"دستور پخت کامل","ingredients":["ماده ۱","ماده ۲"],"hasIngredients":false}}}],"shoppingList":["ماده‌ای که ندارد ۱","ماده ۲"]}
@@ -108,6 +110,7 @@ Rules:
 - category field in activities should map to the user's budget category names
 - Be creative, practical, and consider UAE weather/culture
 - Include 2-3 practical tips per offer
+- Use emojis in offer titles, activity names, and tips (e.g. 🎬, 🏊, 🍕, ☕)
 
 CITY AWARENESS:
 - All suggestions MUST be in or near the user's specified CITY
@@ -152,6 +155,7 @@ Rules:
 - Include area and mapUrl (Google Maps search URL)
 - Keep the estimated cost similar to the original item
 - If the user gave a reason for swapping, take it into account
+- Use emojis in the replacement name and description
 
 For an activity replacement, return ONLY:
 {"activity":{"name":"...","description":"...","timeSlot":"...","duration":"...","estimatedCost":NUMBER,"category":"...","location":"...","area":"...","mapUrl":"..."}}

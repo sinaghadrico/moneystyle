@@ -98,9 +98,9 @@ export function PriceAnalysisContent() {
     startAiTransition(async () => {
       const result = await normalizeItemNamesWithAI();
       if ("error" in result) {
-        toast.error(result.error);
+        toast.error("❌ " + result.error);
       } else {
-        toast.success(`Created ${result.groupsCreated} groups`);
+        toast.success(`✅ Created ${result.groupsCreated} groups`);
         loadData();
       }
     });

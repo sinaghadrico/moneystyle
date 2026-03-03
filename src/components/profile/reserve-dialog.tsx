@@ -81,7 +81,7 @@ export function ReserveDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Reserve updated" : "Reserve added");
+      toast.success(isEdit ? "✅ Reserve updated" : "✅ Reserve added");
       onOpenChange(false);
       onSuccess();
     }

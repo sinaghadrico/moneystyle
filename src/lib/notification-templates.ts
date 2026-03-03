@@ -43,12 +43,12 @@ export const DEFAULT_NOTIFICATION_TEMPLATES: Record<
   },
   [NOTIFICATION_TEMPLATE_KEYS.weekendReminderActivity]: {
     label: "Weekend — Activity Line",
-    content: "  {time_slot} — {name} ({cost} AED)",
+    content: "  🎭 {time_slot} — {name} ({cost} AED)",
     variables: "time_slot, name, cost",
   },
   [NOTIFICATION_TEMPLATE_KEYS.weekendReminderFood]: {
     label: "Weekend — Food Line",
-    content: "  {meal} — {name}{restaurant} ({cost} AED)",
+    content: "  🍽️ {meal} — {name}{restaurant} ({cost} AED)",
     variables: "meal, name, restaurant, cost",
   },
   [NOTIFICATION_TEMPLATE_KEYS.weekendReminderFooter]: {

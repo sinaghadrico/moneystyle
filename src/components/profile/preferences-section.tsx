@@ -82,7 +82,7 @@ export function PreferencesSection({
     setSaving(true);
     const res = await updateUserPreferences(newData);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error("❌ " + res.error);
     }
     setSaving(false);
     onRefresh();

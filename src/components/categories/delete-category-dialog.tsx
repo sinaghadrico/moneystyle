@@ -48,10 +48,10 @@ export function DeleteCategoryDialog({
     const result = await deleteCategory(category.id, reassignId || undefined);
     if (result.error) {
       toast.error(
-        typeof result.error === "string" ? result.error : "Failed to delete",
+        "❌ " + (typeof result.error === "string" ? result.error : "Failed to delete"),
       );
     } else {
-      toast.success("Category deleted");
+      toast.success("🗑️ Category deleted");
       onOpenChange(false);
       onSuccess();
     }

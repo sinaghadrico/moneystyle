@@ -11,25 +11,25 @@ import type { DashboardStats } from "@/lib/types";
 export function StatsCards({ stats }: { stats: DashboardStats }) {
   const cards = [
     {
-      title: "Total Income",
+      title: "📈 Total Income",
       value: formatCurrency(stats.totalIncome),
       icon: TrendingUp,
       color: "text-green-500",
     },
     {
-      title: "Total Expense",
+      title: "📉 Total Expense",
       value: formatCurrency(stats.totalExpense),
       icon: TrendingDown,
       color: "text-red-500",
     },
     {
-      title: "Balance",
+      title: "💰 Balance",
       value: formatCurrency(stats.balance),
       icon: Wallet,
       color: stats.balance >= 0 ? "text-green-500" : "text-red-500",
     },
     {
-      title: "Transactions",
+      title: "🔄 Transactions",
       value: stats.transactionCount.toLocaleString(),
       icon: ArrowLeftRight,
       color: "text-blue-500",

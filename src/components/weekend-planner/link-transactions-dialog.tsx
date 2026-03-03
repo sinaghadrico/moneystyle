@@ -85,10 +85,10 @@ export function LinkTransactionsDialog({
     });
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error("❌ " + res.error);
     } else {
       onLinked(res.linkedTransactionIds);
-      toast.success(`Linked ${newIds.length} transaction(s)`);
+      toast.success(`✅ Linked ${newIds.length} transaction(s)`);
       onOpenChange(false);
     }
     setSaving(false);

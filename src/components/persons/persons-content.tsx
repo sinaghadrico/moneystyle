@@ -54,9 +54,9 @@ export function PersonsContent() {
     if (!deletingPerson) return;
     const result = await deletePerson(deletingPerson.id);
     if ("error" in result && result.error) {
-      toast.error(String(result.error));
+      toast.error("❌ " + String(result.error));
     } else {
-      toast.success("Person deleted");
+      toast.success("🗑️ Person deleted");
       loadData();
     }
     setDeletingPerson(null);
@@ -66,7 +66,7 @@ export function PersonsContent() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Persons</h2>
+          <h2 className="text-2xl font-bold tracking-tight">👥 Persons</h2>
           <p className="text-muted-foreground">{persons.length} persons</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>

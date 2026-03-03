@@ -38,12 +38,12 @@ export function NotificationTemplatesSection() {
   const handleSave = async (key: string) => {
     const content = editValues[key];
     if (!content?.trim()) {
-      toast.error("Template cannot be empty");
+      toast.error("❌ Template cannot be empty");
       return;
     }
     setSavingKey(key);
     await updateNotificationTemplate(key, content);
-    toast.success("Template saved");
+    toast.success("✅ Template saved");
     await load();
     setSavingKey(null);
   };
@@ -51,7 +51,7 @@ export function NotificationTemplatesSection() {
   const handleReset = async (key: string) => {
     setSavingKey(key);
     await resetNotificationTemplate(key);
-    toast.success("Reset to default");
+    toast.success("🔄 Reset to default");
     await load();
     setSavingKey(null);
   };

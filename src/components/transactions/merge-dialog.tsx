@@ -39,10 +39,10 @@ export function MergeDialog({
 
     const result = await mergeTransactions(primaryId, mergeIds);
     if (result.error) {
-      toast.error(result.error);
+      toast.error(`❌ ${result.error}`);
     } else {
       toast.success(
-        `Merged ${result.mergedCount} transaction(s) into primary`
+        `✅ Merged ${result.mergedCount} transaction(s) into primary`
       );
       onSuccess();
       onOpenChange(false);

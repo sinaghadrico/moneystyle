@@ -79,7 +79,7 @@ export function InstallmentDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Installment updated" : "Installment added");
+      toast.success(isEdit ? "✅ Installment updated" : "✅ Installment added");
       onOpenChange(false);
       onSuccess();
     }

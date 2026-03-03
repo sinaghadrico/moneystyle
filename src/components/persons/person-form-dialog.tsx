@@ -66,7 +66,7 @@ export function PersonFormDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Person updated" : "Person created");
+      toast.success(isEdit ? "✅ Person updated" : "✅ Person created");
       onOpenChange(false);
       const person =
         "person" in result

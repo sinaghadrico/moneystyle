@@ -115,13 +115,13 @@ export function ItemsDialog({
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         const data = await res.json();
         if (!res.ok) {
-          toast.error(data.error || "Upload failed");
+          toast.error(`❌ ${data.error || "Upload failed"}`);
         } else {
           setMediaFiles((prev) => [...prev, data.path]);
-          toast.success(`Uploaded ${file.name}`);
+          toast.success(`📎 Uploaded ${file.name}`);
         }
       } catch {
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(`❌ Failed to upload ${file.name}`);
       }
     }
 
@@ -132,7 +132,7 @@ export function ItemsDialog({
   const handleExtract = async () => {
     const images = mediaFiles.filter(isImage);
     if (images.length === 0) {
-      toast.error("No image files to extract from");
+      toast.error("❌ No image files to extract from");
       return;
     }
 
@@ -140,9 +140,9 @@ export function ItemsDialog({
     const result = await parseReceiptFromUpload(transaction.id);
 
     if ("error" in result) {
-      toast.error(result.error);
+      toast.error(`❌ ${result.error}`);
     } else if (result.items.length === 0) {
-      toast.error("No items found in the receipt");
+      toast.error("❌ No items found in the receipt");
     } else {
       const newRows: ItemRow[] = result.items.map((item) => ({
         name: item.name,
@@ -156,7 +156,7 @@ export function ItemsDialog({
       } else {
         setRows((prev) => [...prev, ...newRows]);
       }
-      toast.success(`Extracted ${result.items.length} item(s) from receipt`);
+      toast.success(`✅ Extracted ${result.items.length} item(s) from receipt`);
     }
 
     setExtracting(false);
@@ -192,13 +192,13 @@ export function ItemsDialog({
 
     if ("error" in result) {
       toast.error(
-        typeof result.error === "string" ? result.error : "Failed to save items",
+        `❌ ${typeof result.error === "string" ? result.error : "Failed to save items"}`,
       );
     } else {
       toast.success(
         rows.length > 0
-          ? `Saved ${rows.length} item${rows.length > 1 ? "s" : ""}`
-          : "Items cleared",
+          ? `✅ Saved ${rows.length} item${rows.length > 1 ? "s" : ""}`
+          : "✅ Items cleared",
       );
       onOpenChange(false);
       onSaved();

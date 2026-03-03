@@ -67,7 +67,7 @@ export function IncomeSourceDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "Income source updated" : "Income source added");
+      toast.success(isEdit ? "✅ Income source updated" : "✅ Income source added");
       onOpenChange(false);
       onSuccess();
     }

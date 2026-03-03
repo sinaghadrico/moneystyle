@@ -52,11 +52,11 @@ export function RecordPaymentDialog({
         );
       }
     } else if (result.completed) {
-      toast.success("All installments paid! Marked as inactive.");
+      toast.success("🎯 All installments paid! Marked as inactive.");
       onOpenChange(false);
       onSuccess();
     } else {
-      toast.success("Payment recorded");
+      toast.success("✅ Payment recorded");
       onOpenChange(false);
       onSuccess();
     }

@@ -105,7 +105,7 @@ export function WeekendPlannerContent() {
 
   const handleDelete = async (id: string) => {
     await deleteWeekendPlan(id);
-    toast.success("Weekend plan deleted");
+    toast.success("🗑️ Weekend plan deleted");
     await loadHistory();
   };
 
@@ -120,7 +120,7 @@ export function WeekendPlannerContent() {
       rating,
     });
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error("❌ " + res.error);
       return;
     }
     // Update local state
@@ -148,14 +148,14 @@ export function WeekendPlannerContent() {
     });
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error("❌ " + res.error);
     } else {
       setPlans((prev) =>
         prev.map((p) =>
           p.id === current.id ? { ...p, offers: res.offers } : p
         )
       );
-      toast.success("Item swapped!");
+      toast.success("🔀 Item swapped!");
     }
     setSwappingKey(null);
   };
@@ -164,7 +164,7 @@ export function WeekendPlannerContent() {
     if (!current) return;
     const res = await generateWeekendIcs(current.id, activeTab);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error("❌ " + res.error);
       return;
     }
     const blob = new Blob([res.ics], { type: "text/calendar;charset=utf-8" });
@@ -174,7 +174,7 @@ export function WeekendPlannerContent() {
     a.download = `weekend-plan-${current.weekLabel}.ics`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Calendar file downloaded!");
+    toast.success("📅 Calendar file downloaded!");
   };
 
   const handleLinked = (linkedIds: string[]) => {

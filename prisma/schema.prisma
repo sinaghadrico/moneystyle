@@ -355,6 +355,15 @@ model AiPrompt {
   @@map("ai_prompts")
 }
 
+model NotificationTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  content   String
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_templates")
+}
+
 model MoneyAdvice {
   id                   String   @id @default(cuid())
   summary              String
@@ -406,6 +415,11 @@ model AppSettings {
   smsApiKey              String?
   aiEnabled              Boolean  @default(false)
   openaiApiKey           String?
+  notifyPaymentReminders Boolean  @default(true)
+  notifyWeekendPlan      Boolean  @default(true)
+  notifyMonthlyReport    Boolean  @default(true)
+  notifyWebTransaction   Boolean  @default(true)
+  notifySmsTransaction   Boolean  @default(true)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

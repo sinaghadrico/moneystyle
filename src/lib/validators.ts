@@ -291,5 +291,10 @@ export const settingsUpdateSchema = z.object({
   smsApiKey: z.string().nullable().optional(),
   aiEnabled: z.boolean().optional(),
   openaiApiKey: z.string().nullable().optional(),
+  notifyPaymentReminders: z.boolean().optional(),
+  notifyWeekendPlan: z.boolean().optional(),
+  notifyMonthlyReport: z.boolean().optional(),
+  notifyWebTransaction: z.boolean().optional(),
+  notifySmsTransaction: z.boolean().optional(),
 });
 export type SettingsUpdateInput = z.infer<typeof settingsUpdateSchema>;

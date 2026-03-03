@@ -31,6 +31,7 @@ import {
   Plug,
   Wrench,
   MessageSquare,
+  Bell,
 } from "lucide-react";
 import {
   getSettings,
@@ -43,6 +44,7 @@ import { useAppSettings } from "@/components/settings/settings-provider";
 import { SmsPatternsSection } from "@/components/settings/sms-patterns-section";
 import { CurrencyManagementSection } from "@/components/settings/currency-management-section";
 import { AiPromptsSection } from "@/components/settings/ai-prompts-section";
+import { NotificationTemplatesSection } from "@/components/settings/notification-templates-section";
 import { CurrencySelect } from "@/components/ui/currency-select";
 
 type Settings = {
@@ -59,6 +61,11 @@ type Settings = {
   smsApiKey: string | null;
   aiEnabled: boolean;
   openaiApiKey: string | null;
+  notifyPaymentReminders: boolean;
+  notifyWeekendPlan: boolean;
+  notifyMonthlyReport: boolean;
+  notifyWebTransaction: boolean;
+  notifySmsTransaction: boolean;
 };
 
 type Account = { id: string; name: string };
@@ -111,6 +118,11 @@ export function SettingsContent() {
       smsApiKey: s.smsApiKey,
       aiEnabled: s.aiEnabled,
       openaiApiKey: s.openaiApiKey,
+      notifyPaymentReminders: s.notifyPaymentReminders,
+      notifyWeekendPlan: s.notifyWeekendPlan,
+      notifyMonthlyReport: s.notifyMonthlyReport,
+      notifyWebTransaction: s.notifyWebTransaction,
+      notifySmsTransaction: s.notifySmsTransaction,
     });
     setAccounts(a.map((acc) => ({ id: acc.id, name: acc.name })));
     setLoading(false);
@@ -416,6 +428,7 @@ export function SettingsContent() {
 
           {/* Telegram */}
           {integrationSection === "telegram" && (
+            <div className="space-y-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -484,6 +497,74 @@ export function SettingsContent() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Notification Toggles */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bell className="h-4 w-4" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Choose which notifications are sent via Telegram.
+                </p>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notifyPaymentReminders" className="text-sm">
+                    Payment Reminders
+                  </Label>
+                  <Switch
+                    id="notifyPaymentReminders"
+                    checked={settings.notifyPaymentReminders}
+                    onCheckedChange={(v) => update({ notifyPaymentReminders: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notifyWeekendPlan" className="text-sm">
+                    Weekend Plan Reminder
+                  </Label>
+                  <Switch
+                    id="notifyWeekendPlan"
+                    checked={settings.notifyWeekendPlan}
+                    onCheckedChange={(v) => update({ notifyWeekendPlan: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notifyMonthlyReport" className="text-sm">
+                    Monthly Report
+                  </Label>
+                  <Switch
+                    id="notifyMonthlyReport"
+                    checked={settings.notifyMonthlyReport}
+                    onCheckedChange={(v) => update({ notifyMonthlyReport: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notifyWebTransaction" className="text-sm">
+                    Web Transaction Alerts
+                  </Label>
+                  <Switch
+                    id="notifyWebTransaction"
+                    checked={settings.notifyWebTransaction}
+                    onCheckedChange={(v) => update({ notifyWebTransaction: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notifySmsTransaction" className="text-sm">
+                    SMS Transaction Alerts
+                  </Label>
+                  <Switch
+                    id="notifySmsTransaction"
+                    checked={settings.notifySmsTransaction}
+                    onCheckedChange={(v) => update({ notifySmsTransaction: v })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <NotificationTemplatesSection />
+            </div>
           )}
 
           {/* AI */}

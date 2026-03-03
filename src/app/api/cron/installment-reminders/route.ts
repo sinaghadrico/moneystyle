@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getSettings } from "@/actions/settings";
+import {
+  getNotificationTemplate,
+  renderTemplate,
+  NOTIFICATION_TEMPLATE_KEYS,
+} from "@/lib/notification-templates";
 
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -13,6 +18,11 @@ export async function GET(request: NextRequest) {
   }
 
   const settings = await getSettings();
+
+  if (!settings.notifyPaymentReminders) {
+    return NextResponse.json({ ok: true, sent: false, reason: "Notification disabled" });
+  }
+
   const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
   const botToken = settings.telegramBotToken || undefined;
 
@@ -48,6 +58,12 @@ export async function GET(request: NextRequest) {
       return days;
     };
 
+    const [tplHeader, tplDueToday, tplDueSoon] = await Promise.all([
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.paymentReminderHeader),
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.paymentDueToday),
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.paymentDueSoon),
+    ]);
+
     for (const inst of installments) {
       const daysUntilDue = calcDaysUntilDue(inst.dueDay);
       const amount = Number(inst.amount);
@@ -55,13 +71,27 @@ export async function GET(request: NextRequest) {
         inst.totalCount !== null
           ? ` (${inst.paidCount}/${inst.totalCount})`
           : "";
-      const amtStr = `${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })} ${inst.currency}`;
+      const amtStr = amount.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
       if (daysUntilDue === 0) {
-        lines.push(`🔴 TODAY: ${inst.name} — ${amtStr}${progress}`);
+        lines.push(
+          renderTemplate(tplDueToday, {
+            name: inst.name,
+            amount: amtStr,
+            currency: inst.currency,
+            progress,
+          })
+        );
       } else if (daysUntilDue === inst.reminderDays) {
         lines.push(
-          `⏰ ${inst.name} due in ${daysUntilDue} day${daysUntilDue !== 1 ? "s" : ""} — ${amtStr}${progress}`
+          renderTemplate(tplDueSoon, {
+            name: inst.name,
+            amount: amtStr,
+            currency: inst.currency,
+            progress,
+            days: daysUntilDue,
+            days_label: daysUntilDue !== 1 ? "days" : "day",
+          })
         );
       }
     }
@@ -69,13 +99,27 @@ export async function GET(request: NextRequest) {
     for (const bill of bills) {
       const daysUntilDue = calcDaysUntilDue(bill.dueDay);
       const amount = Number(bill.amount);
-      const amtStr = `~${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })} ${bill.currency}`;
+      const amtStr = `~${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
       if (daysUntilDue === 0) {
-        lines.push(`🔴 TODAY: ${bill.name} — ${amtStr}`);
+        lines.push(
+          renderTemplate(tplDueToday, {
+            name: bill.name,
+            amount: amtStr,
+            currency: bill.currency,
+            progress: "",
+          })
+        );
       } else if (daysUntilDue === bill.reminderDays) {
         lines.push(
-          `⏰ ${bill.name} due in ${daysUntilDue} day${daysUntilDue !== 1 ? "s" : ""} — ${amtStr}`
+          renderTemplate(tplDueSoon, {
+            name: bill.name,
+            amount: amtStr,
+            currency: bill.currency,
+            progress: "",
+            days: daysUntilDue,
+            days_label: daysUntilDue !== 1 ? "days" : "day",
+          })
         );
       }
     }
@@ -84,7 +128,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: true, reminders: 0 });
     }
 
-    const message = `📋 Payment Reminders\n\n${lines.join("\n")}`;
+    const message = `${tplHeader}\n\n${lines.join("\n")}`;
     await sendTelegramMessage(chatId, message, undefined, botToken);
 
     return NextResponse.json({ ok: true, reminders: lines.length });

@@ -26,6 +26,11 @@ const DEFAULTS = {
   smsApiKey: null,
   aiEnabled: false,
   openaiApiKey: null,
+  notifyPaymentReminders: true,
+  notifyWeekendPlan: true,
+  notifyMonthlyReport: true,
+  notifyWebTransaction: true,
+  notifySmsTransaction: true,
 };
 
 export async function getSettings() {
@@ -356,5 +361,50 @@ export async function updateAiPrompt(key: string, content: string) {
 
 export async function resetAiPrompt(key: string) {
   await prisma.aiPrompt.deleteMany({ where: { key } });
+  return { success: true };
+}
+
+// ── Notification Templates ──
+
+export type NotificationTemplateData = {
+  key: string;
+  label: string;
+  content: string;
+  variables: string;
+  isCustom: boolean;
+};
+
+export async function getNotificationTemplates(): Promise<
+  NotificationTemplateData[]
+> {
+  const { DEFAULT_NOTIFICATION_TEMPLATES } = await import(
+    "@/lib/notification-templates"
+  );
+  const rows = await prisma.notificationTemplate.findMany();
+  const customMap = new Map(rows.map((r) => [r.key, r.content]));
+
+  return Object.entries(DEFAULT_NOTIFICATION_TEMPLATES).map(([key, def]) => ({
+    key,
+    label: def.label,
+    content: customMap.get(key) ?? def.content,
+    variables: def.variables,
+    isCustom: customMap.has(key),
+  }));
+}
+
+export async function updateNotificationTemplate(
+  key: string,
+  content: string,
+) {
+  await prisma.notificationTemplate.upsert({
+    where: { key },
+    create: { key, content },
+    update: { content },
+  });
+  return { success: true };
+}
+
+export async function resetNotificationTemplate(key: string) {
+  await prisma.notificationTemplate.deleteMany({ where: { key } });
   return { success: true };
 }

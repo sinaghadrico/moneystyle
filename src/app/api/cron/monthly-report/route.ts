@@ -12,6 +12,11 @@ export async function GET(request: NextRequest) {
   }
 
   const settings = await getSettings();
+
+  if (!settings.notifyMonthlyReport) {
+    return NextResponse.json({ ok: true, sent: false, reason: "Notification disabled" });
+  }
+
   const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
   const botToken = settings.telegramBotToken || undefined;
 

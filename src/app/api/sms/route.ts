@@ -6,6 +6,11 @@ import { checkBudgetAlert } from "@/actions/budgets";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { resolveCategory } from "@/lib/auto-categorize";
 import { getSettings } from "@/actions/settings";
+import {
+  getNotificationTemplate,
+  renderTemplate,
+  NOTIFICATION_TEMPLATE_KEYS,
+} from "@/lib/notification-templates";
 
 export async function POST(request: NextRequest) {
   const settings = await getSettings();
@@ -67,17 +72,35 @@ export async function POST(request: NextRequest) {
   // Send Telegram notification (DB settings first, env fallback)
   const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
   const botToken = settings.telegramBotToken || undefined;
-  if (chatId) {
+  if (chatId && settings.notifySmsTransaction) {
     const typeIcon = parsed.type === "income" ? "💰" : "💳";
     const merchantLabel = parsed.merchant ? ` at ${parsed.merchant}` : "";
     const catName = categoryId
       ? (await prisma.category.findUnique({ where: { id: categoryId } }))?.name
       : null;
     const catLabel = catName ? ` (${catName})` : "";
-    let msg = `${typeIcon} SMS: ${parsed.amount.toLocaleString()} ${settings.currency} ${parsed.type}${merchantLabel}${catLabel} [${account.name}] #${transaction.id.slice(-6)}`;
+
+    const [tplSms, tplBalance] = await Promise.all([
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.smsTransactionAlert),
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.smsBalanceLine),
+    ]);
+
+    let msg = renderTemplate(tplSms, {
+      icon: typeIcon,
+      amount: parsed.amount.toLocaleString(),
+      currency: settings.currency,
+      type: parsed.type,
+      merchant: merchantLabel,
+      category: catLabel,
+      account: account.name,
+      id: transaction.id.slice(-6),
+    });
 
     if (parsed.balance !== undefined) {
-      msg += `\n💰 Balance: ${parsed.balance.toLocaleString()} ${settings.currency}`;
+      msg += renderTemplate(tplBalance, {
+        balance: parsed.balance.toLocaleString(),
+        currency: settings.currency,
+      });
     }
 
     // Budget check for expenses

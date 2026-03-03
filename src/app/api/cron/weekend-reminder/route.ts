@@ -3,6 +3,11 @@ import { prisma } from "@/lib/db";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getSettings } from "@/actions/settings";
 import type { WeekendOffer } from "@/lib/types";
+import {
+  getNotificationTemplate,
+  renderTemplate,
+  NOTIFICATION_TEMPLATE_KEYS,
+} from "@/lib/notification-templates";
 
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -20,6 +25,11 @@ export async function GET(request: NextRequest) {
   }
 
   const settings = await getSettings();
+
+  if (!settings.notifyWeekendPlan) {
+    return NextResponse.json({ ok: true, sent: false, reason: "Notification disabled" });
+  }
+
   const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
   const botToken = settings.telegramBotToken || undefined;
 
@@ -51,15 +61,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: true, sent: false, reason: "No offers in plan" });
     }
 
+    const [tplHeader, tplActivity, tplFood, tplFooter] = await Promise.all([
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderHeader),
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderActivity),
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderFood),
+      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderFooter),
+    ]);
+
     const lines: string[] = [];
-    lines.push(`🗓 Weekend Plan Reminder`);
-    lines.push(`${offer.title}`);
+    lines.push(renderTemplate(tplHeader, { title: offer.title }));
     lines.push("");
 
     if (offer.activities.length > 0) {
       lines.push("📍 Activities:");
       for (const a of offer.activities) {
-        lines.push(`  ${a.timeSlot} — ${a.name} (${a.estimatedCost} AED)`);
+        lines.push(
+          renderTemplate(tplActivity, {
+            time_slot: a.timeSlot,
+            name: a.name,
+            cost: a.estimatedCost,
+          })
+        );
       }
       lines.push("");
     }
@@ -67,17 +89,24 @@ export async function GET(request: NextRequest) {
     if (offer.food.length > 0) {
       lines.push("🍽 Food:");
       for (const f of offer.food) {
-        lines.push(`  ${f.meal} — ${f.name}${f.restaurant ? ` @ ${f.restaurant}` : ""} (${f.estimatedCost} AED)`);
+        lines.push(
+          renderTemplate(tplFood, {
+            meal: f.meal,
+            name: f.name,
+            restaurant: f.restaurant ? ` @ ${f.restaurant}` : "",
+            cost: f.estimatedCost,
+          })
+        );
       }
       lines.push("");
     }
 
-    lines.push(`💰 Total: ${offer.totalCost} AED`);
-
-    if (offer.tips.length > 0) {
-      lines.push("");
-      lines.push(`💡 ${offer.tips[0]}`);
-    }
+    lines.push(
+      renderTemplate(tplFooter, {
+        total_cost: offer.totalCost,
+        tip: offer.tips.length > 0 ? offer.tips[0] : "",
+      })
+    );
 
     const message = lines.join("\n");
     await sendTelegramMessage(chatId, message, undefined, botToken);

@@ -18,6 +18,11 @@ import { revalidatePath } from "next/cache";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getSettings } from "@/actions/settings";
+import {
+  getNotificationTemplate,
+  renderTemplate,
+  NOTIFICATION_TEMPLATE_KEYS,
+} from "@/lib/notification-templates";
 import { storage } from "@/lib/storage";
 import { basicNormalize } from "@/lib/item-normalization";
 
@@ -170,20 +175,22 @@ export async function createTransaction(
     const settings = await getSettings();
     const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
     const botToken = settings.telegramBotToken || undefined;
-    if (chatId) {
+    if (chatId && settings.notifyWebTransaction) {
       const warning = await checkTransactionAnomaly(
         values.amount,
         values.categoryId ?? null,
         values.merchant ?? null,
       );
       if (warning) {
-        const merchant = values.merchant ? ` at ${values.merchant}` : "";
-        await sendTelegramMessage(
-          chatId,
-          `🔍 Web transaction alert: ${values.amount} AED${merchant}${warning}`,
-          undefined,
-          botToken,
+        const tpl = await getNotificationTemplate(
+          NOTIFICATION_TEMPLATE_KEYS.webTransactionAlert,
         );
+        const msg = renderTemplate(tpl, {
+          amount: values.amount,
+          merchant: values.merchant ? ` at ${values.merchant}` : "",
+          warning,
+        });
+        await sendTelegramMessage(chatId, msg, undefined, botToken);
       }
     }
   }

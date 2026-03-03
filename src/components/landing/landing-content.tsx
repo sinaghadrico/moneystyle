@@ -8,6 +8,8 @@ import {
   BarChart3,
   Bell,
   Brain,
+  Calendar,
+  CalendarRange,
   CreditCard,
   Globe,
   LayoutDashboard,
@@ -21,8 +23,10 @@ import {
   Smartphone,
   Sparkles,
   Sun,
+  Target,
   TrendingUp,
   Users,
+  UtensilsCrossed,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -124,10 +128,42 @@ const FEATURES = [
     color: "text-pink-500",
     bg: "bg-pink-500/10",
   },
+  {
+    icon: CalendarRange,
+    title: "Spread Across Months",
+    description:
+      "Spread lump-sum payments (quarterly bills, annual subscriptions) across multiple months for accurate budgeting.",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+  },
+  {
+    icon: Target,
+    title: "Savings Goals",
+    description:
+      "Set savings targets with deadlines, track progress visually, and stay motivated to reach your financial goals.",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
+  {
+    icon: Calendar,
+    title: "Weekend Planner",
+    description:
+      "AI-generated weekend plans based on your preferences, budget, and city. Rate activities and get better suggestions over time.",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+  },
+  {
+    icon: UtensilsCrossed,
+    title: "Meal Planner",
+    description:
+      "Weekly meal plans tailored to your food preferences and budget. Never wonder what to cook again.",
+    color: "text-lime-500",
+    bg: "bg-lime-500/10",
+  },
 ];
 
 const STATS = [
-  { value: "9+", label: "Feature Modules" },
+  { value: "16+", label: "Feature Modules" },
   { value: "100%", label: "Open Source" },
   { value: "PWA", label: "Works Offline" },
   { value: "AI", label: "Powered" },
@@ -157,6 +193,18 @@ const HIGHLIGHTS = [
     title: "Customizable AI Prompts",
     description:
       "Fine-tune every AI prompt in settings. Adjust receipt parsing, money advice, and item normalization to your needs.",
+  },
+  {
+    icon: CalendarRange,
+    title: "Prepaid Amortization",
+    description:
+      "Pay 900 for 3 months of water? Spread it so each month shows 300 — your budgets and charts stay accurate.",
+  },
+  {
+    icon: Bell,
+    title: "Custom Notification Templates",
+    description:
+      "Customize every alert message — budget warnings, payment reminders, and transaction notifications — with your own templates.",
   },
 ];
 
@@ -290,7 +338,7 @@ export function LandingContent() {
               Smart features that go beyond simple bookkeeping.
             </p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {HIGHLIGHTS.map((item) => (
               <div
                 key={item.title}

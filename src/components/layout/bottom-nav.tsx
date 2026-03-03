@@ -15,8 +15,7 @@ import {
   Tags,
   Merge,
   Settings,
-  ChefHat,
-  CalendarHeart,
+  Palette,
 } from "lucide-react";
 import {
   Drawer,
@@ -33,8 +32,7 @@ const PRIMARY_NAV = [
 ];
 
 const MORE_NAV = [
-  { href: "/meal-planner", label: "Meal Planner", icon: ChefHat },
-  { href: "/weekend-planner", label: "Weekend Planner", icon: CalendarHeart },
+  { href: "/lifestyle", label: "Lifestyle", icon: Palette },
   { href: "/accounts", label: "Accounts", icon: Landmark },
   { href: "/persons", label: "Persons", icon: Users },
   { href: "/categories", label: "Categories", icon: Tags },

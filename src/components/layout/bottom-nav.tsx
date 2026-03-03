@@ -7,13 +7,8 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   ArrowLeftRight,
-  TrendingUp,
   UserCircle,
   MoreHorizontal,
-  Landmark,
-  Users,
-  Tags,
-  Merge,
   Settings,
   Palette,
 } from "lucide-react";
@@ -27,16 +22,11 @@ import {
 const PRIMARY_NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/price-analysis", label: "Prices", icon: TrendingUp },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
 const MORE_NAV = [
   { href: "/lifestyle", label: "Lifestyle", icon: Palette },
-  { href: "/accounts", label: "Accounts", icon: Landmark },
-  { href: "/persons", label: "Persons", icon: Users },
-  { href: "/categories", label: "Categories", icon: Tags },
-  { href: "/merge-suggestions", label: "Merge Duplicates", icon: Merge },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -54,7 +44,7 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-50 border-t bg-card md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-4">
           {PRIMARY_NAV.map((item) => {
             const Icon = item.icon;
             const isActive =

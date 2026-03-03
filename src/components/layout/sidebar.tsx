@@ -6,12 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   ArrowLeftRight,
-  Tags,
-  Landmark,
-  Users,
-  Merge,
   Settings,
-  TrendingUp,
   UserCircle,
   Palette,
 } from "lucide-react";
@@ -20,12 +15,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/price-analysis", label: "Price Analysis", icon: TrendingUp },
   { href: "/lifestyle", label: "Lifestyle", icon: Palette },
-  { href: "/accounts", label: "Accounts", icon: Landmark },
-  { href: "/persons", label: "Persons", icon: Users },
-  { href: "/categories", label: "Categories", icon: Tags },
-  { href: "/merge-suggestions", label: "Merge Duplicates", icon: Merge },
   { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

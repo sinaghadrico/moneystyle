@@ -16,7 +16,13 @@ import {
   getFinancialOverview,
 } from "@/actions/profile";
 import { getUserPreferences } from "@/actions/weekend-planner";
-import { Wallet, UserCircle } from "lucide-react";
+import {
+  Wallet,
+  UserCircle,
+  BarChart3,
+  TrendingUp,
+  CreditCard,
+} from "lucide-react";
 import type {
   IncomeSourceData,
   ReserveData,
@@ -33,8 +39,18 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]["key"];
 
+const FINANCE_SECTIONS = [
+  { key: "overview", label: "Overview", icon: BarChart3 },
+  { key: "income", label: "Income & Savings", icon: TrendingUp },
+  { key: "payments", label: "Payments", icon: CreditCard },
+] as const;
+
+type FinanceSection = (typeof FINANCE_SECTIONS)[number]["key"];
+
 export function ProfileContent() {
   const [activeTab, setActiveTab] = useState<Tab>("finance");
+  const [financeSection, setFinanceSection] =
+    useState<FinanceSection>("overview");
   const [loading, setLoading] = useState(true);
   const [incomeSources, setIncomeSources] = useState<IncomeSourceData[]>([]);
   const [reserves, setReserves] = useState<ReserveData[]>([]);
@@ -128,12 +144,56 @@ export function ProfileContent() {
 
       {/* Finance tab */}
       {activeTab === "finance" && (
-        <div className="space-y-6">
-          {overview && <FinancialOverviewCard overview={overview} />}
-          <IncomeSourcesSection sources={incomeSources} onRefresh={loadData} />
-          <ReservesSection reserves={reserves} onRefresh={loadData} />
-          <InstallmentsSection installments={installments} onRefresh={loadData} />
-          <BillsSection bills={bills} onRefresh={loadData} />
+        <div className="space-y-5">
+          {/* Finance sub-navigation */}
+          <div className="flex gap-1 overflow-x-auto no-scrollbar">
+            {FINANCE_SECTIONS.map((section) => {
+              const Icon = section.icon;
+              const isActive = financeSection === section.key;
+              return (
+                <button
+                  key={section.key}
+                  type="button"
+                  onClick={() => setFinanceSection(section.key)}
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {section.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Overview */}
+          {financeSection === "overview" && overview && (
+            <FinancialOverviewCard overview={overview} />
+          )}
+
+          {/* Income & Savings */}
+          {financeSection === "income" && (
+            <div className="space-y-6">
+              <IncomeSourcesSection
+                sources={incomeSources}
+                onRefresh={loadData}
+              />
+              <ReservesSection reserves={reserves} onRefresh={loadData} />
+            </div>
+          )}
+
+          {/* Payments */}
+          {financeSection === "payments" && (
+            <div className="space-y-6">
+              <InstallmentsSection
+                installments={installments}
+                onRefresh={loadData}
+              />
+              <BillsSection bills={bills} onRefresh={loadData} />
+            </div>
+          )}
         </div>
       )}
 

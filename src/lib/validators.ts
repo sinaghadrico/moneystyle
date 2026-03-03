@@ -9,6 +9,7 @@ export const transactionUpdateSchema = z.object({
   merchant: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
+  spreadMonths: z.coerce.number().int().min(2).max(24).nullable().optional(),
 });
 
 export type TransactionUpdateInput = z.infer<typeof transactionUpdateSchema>;
@@ -24,6 +25,7 @@ export const transactionCreateSchema = z.object({
   merchant: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
+  spreadMonths: z.coerce.number().int().min(2).max(24).nullable().optional(),
 });
 
 export type TransactionCreateInput = z.infer<typeof transactionCreateSchema>;

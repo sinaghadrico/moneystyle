@@ -524,6 +524,11 @@ export function TransactionsContent() {
                         >
                           {tx.type}
                         </Badge>
+                        {tx.spreadMonths && tx.spreadMonths > 1 && (
+                          <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                            {tx.spreadMonths}mo
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {formatDate(tx.date)}
@@ -682,12 +687,19 @@ export function TransactionsContent() {
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={TYPE_COLORS[tx.type] || TYPE_COLORS.other}
-                      >
-                        {tx.type}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge
+                          variant="secondary"
+                          className={TYPE_COLORS[tx.type] || TYPE_COLORS.other}
+                        >
+                          {tx.type}
+                        </Badge>
+                        {tx.spreadMonths && tx.spreadMonths > 1 && (
+                          <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                            {tx.spreadMonths}mo
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {tx.splits && tx.splits.length > 0 ? (

@@ -161,6 +161,7 @@ export async function createTransaction(
       merchant: values.merchant ?? null,
       description: values.description ?? null,
       source: "manual",
+      spreadMonths: values.spreadMonths ?? null,
     },
   });
 
@@ -236,6 +237,9 @@ export async function updateTransaction(
   }
   if (values.description !== undefined) {
     updateData.description = values.description;
+  }
+  if (values.spreadMonths !== undefined) {
+    updateData.spreadMonths = values.spreadMonths;
   }
 
   await prisma.transaction.update({

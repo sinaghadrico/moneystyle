@@ -15,6 +15,7 @@ import { getDateRange } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
 import { getCurrencyRates } from "@/actions/currencies";
 import { convertAmount } from "@/lib/currency";
+import { getSpreadEntries, getSpreadFraction } from "@/lib/spread-utils";
 
 const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null };
 
@@ -31,6 +32,14 @@ function getDateFilter(period: string, accountId?: string): Prisma.TransactionWh
   return where;
 }
 
+/** Extend a date filter's gte by 12 months to catch spread transactions from earlier months. */
+function extendForSpread(dateFilter: { gte?: Date; lte?: Date }): { gte?: Date; lte?: Date } {
+  if (!dateFilter?.gte) return dateFilter;
+  const lookback = new Date(dateFilter.gte);
+  lookback.setMonth(lookback.getMonth() - 12);
+  return { ...dateFilter, gte: lookback };
+}
+
 /**
  * Split-aware expense calculation helper with multi-currency conversion.
  * Returns total expense converted to the target currency.
@@ -40,27 +49,56 @@ async function getMyExpense(
   targetCurrency: string,
   rates: Map<string, number>
 ): Promise<number> {
-  const expenseWhere = { ...baseWhere, type: "expense" as const, amount: { not: null } };
+  // Extend date range to catch spread transactions from earlier months
+  const extendedWhere = { ...baseWhere };
+  if (extendedWhere.date && typeof extendedWhere.date === "object") {
+    extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
+  }
+  const expenseWhere = { ...extendedWhere, type: "expense" as const, amount: { not: null } };
 
   const transactions = await prisma.transaction.findMany({
     where: expenseWhere,
     select: {
+      date: true,
       amount: true,
       currency: true,
+      spreadMonths: true,
       splits: { select: { amount: true, personId: true } },
     },
   });
 
+  // Determine the target period from the original (non-extended) filter
+  const origDate = baseWhere.date as { gte?: Date; lte?: Date } | undefined;
+  const periodStart = origDate?.gte;
+  const periodEnd = origDate?.lte;
+
   let total = 0;
   for (const t of transactions) {
+    const sm = t.spreadMonths;
+    let amount: number;
+
     if (t.splits.length > 0) {
+      amount = 0;
       for (const s of t.splits) {
         if (s.personId === null) {
-          total += convertAmount(Number(s.amount), t.currency, targetCurrency, rates);
+          amount += convertAmount(Number(s.amount), t.currency, targetCurrency, rates);
         }
       }
     } else {
-      total += convertAmount(Number(t.amount), t.currency, targetCurrency, rates);
+      amount = convertAmount(Number(t.amount), t.currency, targetCurrency, rates);
+    }
+
+    if (sm && sm > 1) {
+      // Spread: only count fractions whose months fall within the original period
+      const entries = getSpreadEntries(t.date, sm);
+      for (const entry of entries) {
+        const entryDate = new Date(entry.month + "-15");
+        if (periodStart && entryDate < periodStart) continue;
+        if (periodEnd && entryDate > periodEnd) continue;
+        total += amount * entry.fraction;
+      }
+    } else {
+      total += amount;
     }
   }
 
@@ -104,18 +142,24 @@ export async function getMonthlyData(
   accountId?: string
 ): Promise<MonthlyData[]> {
   const where = getDateFilter(period, accountId);
+  // Extend date range for spread transactions
+  const extendedWhere = { ...where };
+  if (extendedWhere.date && typeof extendedWhere.date === "object") {
+    extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
+  }
   const [primaryCurrency, rates] = await Promise.all([
     getPrimaryCurrency(),
     getCurrencyRates(),
   ]);
 
   const transactions = await prisma.transaction.findMany({
-    where: { ...where, amount: { not: null } },
+    where: { ...extendedWhere, amount: { not: null } },
     select: {
       date: true,
       amount: true,
       currency: true,
       type: true,
+      spreadMonths: true,
       splits: { select: { amount: true, personId: true } },
     },
     orderBy: { date: "asc" },
@@ -124,27 +168,47 @@ export async function getMonthlyData(
   const monthMap = new Map<string, { income: number; expense: number }>();
 
   for (const t of transactions) {
-    const month = t.date.toISOString().slice(0, 7);
-    const current = monthMap.get(month) || { income: 0, expense: 0 };
+    let amount: number;
 
     if (t.type === "income") {
-      current.income += convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
+      amount = convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
+      // Spread income across months too
+      const entries = getSpreadEntries(t.date, t.spreadMonths);
+      for (const entry of entries) {
+        const current = monthMap.get(entry.month) || { income: 0, expense: 0 };
+        current.income += amount * entry.fraction;
+        monthMap.set(entry.month, current);
+      }
     } else if (t.type === "expense") {
       if (t.splits.length > 0) {
+        amount = 0;
         for (const s of t.splits) {
           if (s.personId === null) {
-            current.expense += convertAmount(Number(s.amount), t.currency, primaryCurrency, rates);
+            amount += convertAmount(Number(s.amount), t.currency, primaryCurrency, rates);
           }
         }
       } else {
-        current.expense += convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
+        amount = convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
+      }
+
+      const entries = getSpreadEntries(t.date, t.spreadMonths);
+      for (const entry of entries) {
+        const current = monthMap.get(entry.month) || { income: 0, expense: 0 };
+        current.expense += amount * entry.fraction;
+        monthMap.set(entry.month, current);
       }
     }
-
-    monthMap.set(month, current);
   }
 
+  // Filter to only include months within the original period
+  const origDate = where.date as { gte?: Date } | undefined;
+  const periodStart = origDate?.gte;
+
   return Array.from(monthMap.entries())
+    .filter(([month]) => {
+      if (!periodStart) return true;
+      return month >= `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, "0")}`;
+    })
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, data]) => ({
       month,
@@ -158,17 +222,23 @@ export async function getCategoryBreakdown(
   accountId?: string
 ): Promise<CategoryBreakdown[]> {
   const where = getDateFilter(period, accountId);
+  const extendedWhere = { ...where };
+  if (extendedWhere.date && typeof extendedWhere.date === "object") {
+    extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
+  }
   const [primaryCurrency, rates] = await Promise.all([
     getPrimaryCurrency(),
     getCurrencyRates(),
   ]);
 
   const transactions = await prisma.transaction.findMany({
-    where: { ...where, type: "expense", amount: { not: null } },
+    where: { ...extendedWhere, type: "expense", amount: { not: null } },
     select: {
+      date: true,
       categoryId: true,
       amount: true,
       currency: true,
+      spreadMonths: true,
       splits: { select: { categoryId: true, amount: true, personId: true } },
     },
   });
@@ -176,22 +246,42 @@ export async function getCategoryBreakdown(
   const allCategories = await prisma.category.findMany();
   const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
 
+  const origDate = where.date as { gte?: Date; lte?: Date } | undefined;
+  const periodStart = origDate?.gte;
+  const periodEnd = origDate?.lte;
+
   const catTotals = new Map<string | null, { total: number; count: number }>();
 
   for (const tx of transactions) {
+    const sm = tx.spreadMonths;
+
+    // Calculate the fraction of this transaction that falls within the target period
+    let periodFraction = 1;
+    if (sm && sm > 1) {
+      const entries = getSpreadEntries(tx.date, sm);
+      periodFraction = 0;
+      for (const entry of entries) {
+        const entryDate = new Date(entry.month + "-15");
+        if (periodStart && entryDate < periodStart) continue;
+        if (periodEnd && entryDate > periodEnd) continue;
+        periodFraction += entry.fraction;
+      }
+      if (periodFraction === 0) continue;
+    }
+
     if (tx.splits.length > 0) {
       for (const s of tx.splits) {
         if (s.personId !== null) continue;
         const key = s.categoryId;
         const entry = catTotals.get(key) ?? { total: 0, count: 0 };
-        entry.total += convertAmount(Number(s.amount), tx.currency, primaryCurrency, rates);
+        entry.total += convertAmount(Number(s.amount), tx.currency, primaryCurrency, rates) * periodFraction;
         entry.count += 1;
         catTotals.set(key, entry);
       }
     } else {
       const key = tx.categoryId;
       const entry = catTotals.get(key) ?? { total: 0, count: 0 };
-      entry.total += convertAmount(Number(tx.amount ?? 0), tx.currency, primaryCurrency, rates);
+      entry.total += convertAmount(Number(tx.amount ?? 0), tx.currency, primaryCurrency, rates) * periodFraction;
       entry.count += 1;
       catTotals.set(key, entry);
     }
@@ -255,18 +345,23 @@ export async function getMonthlyCategoryBreakdown(
   accountId?: string
 ): Promise<{ data: MonthlyCategoryData[]; categories: CategoryMeta[] }> {
   const where = getDateFilter(period, accountId);
+  const extendedWhere = { ...where };
+  if (extendedWhere.date && typeof extendedWhere.date === "object") {
+    extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
+  }
   const [primaryCurrency, rates] = await Promise.all([
     getPrimaryCurrency(),
     getCurrencyRates(),
   ]);
 
   const transactions = await prisma.transaction.findMany({
-    where: { ...where, type: "expense", amount: { not: null } },
+    where: { ...extendedWhere, type: "expense", amount: { not: null } },
     select: {
       date: true,
       amount: true,
       currency: true,
       categoryId: true,
+      spreadMonths: true,
       splits: { select: { categoryId: true, amount: true, personId: true } },
     },
     orderBy: { date: "asc" },
@@ -275,33 +370,47 @@ export async function getMonthlyCategoryBreakdown(
   const categories = await prisma.category.findMany();
   const categoryLookup = new Map(categories.map((c) => [c.id, c]));
 
+  const origDate = where.date as { gte?: Date } | undefined;
+  const periodStart = origDate?.gte;
+
   const monthCatMap = new Map<string, Map<string, number>>();
   const allCatNames = new Set<string>();
 
+  function addToMonth(month: string, catName: string, amount: number) {
+    allCatNames.add(catName);
+    if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
+    const catTotals = monthCatMap.get(month)!;
+    catTotals.set(catName, (catTotals.get(catName) ?? 0) + amount);
+  }
+
   for (const t of transactions) {
-    const month = t.date.toISOString().slice(0, 7);
+    const entries = getSpreadEntries(t.date, t.spreadMonths);
 
     if (t.splits.length > 0) {
       for (const s of t.splits) {
         if (s.personId !== null) continue;
         const cat = s.categoryId ? categoryLookup.get(s.categoryId) : null;
         const catName = cat?.name ?? "Uncategorized";
-        allCatNames.add(catName);
-        if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
-        const catTotals = monthCatMap.get(month)!;
-        catTotals.set(catName, (catTotals.get(catName) ?? 0) + convertAmount(Number(s.amount), t.currency, primaryCurrency, rates));
+        const converted = convertAmount(Number(s.amount), t.currency, primaryCurrency, rates);
+        for (const entry of entries) {
+          addToMonth(entry.month, catName, converted * entry.fraction);
+        }
       }
     } else {
       const cat = t.categoryId ? categoryLookup.get(t.categoryId) : null;
       const catName = cat?.name ?? "Uncategorized";
-      allCatNames.add(catName);
-      if (!monthCatMap.has(month)) monthCatMap.set(month, new Map());
-      const catTotals = monthCatMap.get(month)!;
-      catTotals.set(catName, (catTotals.get(catName) ?? 0) + convertAmount(Number(t.amount), t.currency, primaryCurrency, rates));
+      const converted = convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
+      for (const entry of entries) {
+        addToMonth(entry.month, catName, converted * entry.fraction);
+      }
     }
   }
 
   const data: MonthlyCategoryData[] = Array.from(monthCatMap.entries())
+    .filter(([month]) => {
+      if (!periodStart) return true;
+      return month >= `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, "0")}`;
+    })
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, catTotals]) => {
       const row: MonthlyCategoryData = { month };
@@ -372,6 +481,7 @@ export async function getDailySpendData(): Promise<DailySpend[]> {
       date: true,
       amount: true,
       currency: true,
+      spreadMonths: true,
       splits: { select: { amount: true, personId: true } },
     },
     orderBy: { date: "asc" },
@@ -382,15 +492,19 @@ export async function getDailySpendData(): Promise<DailySpend[]> {
   for (const t of transactions) {
     const day = t.date.toISOString().slice(0, 10);
     const current = dayMap.get(day) ?? 0;
+    // For spread transactions, divide the daily amount by spreadMonths
+    const divisor = t.spreadMonths && t.spreadMonths > 1 ? t.spreadMonths : 1;
 
     if (t.splits.length > 0) {
+      let splitTotal = current;
       for (const s of t.splits) {
         if (s.personId === null) {
-          dayMap.set(day, current + convertAmount(Number(s.amount), t.currency, primaryCurrency, rates));
+          splitTotal += convertAmount(Number(s.amount), t.currency, primaryCurrency, rates) / divisor;
         }
       }
+      dayMap.set(day, splitTotal);
     } else {
-      dayMap.set(day, current + convertAmount(Number(t.amount), t.currency, primaryCurrency, rates));
+      dayMap.set(day, current + convertAmount(Number(t.amount), t.currency, primaryCurrency, rates) / divisor);
     }
   }
 

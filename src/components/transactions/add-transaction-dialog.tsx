@@ -67,6 +67,7 @@ export function AddTransactionDialog({
     merchant: "",
     description: "",
     tagIds: [] as string[],
+    spreadMonths: "",
   });
 
   const handleSave = async () => {
@@ -82,6 +83,7 @@ export function AddTransactionDialog({
       merchant: form.merchant || null,
       description: form.description || null,
       tagIds: form.tagIds,
+      spreadMonths: form.spreadMonths ? Number(form.spreadMonths) : null,
     });
 
     if ("error" in result) {
@@ -213,6 +215,37 @@ export function AddTransactionDialog({
               }
               placeholder="Description"
             />
+          </div>
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="spread-toggle"
+                className="h-4 w-4 rounded border-input accent-primary"
+                checked={!!form.spreadMonths}
+                onChange={(e) =>
+                  setForm({ ...form, spreadMonths: e.target.checked ? "3" : "" })
+                }
+              />
+              <Label htmlFor="spread-toggle" className="mb-0">Spread across months</Label>
+            </div>
+            {form.spreadMonths && (
+              <div className="space-y-1">
+                <Input
+                  type="number"
+                  min={2}
+                  max={24}
+                  value={form.spreadMonths}
+                  onChange={(e) => setForm({ ...form, spreadMonths: e.target.value })}
+                  placeholder="Number of months"
+                />
+                {form.amount && Number(form.spreadMonths) >= 2 && (
+                  <p className="text-xs text-muted-foreground">
+                    Monthly: {(Number(form.amount) / Number(form.spreadMonths)).toFixed(2)} {form.currency}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div className="grid gap-2">
             <Label>Tags</Label>

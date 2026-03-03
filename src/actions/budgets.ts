@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { budgetUpsertSchema } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
+import { getSpreadFraction } from "@/lib/spread-utils";
 
 export async function getBudgets() {
   return prisma.budget.findMany({
@@ -26,6 +27,8 @@ export type BudgetProgress = {
  * spent = direct expenses (no splits) in this category + my splits (personId IS NULL) in this category
  */
 async function getMySpentForCategory(categoryId: string, startOfMonth: Date, endOfMonth: Date): Promise<number> {
+  const targetMonth = `${startOfMonth.getFullYear()}-${String(startOfMonth.getMonth() + 1).padStart(2, "0")}`;
+
   const baseDateWhere = {
     type: "expense" as const,
     date: { gte: startOfMonth, lte: endOfMonth },
@@ -33,24 +36,50 @@ async function getMySpentForCategory(categoryId: string, startOfMonth: Date, end
     amount: { not: null },
   };
 
-  const [directAgg, mySplitsAgg] = await Promise.all([
-    // Direct expenses in this category (no splits)
+  // Lookback window for spread transactions (up to 12 months before)
+  const lookback = new Date(startOfMonth);
+  lookback.setMonth(lookback.getMonth() - 12);
+
+  const [directAgg, mySplitsAgg, spreadTxs] = await Promise.all([
+    // Direct expenses in this category (no splits, no spread)
     prisma.transaction.aggregate({
-      where: { ...baseDateWhere, categoryId, splits: { none: {} } },
+      where: { ...baseDateWhere, categoryId, splits: { none: {} }, spreadMonths: null },
       _sum: { amount: true },
     }),
-    // My splits (personId IS NULL) in this category
+    // My splits (personId IS NULL) in this category (no spread)
     prisma.transactionSplit.aggregate({
       where: {
         categoryId,
         personId: null,
-        transaction: { ...baseDateWhere, splits: { some: {} } },
+        transaction: { ...baseDateWhere, splits: { some: {} }, spreadMonths: null },
       },
       _sum: { amount: true },
     }),
+    // Spread transactions that may cover this month
+    prisma.transaction.findMany({
+      where: {
+        type: "expense",
+        mergedIntoId: null,
+        amount: { not: null },
+        spreadMonths: { gt: 1 },
+        categoryId,
+        splits: { none: {} },
+        date: { gte: lookback, lte: endOfMonth },
+      },
+      select: { date: true, amount: true, spreadMonths: true },
+    }),
   ]);
 
-  return Number(directAgg._sum.amount ?? 0) + Number(mySplitsAgg._sum.amount ?? 0);
+  let total = Number(directAgg._sum.amount ?? 0) + Number(mySplitsAgg._sum.amount ?? 0);
+
+  for (const tx of spreadTxs) {
+    const fraction = getSpreadFraction(tx.date, tx.spreadMonths, targetMonth);
+    if (fraction > 0) {
+      total += Number(tx.amount) * fraction;
+    }
+  }
+
+  return total;
 }
 
 export async function getBudgetProgress(): Promise<BudgetProgress[]> {

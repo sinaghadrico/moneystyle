@@ -15,6 +15,15 @@ import {
 import { toast } from "sonner";
 import { MessageSquareCode, Loader2, RotateCcw, Save } from "lucide-react";
 
+const PROMPT_COST: Record<string, string> = {
+  receipt_parser: "~$0.01/image",
+  money_advice: "~$0.01",
+  item_normalizer: "~$0.005",
+  meal_planner: "~$0.02",
+  weekend_planner: "~$0.03",
+  weekend_item_swap: "~$0.005",
+};
+
 export function AiPromptsSection() {
   const [prompts, setPrompts] = useState<AiPromptData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +84,7 @@ export function AiPromptsSection() {
   }
 
   return (
-    <Card className="md:col-span-2">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <MessageSquareCode className="h-4 w-4" />
@@ -92,8 +101,13 @@ export function AiPromptsSection() {
           const isDirty = editValues[prompt.key] !== prompt.content;
           return (
             <div key={prompt.key} className="space-y-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Label className="font-semibold">{prompt.label}</Label>
+                {PROMPT_COST[prompt.key] && (
+                  <Badge variant="outline" className="text-[10px] font-mono">
+                    {PROMPT_COST[prompt.key]}
+                  </Badge>
+                )}
                 {prompt.isCustom && (
                   <Badge variant="secondary" className="text-xs">
                     Customized

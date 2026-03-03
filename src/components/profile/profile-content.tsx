@@ -37,6 +37,8 @@ export function ProfileContent() {
     entertainment: [],
     food: [],
     likes: [],
+    city: "Dubai",
+    companionType: "solo",
   });
 
   const loadData = useCallback(async () => {

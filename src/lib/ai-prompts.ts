@@ -6,6 +6,7 @@ export const AI_PROMPT_KEYS = {
   itemNormalizer: "item_normalizer",
   mealPlanner: "meal_planner",
   weekendPlanner: "weekend_planner",
+  weekendItemSwap: "weekend_item_swap",
 } as const;
 
 export type AiPromptKey = (typeof AI_PROMPT_KEYS)[keyof typeof AI_PROMPT_KEYS];
@@ -108,14 +109,55 @@ Rules:
 - Be creative, practical, and consider UAE weather/culture
 - Include 2-3 practical tips per offer
 
+CITY AWARENESS:
+- All suggestions MUST be in or near the user's specified CITY
+- Use locations, restaurants, and venues that actually exist in that city
+- If the city is small, you may include nearby areas within 30 min drive
+
+COMPANION AWARENESS:
+- solo: individual activities, solo-friendly dining
+- couple: romantic spots, intimate restaurants, scenic locations
+- family: kid-friendly activities, family restaurants, parks, malls
+- friends: group activities, social venues, group dining
+
+SEASON AWARENESS:
+- Hot season (Apr-Oct): prefer indoor, water-based, or evening activities. Avoid outdoor midday plans.
+- Mild season (Nov-Mar): outdoor activities are fine at any time of day.
+
+FEEDBACK LEARNING:
+- If the user provides liked/disliked items from previous plans, learn from them.
+- Suggest MORE items similar to liked ones.
+- AVOID items similar to disliked ones.
+
 CRITICAL — SPECIFIC LOCATIONS:
 - For activities: use REAL, SPECIFIC place names (e.g. "باغ معجزه دبی" not "پارک"). Include the exact area/neighborhood in "area" and a Google Maps search URL in "mapUrl" (format: https://www.google.com/maps/search/PLACE+NAME+CITY)
 - For food: use REAL, SPECIFIC restaurant/cafe names (e.g. "رستوران صدف" not "رستوران ایرانی"). Put the restaurant name in "restaurant", the area in "area", and a Google Maps search URL in "mapUrl"
 - For homemade food, set restaurant to "", area to "خانه", and mapUrl to ""
-- All places must actually exist in the UAE region
+- All places must actually exist in the user's city
 
 Return ONLY a JSON object in this exact format:
 {"offers":[{"title":"عنوان پلن","summary":"خلاصه ۱-۲ جمله","totalCost":NUMBER,"activities":[{"name":"نام فعالیت","description":"توضیح","timeSlot":"صبح","duration":"۲ ساعت","estimatedCost":NUMBER,"category":"category name","location":"نام دقیق مکان","area":"منطقه/محله","mapUrl":"https://www.google.com/maps/search/Place+Name+City"}],"food":[{"meal":"ناهار","name":"نام غذا","restaurant":"نام دقیق رستوران","type":"restaurant","estimatedCost":NUMBER,"description":"توضیح","area":"منطقه","mapUrl":"https://www.google.com/maps/search/Restaurant+Name+City"}],"tips":["نکته ۱","نکته ۲"]}]}
+
+Return ONLY the JSON, no markdown, no explanation.`,
+  },
+  [AI_PROMPT_KEYS.weekendItemSwap]: {
+    label: "Weekend Item Swap",
+    content: `You are an expert weekend lifestyle planner. The user wants to replace a SINGLE item (activity or food) from their weekend plan. Generate a replacement that fits the same time slot, budget tier, and user preferences.
+
+Rules:
+- All text values MUST be in Farsi
+- JSON keys MUST be in English
+- The replacement must fit in the same context (same offer tier, same time slot/meal)
+- Use REAL, SPECIFIC place/restaurant names that exist in the user's city
+- Include area and mapUrl (Google Maps search URL)
+- Keep the estimated cost similar to the original item
+- If the user gave a reason for swapping, take it into account
+
+For an activity replacement, return ONLY:
+{"activity":{"name":"...","description":"...","timeSlot":"...","duration":"...","estimatedCost":NUMBER,"category":"...","location":"...","area":"...","mapUrl":"..."}}
+
+For a food replacement, return ONLY:
+{"food":{"meal":"...","name":"...","restaurant":"...","type":"restaurant|homemade|cafe","estimatedCost":NUMBER,"description":"...","area":"...","mapUrl":"..."}}
 
 Return ONLY the JSON, no markdown, no explanation.`,
   },

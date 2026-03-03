@@ -229,9 +229,38 @@ export const userPreferenceSchema = z.object({
   entertainment: z.array(z.string().min(1).max(100)).default([]),
   food: z.array(z.string().min(1).max(100)).default([]),
   likes: z.array(z.string().min(1).max(100)).default([]),
+  city: z.enum([
+    "Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain",
+  ]).default("Dubai"),
+  companionType: z.enum(["solo", "couple", "family", "friends"]).default("solo"),
 });
 
 export type UserPreferenceInput = z.infer<typeof userPreferenceSchema>;
+
+export const rateItemSchema = z.object({
+  planId: z.string().min(1),
+  itemKey: z.string().regex(/^(activity|food):\d+:\d+$/),
+  rating: z.enum(["like", "dislike"]),
+});
+
+export type RateItemInput = z.infer<typeof rateItemSchema>;
+
+export const swapItemSchema = z.object({
+  planId: z.string().min(1),
+  offerIndex: z.coerce.number().int().min(0).max(2),
+  itemType: z.enum(["activity", "food"]),
+  itemIndex: z.coerce.number().int().min(0),
+  reason: z.string().max(200).optional(),
+});
+
+export type SwapItemInput = z.infer<typeof swapItemSchema>;
+
+export const linkTransactionsSchema = z.object({
+  planId: z.string().min(1),
+  transactionIds: z.array(z.string().min(1)).min(1),
+});
+
+export type LinkTransactionsInput = z.infer<typeof linkTransactionsSchema>;
 
 // Currency validators
 

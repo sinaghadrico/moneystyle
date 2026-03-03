@@ -5,10 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Film, UtensilsCrossed, Heart, X, Plus, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Film, UtensilsCrossed, Heart, X, Plus, Loader2, MapPin, Users } from "lucide-react";
 import { updateUserPreferences } from "@/actions/weekend-planner";
 import { toast } from "sonner";
 import type { UserPreferenceData } from "@/lib/types";
+import { UAE_CITIES, COMPANION_TYPES } from "@/lib/types";
 
 type TagCategory = "entertainment" | "food" | "likes";
 
@@ -113,6 +121,60 @@ export function PreferencesSection({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* City & Companion selects */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              City
+            </div>
+            <Select
+              value={data.city}
+              onValueChange={async (value) => {
+                const updated = { ...data, city: value };
+                setData(updated);
+                await save(updated);
+              }}
+            >
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {UAE_CITIES.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              Companion
+            </div>
+            <Select
+              value={data.companionType}
+              onValueChange={async (value) => {
+                const updated = { ...data, companionType: value };
+                setData(updated);
+                await save(updated);
+              }}
+            >
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COMPANION_TYPES.map((ct) => (
+                  <SelectItem key={ct.value} value={ct.value}>
+                    {ct.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {SECTIONS.map((section) => {
           const Icon = section.icon;
           return (

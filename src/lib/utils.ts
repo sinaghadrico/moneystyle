@@ -48,3 +48,9 @@ export function getDateRange(period: string): Date | null {
       return null;
   }
 }
+
+export function getUaeSeason(): { season: "hot" | "mild"; description: string } {
+  const month = new Date().getMonth();
+  if (month >= 3 && month <= 9) return { season: "hot", description: "Hot season (indoor/water/evening preferred)" };
+  return { season: "mild", description: "Mild season (outdoor OK)" };
+}

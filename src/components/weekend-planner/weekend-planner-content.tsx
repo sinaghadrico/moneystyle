@@ -8,6 +8,9 @@ import {
   generateWeekendPlan,
   getWeekendPlans,
   deleteWeekendPlan,
+  rateWeekendItem,
+  swapWeekendItem,
+  generateWeekendIcs,
 } from "@/actions/weekend-planner";
 import {
   CalendarHeart,
@@ -24,10 +27,21 @@ import {
   DollarSign,
   ExternalLink,
   Navigation,
+  ThumbsUp,
+  ThumbsDown,
+  RefreshCw,
+  Calendar,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
-import type { WeekendPlanData, WeekendOffer } from "@/lib/types";
+import type {
+  WeekendPlanData,
+  WeekendOffer,
+  WeekendPlanRatings,
+} from "@/lib/types";
+import { LinkTransactionsDialog } from "./link-transactions-dialog";
+import { SpendingComparison } from "./spending-comparison";
 
 const OFFER_TABS = [
   { key: 0, label: "اقتصادی" },
@@ -61,6 +75,8 @@ export function WeekendPlannerContent() {
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [swappingKey, setSwappingKey] = useState<string | null>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   const loadHistory = async () => {
     setHistoryLoading(true);
@@ -93,9 +109,148 @@ export function WeekendPlannerContent() {
     await loadHistory();
   };
 
+  const handleRate = async (
+    itemKey: string,
+    rating: "like" | "dislike"
+  ) => {
+    if (!current) return;
+    const res = await rateWeekendItem({
+      planId: current.id,
+      itemKey,
+      rating,
+    });
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+    // Update local state
+    setPlans((prev) =>
+      prev.map((p) =>
+        p.id === current.id ? { ...p, ratings: res.ratings } : p
+      )
+    );
+  };
+
+  const handleSwap = async (
+    offerIndex: number,
+    itemType: "activity" | "food",
+    itemIndex: number
+  ) => {
+    if (!current) return;
+    const key = `${itemType}:${offerIndex}:${itemIndex}`;
+    setSwappingKey(key);
+
+    const res = await swapWeekendItem({
+      planId: current.id,
+      offerIndex,
+      itemType,
+      itemIndex,
+    });
+
+    if ("error" in res) {
+      toast.error(res.error);
+    } else {
+      setPlans((prev) =>
+        prev.map((p) =>
+          p.id === current.id ? { ...p, offers: res.offers } : p
+        )
+      );
+      toast.success("Item swapped!");
+    }
+    setSwappingKey(null);
+  };
+
+  const handleCalendarExport = async () => {
+    if (!current) return;
+    const res = await generateWeekendIcs(current.id, activeTab);
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+    const blob = new Blob([res.ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `weekend-plan-${current.weekLabel}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Calendar file downloaded!");
+  };
+
+  const handleLinked = (linkedIds: string[]) => {
+    if (!current) return;
+    setPlans((prev) =>
+      prev.map((p) =>
+        p.id === current.id
+          ? { ...p, linkedTransactionIds: linkedIds }
+          : p
+      )
+    );
+  };
+
   const current = plans[viewIndex] ?? null;
   const currentOffer: WeekendOffer | null =
     current?.offers?.[activeTab] ?? null;
+  const currentRatings: WeekendPlanRatings = current?.ratings ?? {};
+
+  const RatingButtons = ({
+    itemKey,
+  }: {
+    itemKey: string;
+  }) => {
+    const currentRating = currentRatings[itemKey];
+    return (
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => handleRate(itemKey, "like")}
+          className={`p-1 rounded-full transition-colors ${
+            currentRating === "like"
+              ? "bg-green-500/20 text-green-600"
+              : "text-muted-foreground hover:text-green-600 hover:bg-green-500/10"
+          }`}
+        >
+          <ThumbsUp className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleRate(itemKey, "dislike")}
+          className={`p-1 rounded-full transition-colors ${
+            currentRating === "dislike"
+              ? "bg-red-500/20 text-red-600"
+              : "text-muted-foreground hover:text-red-600 hover:bg-red-500/10"
+          }`}
+        >
+          <ThumbsDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  };
+
+  const SwapButton = ({
+    offerIndex,
+    itemType,
+    itemIndex,
+  }: {
+    offerIndex: number;
+    itemType: "activity" | "food";
+    itemIndex: number;
+  }) => {
+    const key = `${itemType}:${offerIndex}:${itemIndex}`;
+    const isSwapping = swappingKey === key;
+    return (
+      <button
+        type="button"
+        onClick={() => handleSwap(offerIndex, itemType, itemIndex)}
+        disabled={isSwapping || swappingKey !== null}
+        className="p-1 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+      >
+        <RefreshCw
+          className={`h-3.5 w-3.5 ${isSwapping ? "animate-spin" : ""}`}
+        />
+      </button>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -254,61 +409,72 @@ export function WeekendPlannerContent() {
                 <MapPin className="h-4 w-4 text-blue-500" />
                 Activities
               </h4>
-              {currentOffer.activities.map((activity, i) => (
-                <Card key={i}>
-                  <CardContent className="pt-3 pb-3 space-y-1.5" dir="rtl">
-                    <div className="flex items-start justify-between gap-2">
-                      <h5 className="font-medium text-sm">
-                        {activity.name}
-                      </h5>
-                      <Badge
-                        variant="secondary"
-                        className={`text-xs shrink-0 ${TIME_SLOT_COLORS[activity.timeSlot] ?? ""}`}
-                      >
-                        {activity.timeSlot}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {activity.description}
-                    </p>
-                    {activity.location && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <Navigation className="h-3 w-3 text-blue-500 shrink-0" />
-                        <span className="text-muted-foreground">
-                          {activity.location}
-                          {activity.area && ` — ${activity.area}`}
-                        </span>
-                        {activity.mapUrl && (
-                          <a
-                            href={activity.mapUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-0.5 text-blue-500 hover:text-blue-600 shrink-0"
+              {currentOffer.activities.map((activity, i) => {
+                const itemKey = `activity:${activeTab}:${i}`;
+                return (
+                  <Card key={i}>
+                    <CardContent className="pt-3 pb-3 space-y-1.5" dir="rtl">
+                      <div className="flex items-start justify-between gap-2">
+                        <h5 className="font-medium text-sm">
+                          {activity.name}
+                        </h5>
+                        <div className="flex items-center gap-1 shrink-0" dir="ltr">
+                          <RatingButtons itemKey={itemKey} />
+                          <SwapButton
+                            offerIndex={activeTab}
+                            itemType="activity"
+                            itemIndex={i}
+                          />
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${TIME_SLOT_COLORS[activity.timeSlot] ?? ""}`}
                           >
-                            <MapPin className="h-3 w-3" />
-                            <ExternalLink className="h-2.5 w-2.5" />
-                          </a>
+                            {activity.timeSlot}
+                          </Badge>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {activity.description}
+                      </p>
+                      {activity.location && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <Navigation className="h-3 w-3 text-blue-500 shrink-0" />
+                          <span className="text-muted-foreground">
+                            {activity.location}
+                            {activity.area && ` — ${activity.area}`}
+                          </span>
+                          {activity.mapUrl && (
+                            <a
+                              href={activity.mapUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 text-blue-500 hover:text-blue-600 shrink-0"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {activity.duration}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          {formatCurrency(activity.estimatedCost)}
+                        </span>
+                        {activity.category && (
+                          <Badge variant="outline" className="text-xs">
+                            {activity.category}
+                          </Badge>
                         )}
                       </div>
-                    )}
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {activity.duration}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        {formatCurrency(activity.estimatedCost)}
-                      </span>
-                      {activity.category && (
-                        <Badge variant="outline" className="text-xs">
-                          {activity.category}
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
@@ -319,55 +485,66 @@ export function WeekendPlannerContent() {
                 <UtensilsCrossed className="h-4 w-4 text-orange-500" />
                 Food
               </h4>
-              {currentOffer.food.map((f, i) => (
-                <Card key={i}>
-                  <CardContent className="pt-3 pb-3 space-y-1.5" dir="rtl">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-xs text-muted-foreground">
-                          {f.meal}
-                        </span>
-                        <h5 className="font-medium text-sm">{f.name}</h5>
-                        {f.restaurant && (
+              {currentOffer.food.map((f, i) => {
+                const itemKey = `food:${activeTab}:${i}`;
+                return (
+                  <Card key={i}>
+                    <CardContent className="pt-3 pb-3 space-y-1.5" dir="rtl">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
                           <span className="text-xs text-muted-foreground">
-                            {f.restaurant}
+                            {f.meal}
                           </span>
-                        )}
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className={`text-xs shrink-0 ${FOOD_TYPE_COLORS[f.type] ?? ""}`}
-                      >
-                        {FOOD_TYPE_LABELS[f.type] ?? f.type}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {f.description}
-                    </p>
-                    {f.area && f.type !== "homemade" && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <Navigation className="h-3 w-3 text-orange-500 shrink-0" />
-                        <span className="text-muted-foreground">{f.area}</span>
-                        {f.mapUrl && (
-                          <a
-                            href={f.mapUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-0.5 text-blue-500 hover:text-blue-600 shrink-0"
+                          <h5 className="font-medium text-sm">{f.name}</h5>
+                          {f.restaurant && (
+                            <span className="text-xs text-muted-foreground">
+                              {f.restaurant}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0" dir="ltr">
+                          <RatingButtons itemKey={itemKey} />
+                          <SwapButton
+                            offerIndex={activeTab}
+                            itemType="food"
+                            itemIndex={i}
+                          />
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${FOOD_TYPE_COLORS[f.type] ?? ""}`}
                           >
-                            <MapPin className="h-3 w-3" />
-                            <ExternalLink className="h-2.5 w-2.5" />
-                          </a>
-                        )}
+                            {FOOD_TYPE_LABELS[f.type] ?? f.type}
+                          </Badge>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <DollarSign className="h-3 w-3" />
-                      {formatCurrency(f.estimatedCost)}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <p className="text-xs text-muted-foreground">
+                        {f.description}
+                      </p>
+                      {f.area && f.type !== "homemade" && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <Navigation className="h-3 w-3 text-orange-500 shrink-0" />
+                          <span className="text-muted-foreground">{f.area}</span>
+                          {f.mapUrl && (
+                            <a
+                              href={f.mapUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 text-blue-500 hover:text-blue-600 shrink-0"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <DollarSign className="h-3 w-3" />
+                        {formatCurrency(f.estimatedCost)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
@@ -385,7 +562,7 @@ export function WeekendPlannerContent() {
                       key={i}
                       className="text-sm text-muted-foreground flex items-start gap-2"
                     >
-                      <span className="text-xs mt-0.5">•</span>
+                      <span className="text-xs mt-0.5">&#8226;</span>
                       {tip}
                     </li>
                   ))}
@@ -394,21 +571,63 @@ export function WeekendPlannerContent() {
             </Card>
           )}
 
+          {/* Spending Comparison */}
+          {current.linkedTransactionIds.length > 0 && (
+            <SpendingComparison
+              planId={current.id}
+              offerIndex={activeTab}
+              linkedTransactionIds={current.linkedTransactionIds}
+              onUnlink={(updatedIds) => handleLinked(updatedIds)}
+              onOpenLinkDialog={() => setLinkDialogOpen(true)}
+            />
+          )}
+
           {/* Footer */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <p className="text-xs text-muted-foreground">
               Generated by AI based on your preferences and budget.
             </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-destructive"
-              onClick={() => handleDelete(current.id)}
-            >
-              <Trash2 className="h-3 w-3 mr-1" />
-              Delete
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={handleCalendarExport}
+              >
+                <Calendar className="h-3 w-3 mr-1" />
+                Add to Calendar
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setLinkDialogOpen(true)}
+              >
+                <Link2 className="h-3 w-3 mr-1" />
+                Link Transactions
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-destructive"
+                onClick={() => handleDelete(current.id)}
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete
+              </Button>
+            </div>
           </div>
+
+          {/* Link Transactions Dialog */}
+          {current && (
+            <LinkTransactionsDialog
+              open={linkDialogOpen}
+              onOpenChange={setLinkDialogOpen}
+              planId={current.id}
+              linkedTransactionIds={current.linkedTransactionIds}
+              onLinked={handleLinked}
+            />
+          )}
         </div>
       )}
     </div>

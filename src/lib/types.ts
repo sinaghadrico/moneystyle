@@ -298,6 +298,8 @@ export type UserPreferenceData = {
   entertainment: string[];
   food: string[];
   likes: string[];
+  city: string;
+  companionType: string;
 };
 
 export type WeekendActivity = {
@@ -336,8 +338,37 @@ export type WeekendPlanData = {
   id: string;
   weekLabel: string;
   offers: WeekendOffer[];
+  ratings: WeekendPlanRatings;
+  linkedTransactionIds: string[];
   createdAt: string;
 };
+
+export type ItemRating = "like" | "dislike";
+export type WeekendPlanRatings = Record<string, ItemRating>;
+
+export type WeekendSpendingComparison = {
+  estimatedTotal: number;
+  actualTotal: number;
+  difference: number;
+  linkedTransactions: {
+    id: string;
+    merchant: string | null;
+    amount: number;
+    date: string;
+    category: string | null;
+  }[];
+};
+
+export const UAE_CITIES = [
+  "Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain",
+] as const;
+
+export const COMPANION_TYPES = [
+  { value: "solo", label: "Solo" },
+  { value: "couple", label: "Couple" },
+  { value: "family", label: "Family" },
+  { value: "friends", label: "Friends" },
+] as const;
 
 // Currency types
 

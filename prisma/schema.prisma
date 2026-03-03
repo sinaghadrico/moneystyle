@@ -372,6 +372,8 @@ model UserPreference {
   entertainment String[]
   food          String[]
   likes         String[]
+  city          String   @default("Dubai")
+  companionType String   @default("solo")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -379,10 +381,12 @@ model UserPreference {
 }
 
 model WeekendPlan {
-  id        String   @id @default(cuid())
-  weekLabel String
-  plan      Json
-  createdAt DateTime @default(now())
+  id                   String   @id @default(cuid())
+  weekLabel            String
+  plan                 Json
+  ratings              Json?
+  linkedTransactionIds String[]
+  createdAt            DateTime @default(now())
 
   @@map("weekend_plans")
 }

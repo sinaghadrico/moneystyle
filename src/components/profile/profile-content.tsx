@@ -17,6 +17,7 @@ import {
   getFinancialOverview,
 } from "@/actions/profile";
 import { getUserPreferences } from "@/actions/weekend-planner";
+import { Wallet, UserCircle } from "lucide-react";
 import type {
   IncomeSourceData,
   ReserveData,
@@ -26,7 +27,15 @@ import type {
   UserPreferenceData,
 } from "@/lib/types";
 
+const TABS = [
+  { key: "finance", label: "Finance", icon: Wallet },
+  { key: "personal", label: "Personal", icon: UserCircle },
+] as const;
+
+type Tab = (typeof TABS)[number]["key"];
+
 export function ProfileContent() {
+  const [activeTab, setActiveTab] = useState<Tab>("finance");
   const [loading, setLoading] = useState(true);
   const [incomeSources, setIncomeSources] = useState<IncomeSourceData[]>([]);
   const [reserves, setReserves] = useState<ReserveData[]>([]);
@@ -68,11 +77,9 @@ export function ProfileContent() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Financial Profile
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight">Profile</h2>
           <p className="text-muted-foreground">
-            Your complete financial overview
+            Manage your financial and personal information
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -89,23 +96,55 @@ export function ProfileContent() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          Financial Profile
-        </h2>
+        <h2 className="text-2xl font-bold tracking-tight">Profile</h2>
         <p className="text-muted-foreground">
-          Your complete financial overview
+          Manage your financial and personal information
         </p>
       </div>
 
-      {overview && <FinancialOverviewCard overview={overview} />}
+      {/* Tab switcher */}
+      <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-      <IncomeSourcesSection sources={incomeSources} onRefresh={loadData} />
-      <ReservesSection reserves={reserves} onRefresh={loadData} />
-      <InstallmentsSection installments={installments} onRefresh={loadData} />
-      <BillsSection bills={bills} onRefresh={loadData} />
-      <PreferencesSection preferences={preferences} onRefresh={loadData} />
-      <MoneyAdviceSection />
+      {/* Finance tab */}
+      {activeTab === "finance" && (
+        <div className="space-y-6">
+          {overview && <FinancialOverviewCard overview={overview} />}
+          <IncomeSourcesSection sources={incomeSources} onRefresh={loadData} />
+          <ReservesSection reserves={reserves} onRefresh={loadData} />
+          <InstallmentsSection installments={installments} onRefresh={loadData} />
+          <BillsSection bills={bills} onRefresh={loadData} />
+          <MoneyAdviceSection />
+        </div>
+      )}
+
+      {/* Personal tab */}
+      {activeTab === "personal" && (
+        <div className="space-y-6">
+          <PreferencesSection preferences={preferences} onRefresh={loadData} />
+        </div>
+      )}
     </div>
   );
 }

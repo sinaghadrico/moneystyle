@@ -94,11 +94,12 @@ export function AddSavingsDialog({
           )}
         </div>
         <ResponsiveDialogFooter>
-          <div className="flex w-full items-center gap-2 justify-end">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
+              className="flex-1"
               onClick={handleAdd}
               disabled={saving || !amount || parseFloat(amount) <= 0}
             >

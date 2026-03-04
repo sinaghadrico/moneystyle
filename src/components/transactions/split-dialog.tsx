@@ -239,8 +239,8 @@ export function SplitDialog({
             </div>
           ))}
 
-          <div className="flex items-center justify-between">
-            <Button variant="outline" size="sm" onClick={addRow}>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <Button variant="outline" size="sm" className="shrink-0" onClick={addRow}>
               <Plus className="mr-1 h-3.5 w-3.5" />
               Add Split
             </Button>

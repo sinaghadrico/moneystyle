@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { upsertSavingsGoal, deleteSavingsGoal } from "@/actions/savings";
+import { Trash2 } from "lucide-react";
 import type { SavingsProgress } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ export function SavingsFormDialog({
   onSuccess: () => void;
 }) {
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     name: goal?.name ?? "",
     targetAmount: goal?.targetAmount?.toString() ?? "",
@@ -69,10 +71,22 @@ export function SavingsFormDialog({
   };
 
   return (
+    <>
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>{goal ? "Edit" : "New"} Savings Goal</ResponsiveDialogTitle>
+          <div className="flex items-center justify-between">
+            <ResponsiveDialogTitle>{goal ? "Edit" : "New"} Savings Goal</ResponsiveDialogTitle>
+            {goal && (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                disabled={saving}
+                className="p-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -121,23 +135,12 @@ export function SavingsFormDialog({
           </div>
         </div>
         <ResponsiveDialogFooter>
-          <div className="flex w-full items-center gap-2">
-            {goal && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={handleDelete}
-                disabled={saving}
-              >
-                Delete
-              </Button>
-            )}
-            <div className="flex-1" />
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
+              className="flex-1"
               onClick={handleSave}
               disabled={saving || !form.name || !form.targetAmount}
             >
@@ -147,5 +150,32 @@ export function SavingsFormDialog({
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
+
+    <ResponsiveDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Delete Goal</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <p className="text-sm text-muted-foreground px-4 md:px-0">
+          Are you sure you want to delete &quot;{goal?.name}&quot;? This action cannot be undone.
+        </p>
+        <ResponsiveDialogFooter>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={handleDelete}
+              disabled={saving}
+            >
+              Delete
+            </Button>
+          </div>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
+    </>
   );
 }

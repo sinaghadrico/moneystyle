@@ -67,9 +67,9 @@ function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
   const handleAction = useCallback(
     (href: string) => {
       onClose();
-      setTimeout(() => router.push(href), 200);
+      setTimeout(() => window.open(href, "_blank"), 200);
     },
-    [onClose, router]
+    [onClose]
   );
 
   if (!visible) return null;

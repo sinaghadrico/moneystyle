@@ -208,11 +208,9 @@ export function ItemsDialog({
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="sm:max-w-xl">
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>
-            Items — {transaction.merchant || "Transaction"}
-          </ResponsiveDialogTitle>
+      <ResponsiveDialogContent className="sm:max-w-xl sm:max-h-[85vh] sm:flex sm:flex-col">
+        <ResponsiveDialogHeader className="shrink-0">
+          <ResponsiveDialogTitle>Items</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
 
         {loading ? (
@@ -220,7 +218,7 @@ export function ItemsDialog({
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-2 py-2">
+          <div className="space-y-2 py-2 sm:overflow-y-auto sm:min-h-0">
             {/* Receipt upload */}
             <div className="rounded-lg border border-dashed p-3 space-y-2">
               <div className="flex items-center justify-between">
@@ -374,7 +372,7 @@ export function ItemsDialog({
           </div>
         )}
 
-        <ResponsiveDialogFooter>
+        <ResponsiveDialogFooter className="shrink-0">
           <div className="flex w-full gap-2">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Cancel

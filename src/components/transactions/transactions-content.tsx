@@ -517,7 +517,7 @@ export function TransactionsContent() {
                 }
               >
                 <div
-                  className={`border p-3 space-y-2 ${selected.has(tx.id) ? "bg-primary/5 border-primary/20" : ""}`}
+                  className={`p-3 space-y-2 ${selected.has(tx.id) ? "bg-primary/5" : ""}`}
                 >
                   <div className="flex items-start gap-2 min-w-0">
                     <div
@@ -612,11 +612,10 @@ export function TransactionsContent() {
                       </Badge>
                     )}
                     {tx.mediaFiles.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 gap-1 px-1.5 text-xs"
-                        onClick={() => { setViewMedia(tx.mediaFiles); setViewMediaTxId(tx.id); }}
+                      <button
+                        className="relative z-10 inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[10px] text-muted-foreground active:bg-muted/80"
+                        onPointerDownCapture={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); setViewMedia(tx.mediaFiles); setViewMediaTxId(tx.id); }}
                       >
                         {tx.mediaFiles.some((f) => /\.(jpg|jpeg|png)$/i.test(f)) ? (
                           <ImageIcon className="h-3.5 w-3.5" />
@@ -624,7 +623,7 @@ export function TransactionsContent() {
                           <FileText className="h-3.5 w-3.5" />
                         )}
                         {tx.mediaFiles.length > 1 && tx.mediaFiles.length}
-                      </Button>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -886,9 +885,21 @@ export function TransactionsContent() {
         </div>
       )}
 
-      {/* Mobile selection bar + FAB */}
-      {selected.size > 0 ? (
-        <div className="fixed bottom-16 left-3 right-3 z-40 flex flex-col items-end gap-2 md:hidden">
+      {/* Mobile selection bar + FAB — hide when any dialog/drawer is open */}
+      {(() => {
+        const anyOpen = showAdd || !!deleteIds.length || showMerge || filterDrawerOpen || !!editTx || !!splitTx || !!itemsTx || viewMedia.length > 0;
+        if (anyOpen) return null;
+        if (selected.size === 0) return (
+          <button
+            className="fixed right-4 z-[51] flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 md:hidden"
+            style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 16px + 3rem + 8px)" }}
+            onClick={() => setShowAdd(true)}
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        );
+        return (
+        <div className="fixed left-3 right-3 z-[55] flex flex-col items-end gap-2 md:hidden" style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 8px)" }}>
           <button
             className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95"
             onClick={() => setShowAdd(true)}
@@ -925,14 +936,8 @@ export function TransactionsContent() {
             </div>
           </div>
         </div>
-      ) : (
-        <button
-          className="fixed bottom-[4.5rem] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 md:hidden"
-          onClick={() => setShowAdd(true)}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-      )}
+        );
+      })()}
 
       {editTx && (
         <EditTransactionDialog

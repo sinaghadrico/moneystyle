@@ -42,9 +42,15 @@ export function SwipeableCard({
   }, [showHint]);
 
   const bind = useDrag(
-    ({ movement: [mx], velocity: [vx], direction: [dx], active, cancel, tap }) => {
+    ({ movement: [mx], velocity: [vx], direction: [dx], active, cancel, tap, axis }) => {
       if (tap && onTap) {
         onTap();
+        return;
+      }
+
+      // If gesture locked to vertical axis, cancel and let page scroll
+      if (axis === "y") {
+        cancel();
         return;
       }
 
@@ -68,14 +74,15 @@ export function SwipeableCard({
       }
     },
     {
-      axis: "x",
+      axis: "lock",
       filterTaps: true,
       from: () => [offsetRef.current, 0],
+      threshold: 10,
     }
   );
 
   return (
-    <div className="relative overflow-hidden rounded-lg">
+    <div className="relative overflow-hidden rounded-xl border">
       {/* Action buttons revealed behind */}
       <div className="absolute inset-y-0 right-0 flex items-center">
         {actions}

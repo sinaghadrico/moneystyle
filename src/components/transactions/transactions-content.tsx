@@ -167,6 +167,7 @@ export function TransactionsContent() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
+  const listTopRef = useRef<HTMLDivElement>(null);
   const [showMerge, setShowMerge] = useState(false);
   const [splitTx, setSplitTx] = useState<TransactionWithCategory | null>(null);
   const [itemsTx, setItemsTx] = useState<TransactionWithCategory | null>(null);
@@ -324,17 +325,41 @@ export function TransactionsContent() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div ref={listTopRef} className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">💳 Transactions</h2>
           <p className="text-muted-foreground">
             {result ? `${result.total} transactions` : "Loading..."}
           </p>
         </div>
-        <div className="hidden sm:flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* Mobile: filter button */}
+          {(() => {
+            const activeFilterCount = Object.entries(filters).filter(
+              ([, v]) => v !== "",
+            ).length;
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="md:hidden"
+                onClick={() => setFilterDrawerOpen(true)}
+              >
+                <SlidersHorizontal className="mr-1.5 h-4 w-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-1.5 px-1.5 text-[10px]">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            );
+          })()}
+          {/* Desktop: action buttons */}
           {selected.size >= 1 && (
             <Button
               variant="destructive"
+              className="hidden sm:flex"
               onClick={() => setDeleteIds([...selected])}
             >
               <Trash2 className="mr-1.5 h-4 w-4" />
@@ -342,38 +367,22 @@ export function TransactionsContent() {
             </Button>
           )}
           {selected.size >= 2 && (
-            <Button onClick={() => setShowMerge(true)}>
+            <Button className="hidden sm:flex" onClick={() => setShowMerge(true)}>
               <Merge className="mr-1.5 h-4 w-4" />
               Merge {selected.size} Selected
             </Button>
           )}
-          <Button onClick={() => setShowAdd(true)}>
+          <Button className="hidden sm:flex" onClick={() => setShowAdd(true)}>
             <Plus className="mr-1 h-4 w-4" />
             Add Transaction
           </Button>
         </div>
       </div>
 
-      {/* Mobile: filter button + drawer */}
+      {/* Mobile: filter drawer */}
       {(() => {
-        const activeFilterCount = Object.entries(filters).filter(
-          ([, v]) => v !== "",
-        ).length;
         return (
           <div className="md:hidden">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilterDrawerOpen(true)}
-            >
-              <SlidersHorizontal className="mr-1.5 h-4 w-4" />
-              Filters
-              {activeFilterCount > 0 && (
-                <Badge variant="secondary" className="ml-1.5 px-1.5 text-[10px]">
-                  {activeFilterCount}
-                </Badge>
-              )}
-            </Button>
             <Drawer open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
               <DrawerContent className="max-h-[60vh]">
                 <DrawerHeader>
@@ -858,7 +867,7 @@ export function TransactionsContent() {
               variant="outline"
               size="sm"
               disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
+              onClick={() => { setPage((p) => p - 1); setTimeout(() => listTopRef.current?.scrollIntoView({ behavior: "smooth" }), 100); }}
             >
               <ChevronLeft className="mr-1 h-4 w-4" />
               Previous
@@ -867,7 +876,7 @@ export function TransactionsContent() {
               variant="outline"
               size="sm"
               disabled={page >= result.totalPages}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => { setPage((p) => p + 1); setTimeout(() => listTopRef.current?.scrollIntoView({ behavior: "smooth" }), 100); }}
             >
               Next
               <ChevronRight className="ml-1 h-4 w-4" />

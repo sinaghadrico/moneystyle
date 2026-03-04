@@ -81,11 +81,11 @@ function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
           opacity: animating ? 1 : 0,
         }}
       >
-        <div className="w-56 rounded-2xl border shadow-2xl shadow-purple-500/10 overflow-hidden backdrop-blur-xl bg-card bg-gradient-to-br from-indigo-500/25 via-purple-500/20 to-pink-500/25 dark:from-indigo-500/35 dark:via-purple-500/30 dark:to-pink-500/35">
+        <div className="w-56 rounded-2xl border shadow-2xl shadow-black/10 overflow-hidden backdrop-blur-xl bg-card bg-gradient-to-br from-neutral-500/10 via-neutral-400/5 to-neutral-500/10 dark:from-neutral-400/15 dark:via-neutral-500/10 dark:to-neutral-400/15">
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-purple-500" />
+              <Sparkles className="h-4 w-4 text-neutral-500" />
               <span className="text-sm font-semibold">AI & Lifestyle</span>
             </div>
           </div>
@@ -120,13 +120,13 @@ function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
       {/* Close FAB */}
       <button
         onClick={onClose}
-        className="absolute right-4 bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] md:bottom-6 h-12 w-12 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-purple-500/30 flex items-center justify-center"
+        className="absolute right-4 bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] md:bottom-6 h-12 w-12 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-900 shadow-lg shadow-black/40 flex items-center justify-center"
         style={{
           transition: "transform 400ms cubic-bezier(0.34,1.56,0.64,1)",
           transform: animating ? "rotate(90deg) scale(1.1)" : "rotate(0deg) scale(1)",
         }}
       >
-        <X className="h-5 w-5 text-white md:h-4 md:w-4" />
+        <X className="h-5 w-5 text-amber-400 md:h-4 md:w-4" />
       </button>
     </div>
   );
@@ -142,9 +142,9 @@ export function BottomNav() {
       {!fabOpen && (
         <button
           onClick={() => setFabOpen(true)}
-          className="fixed z-50 right-4 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-purple-500/30 flex items-center justify-center active:scale-95 transition-transform bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] h-12 w-12 md:bottom-6 md:h-10 md:w-auto md:gap-2 md:px-4 animate-fab-pulse"
+          className="fixed z-50 right-4 rounded-full bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-900 shadow-lg shadow-black/40 flex items-center justify-center active:scale-95 transition-transform bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] h-12 w-12 md:bottom-6 md:h-10 md:w-auto md:gap-2 md:px-4 animate-fab-pulse overflow-hidden fab-shimmer"
         >
-          <Sparkles className="h-5 w-5 text-white md:h-4 md:w-4 animate-[spin_4s_linear_infinite]" />
+          <Sparkles className="h-5 w-5 text-amber-400 md:h-4 md:w-4 animate-[spin_4s_linear_infinite]" />
           <span className="hidden md:inline text-sm font-medium text-white">AI & Lifestyle</span>
         </button>
       )}

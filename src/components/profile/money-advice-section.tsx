@@ -81,11 +81,12 @@ export function MoneyAdviceSection() {
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-amber-500" />
-          Money Advice
-        </h3>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-500" />
+            Money Advice
+          </h3>
         <Button
           size="sm"
           variant="outline"
@@ -104,6 +105,10 @@ export function MoneyAdviceSection() {
             </>
           )}
         </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          AI-powered suggestions on how to put your money to work.
+        </p>
       </div>
 
       {error && (

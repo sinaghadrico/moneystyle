@@ -146,6 +146,7 @@ export function SmsPatternsSection() {
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Test area
   const [testText, setTestText] = useState("");
@@ -581,7 +582,7 @@ export function SmsPatternsSection() {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 shrink-0 text-destructive"
-                    onClick={() => handleDelete(p.id)}
+                    onClick={() => setConfirmDeleteId(p.id)}
                     disabled={deleting === p.id}
                   >
                     {deleting === p.id ? (
@@ -821,16 +822,51 @@ export function SmsPatternsSection() {
             </div>
 
             <ResponsiveDialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={saving || !form.name || !form.regex}>
-                {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-                {editingId ? "Update" : "Create"}
-              </Button>
+              <div className="flex w-full gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={handleSave} disabled={saving || !form.name || !form.regex}>
+                  {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                  {editingId ? "Update" : "Create"}
+                </Button>
+              </div>
+            </ResponsiveDialogFooter>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
+
+        {/* Delete confirmation */}
+        <ResponsiveDialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+          <ResponsiveDialogContent className="sm:max-w-sm">
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Delete Pattern</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Are you sure? This cannot be undone.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogFooter>
+              <div className="flex w-full gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setConfirmDeleteId(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  disabled={!!deleting}
+                  onClick={async () => {
+                    if (!confirmDeleteId) return;
+                    await handleDelete(confirmDeleteId);
+                    setConfirmDeleteId(null);
+                  }}
+                >
+                  {deleting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+                  Delete
+                </Button>
+              </div>
             </ResponsiveDialogFooter>
           </ResponsiveDialogContent>
         </ResponsiveDialog>

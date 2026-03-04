@@ -1,5 +1,5 @@
-import { LifestyleContent } from "@/components/lifestyle/lifestyle-content";
+import { MealPlannerContent } from "@/components/meal-planner/meal-planner-content";
 
 export default function MealsPage() {
-  return <LifestyleContent initialTab="meals" />;
+  return <MealPlannerContent />;
 }

@@ -1,5 +1,5 @@
-import { LifestyleContent } from "@/components/lifestyle/lifestyle-content";
+import { ShoppingBasketsSection } from "@/components/lifestyle/shopping-baskets-section";
 
 export default function ShoppingPage() {
-  return <LifestyleContent initialTab="shopping" />;
+  return <ShoppingBasketsSection />;
 }

@@ -8,9 +8,7 @@ import {
   LayoutDashboard,
   ArrowLeftRight,
   UserCircle,
-  MoreHorizontal,
   Settings,
-  Palette,
   Sparkles,
   X,
   Brain,
@@ -18,22 +16,11 @@ import {
   UtensilsCrossed,
   ShoppingCart,
 } from "lucide-react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 
 const PRIMARY_NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/profile", label: "Profile", icon: UserCircle },
-];
-
-const MORE_NAV = [
-  { href: "/lifestyle", label: "Lifestyle", icon: Palette },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const QUICK_ACTIONS = [
@@ -147,12 +134,7 @@ function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 export function BottomNav() {
   const pathname = usePathname();
-  const [moreOpen, setMoreOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
-
-  const isMoreActive = MORE_NAV.some((item) =>
-    pathname.startsWith(item.href)
-  );
 
   return (
     <>
@@ -196,50 +178,18 @@ export function BottomNav() {
               </Link>
             );
           })}
-          <button
-            onClick={() => setMoreOpen(true)}
+          <Link
+            href="/settings"
             className={cn(
               "flex flex-col items-center gap-1 py-3",
-              isMoreActive ? "text-primary" : "text-muted-foreground"
+              pathname.startsWith("/settings") ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[10px] leading-tight font-medium">More</span>
-          </button>
+            <Settings className="h-5 w-5" />
+            <span className="text-[10px] leading-tight font-medium">Settings</span>
+          </Link>
         </div>
       </nav>
-
-      {/* More Drawer */}
-      <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>More</DrawerTitle>
-          </DrawerHeader>
-          <div className="flex flex-col gap-1 px-4 pb-6">
-            {MORE_NAV.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname.startsWith(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMoreOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </DrawerContent>
-      </Drawer>
     </>
   );
 }

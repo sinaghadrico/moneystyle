@@ -4,6 +4,14 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   getShoppingLists,
@@ -50,6 +58,7 @@ export function ShoppingBasketsSection() {
   const [newItemName, setNewItemName] = useState("");
   const [newItemQty, setNewItemQty] = useState("1");
   const [analyzing, startAnalyzing] = useTransition();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadLists();
@@ -174,15 +183,20 @@ export function ShoppingBasketsSection() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <ShoppingCart className="h-5 w-5 text-blue-500" />
-          Shopping Lists
-        </h3>
-        <Button size="sm" variant="outline" onClick={() => setShowCreate((v) => !v)}>
-          <Plus className="mr-1 h-4 w-4" />
-          New List
-        </Button>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5 text-blue-500" />
+            Shopping Lists
+          </h3>
+          <Button size="sm" variant="outline" onClick={() => setShowCreate((v) => !v)}>
+            <Plus className="mr-1 h-4 w-4" />
+            New List
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Create lists and compare prices across stores.
+        </p>
       </div>
 
       {showCreate && (
@@ -229,10 +243,10 @@ export function ShoppingBasketsSection() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteList(list.id);
+                    setConfirmDeleteId(list.id);
                   }}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -242,6 +256,35 @@ export function ShoppingBasketsSection() {
           ))}
         </div>
       )}
+
+      <ResponsiveDialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+        <ResponsiveDialogContent className="sm:max-w-sm">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Delete List</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Are you sure? This will delete the list and all its items.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmDeleteId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={async () => {
+                  if (!confirmDeleteId) return;
+                  await handleDeleteList(confirmDeleteId);
+                  setConfirmDeleteId(null);
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
@@ -462,7 +505,7 @@ function DetailView({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                className="h-6 w-6 text-destructive hover:text-destructive"
                 onClick={() => onRemoveItem(item.id)}
               >
                 <Trash2 className="h-3 w-3" />

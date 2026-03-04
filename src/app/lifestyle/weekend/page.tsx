@@ -1,5 +1,5 @@
-import { LifestyleContent } from "@/components/lifestyle/lifestyle-content";
+import { WeekendPlannerContent } from "@/components/weekend-planner/weekend-planner-content";
 
 export default function WeekendPage() {
-  return <LifestyleContent initialTab="weekend" />;
+  return <WeekendPlannerContent />;
 }

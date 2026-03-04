@@ -1,5 +1,5 @@
-import { LifestyleContent } from "@/components/lifestyle/lifestyle-content";
+import { MoneyAdviceSection } from "@/components/profile/money-advice-section";
 
 export default function AdvicePage() {
-  return <LifestyleContent initialTab="money-advice" />;
+  return <MoneyAdviceSection />;
 }

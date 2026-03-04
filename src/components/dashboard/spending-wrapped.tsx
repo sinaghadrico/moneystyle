@@ -191,7 +191,7 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
       />
 
       {/* Story container */}
-      <div className="relative z-10 w-full h-full sm:h-[600px] sm:max-w-sm sm:rounded-2xl overflow-hidden bg-black flex flex-col">
+      <div className="relative z-10 w-full h-full sm:h-[600px] sm:max-w-sm sm:rounded-2xl overflow-hidden bg-black flex flex-col select-none">
         {/* Progress bars (Instagram-style) */}
         {totalSlides > 0 && !loading && !isEmpty && (
           <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 px-3 pt-3">

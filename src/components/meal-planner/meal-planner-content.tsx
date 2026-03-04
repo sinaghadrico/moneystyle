@@ -88,24 +88,29 @@ export function MealPlannerContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <ChefHat className="h-5 w-5 text-lime-600" />
-          Meal Planner
-        </h3>
-        <Button onClick={handleGenerate} disabled={loading} size="sm" variant="outline">
-          {loading ? (
-            <>
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-1 h-4 w-4" />
-              {plans.length > 0 ? "New Plan" : "Generate"}
-            </>
-          )}
-        </Button>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <ChefHat className="h-5 w-5 text-lime-600" />
+            Meal Planner
+          </h3>
+          <Button onClick={handleGenerate} disabled={loading} size="sm" variant="outline">
+            {loading ? (
+              <>
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-1 h-4 w-4" />
+                {plans.length > 0 ? "New Plan" : "Generate"}
+              </>
+            )}
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          AI-generated weekly meal plan based on your recent grocery purchases.
+        </p>
       </div>
 
       {error && (

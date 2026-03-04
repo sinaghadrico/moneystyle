@@ -220,10 +220,15 @@ export function ItemsDialog({
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-3 py-4">
-            {/* Receipt upload section */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+          <div className="space-y-2 py-2">
+            {/* Receipt upload */}
+            <div className="rounded-lg border border-dashed p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {mediaFiles.length > 0
+                    ? `${mediaFiles.length} file${mediaFiles.length > 1 ? "s" : ""} attached`
+                    : "No receipt uploaded"}
+                </span>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -235,49 +240,34 @@ export function ItemsDialog({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-7 text-xs"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >
                   {uploading ? (
-                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                   ) : (
-                    <Upload className="mr-1 h-3.5 w-3.5" />
+                    <Upload className="mr-1 h-3 w-3" />
                   )}
-                  Upload receipt
+                  Upload
                 </Button>
-                {imageFiles.length > 0 && (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={handleExtract}
-                    disabled={extracting}
-                  >
-                    {extracting ? (
-                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Sparkles className="mr-1 h-3.5 w-3.5" />
-                    )}
-                    Extract Items
-                  </Button>
-                )}
               </div>
-
               {mediaFiles.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1">
                   {mediaFiles.map((file) => {
                     const name = file.split("/").pop() ?? file;
                     return (
                       <span
                         key={file}
-                        className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+                        className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px]"
                       >
-                        <ImageIcon className="h-3 w-3 shrink-0" />
-                        <span className="max-w-[120px] truncate">{name}</span>
+                        <ImageIcon className="h-2.5 w-2.5 shrink-0" />
+                        <span className="max-w-[100px] truncate">{name}</span>
                         <button
                           onClick={() => handleRemoveMedia(file)}
-                          className="ml-0.5 text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-foreground"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-2.5 w-2.5" />
                         </button>
                       </span>
                     );
@@ -286,66 +276,67 @@ export function ItemsDialog({
               )}
             </div>
 
+            {imageFiles.length > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                className="w-full"
+                onClick={handleExtract}
+                disabled={extracting}
+              >
+                {extracting ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-1.5 h-4 w-4" />
+                )}
+                Extract Items from Receipt
+              </Button>
+            )}
+
             {/* Item rows */}
             {rows.map((row, idx) => (
               <div
                 key={idx}
-                className="flex flex-col gap-2 sm:flex-row sm:items-end"
+                className="grid grid-cols-[1fr_3rem_4rem_4rem_2rem] items-end gap-1.5 sm:grid-cols-[1fr_4rem_5rem_5rem_2rem]"
               >
-                <div className="flex-1">
-                  <Label
-                    className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
-                  >
-                    Name
-                  </Label>
+                <div>
+                  {idx === 0 && <Label className="text-[10px] text-muted-foreground">Name</Label>}
                   <Input
-                    className="h-9"
+                    className="h-8 text-sm"
                     value={row.name}
                     onChange={(e) => updateRow(idx, "name", e.target.value)}
-                    placeholder="Item name"
+                    placeholder="Item"
                   />
                 </div>
-                <div className="sm:w-16">
-                  <Label
-                    className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
-                  >
-                    Qty
-                  </Label>
+                <div>
+                  {idx === 0 && <Label className="text-[10px] text-muted-foreground">Qty</Label>}
                   <Input
                     type="number"
                     step="1"
                     min="1"
-                    className="h-9"
+                    className="h-8 text-sm px-1.5"
                     value={row.quantity}
                     onChange={(e) => updateRow(idx, "quantity", e.target.value)}
                     placeholder="1"
                   />
                 </div>
-                <div className="sm:w-24">
-                  <Label
-                    className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
-                  >
-                    Price
-                  </Label>
+                <div>
+                  {idx === 0 && <Label className="text-[10px] text-muted-foreground">Price</Label>}
                   <Input
                     type="number"
                     step="0.01"
-                    className="h-9"
+                    className="h-8 text-sm px-1.5"
                     value={row.unitPrice}
                     onChange={(e) => updateRow(idx, "unitPrice", e.target.value)}
                     placeholder="0.00"
                   />
                 </div>
-                <div className="sm:w-24">
-                  <Label
-                    className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
-                  >
-                    Total
-                  </Label>
+                <div>
+                  {idx === 0 && <Label className="text-[10px] text-muted-foreground">Total</Label>}
                   <Input
                     type="number"
                     step="0.01"
-                    className="h-9"
+                    className="h-8 text-sm px-1.5"
                     value={row.totalPrice}
                     onChange={(e) =>
                       updateRow(idx, "totalPrice", e.target.value)
@@ -356,10 +347,10 @@ export function ItemsDialog({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 shrink-0 self-end"
+                  className="h-8 w-8 shrink-0"
                   onClick={() => removeRow(idx)}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
             ))}
@@ -370,13 +361,13 @@ export function ItemsDialog({
             </Button>
 
             {rows.length > 0 && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
-                <span>Items total: {formatCurrency(itemsTotal)}</span>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium">
+                <span>Items: {formatCurrency(itemsTotal)}</span>
                 <span className="text-muted-foreground">
-                  Transaction: {formatCurrency(txAmount)}
+                  Tx: {formatCurrency(txAmount)}
                 </span>
                 <span className={totalMatch ? "text-green-600" : "text-amber-500"}>
-                  {totalMatch ? "Match" : "Mismatch"}
+                  {totalMatch ? "✓ Match" : "✗ Mismatch"}
                 </span>
               </div>
             )}

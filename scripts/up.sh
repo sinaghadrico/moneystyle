@@ -18,6 +18,13 @@ if [ "$MODE" = "--remote" ]; then
   export DATABASE_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
   export DIRECT_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
 
+  # Write .env.local to override .env for Prisma/Next.js
+  cat > .env.local << ENVEOF
+DATABASE_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
+DIRECT_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
+ENVEOF
+  echo "    .env.local created (overrides .env)"
+
   echo "==> Starting dev server on port 3020..."
   PORT=3020 pnpm dev &
   DEV_PID=$!
@@ -116,7 +123,8 @@ cleanup() {
   kill $DEV_PID $TUNNEL_PID 2>/dev/null
   if [ "$MODE" = "--remote" ]; then
     pkill -f "ssh.*5433:localhost:5432" 2>/dev/null
-    echo "    SSH tunnel closed."
+    rm -f .env.local
+    echo "    SSH tunnel closed. .env.local removed."
   else
     docker compose stop db minio
   fi

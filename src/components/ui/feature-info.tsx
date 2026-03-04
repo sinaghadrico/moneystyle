@@ -36,7 +36,7 @@ export function FeatureInfo({ content }: { content: FeatureInfoContent }) {
       </button>
 
       <ResponsiveDialog open={open} onOpenChange={setOpen}>
-        <ResponsiveDialogContent>
+        <ResponsiveDialogContent className="max-h-[80vh] flex flex-col">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>{content.title}</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
@@ -44,7 +44,7 @@ export function FeatureInfo({ content }: { content: FeatureInfoContent }) {
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
-          <div className="space-y-4 py-4 text-sm">
+          <div className="space-y-4 py-4 text-sm flex-1 overflow-y-auto">
             {content.sections.map((section) => (
               <div key={section.heading} className="space-y-1.5">
                 <h4 className="font-semibold">{section.heading}</h4>

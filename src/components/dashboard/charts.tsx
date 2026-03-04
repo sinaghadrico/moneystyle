@@ -332,10 +332,10 @@ export function MonthlyCategoryChart({
         <CardTitle className="text-base font-semibold">
           Monthly Expense by Category
         </CardTitle>
-        <div className="flex flex-wrap gap-1.5 pt-2">
+        <div className="flex gap-1.5 pt-2 overflow-x-auto pb-1 scrollbar-none">
           <Badge
             variant={allSelected ? "default" : "outline"}
-            className="cursor-pointer select-none text-xs px-2.5 py-0.5 rounded-full transition-all"
+            className="cursor-pointer select-none text-xs px-2.5 py-0.5 rounded-full transition-all shrink-0"
             onClick={toggleAll}
           >
             All
@@ -344,7 +344,7 @@ export function MonthlyCategoryChart({
             <Badge
               key={cat.name}
               variant={visible.has(cat.name) ? "default" : "outline"}
-              className="cursor-pointer select-none text-xs px-2.5 py-0.5 rounded-full transition-all"
+              className="cursor-pointer select-none text-xs px-2.5 py-0.5 rounded-full transition-all shrink-0"
               style={
                 visible.has(cat.name)
                   ? {
@@ -362,7 +362,7 @@ export function MonthlyCategoryChart({
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-[500px]">
+        <div className="h-[320px] sm:h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barCategoryGap="15%">
               <CartesianGrid
@@ -391,7 +391,6 @@ export function MonthlyCategoryChart({
                 labelStyle={tooltipLabelStyle}
                 cursor={{ fill: "var(--muted)", opacity: 0.3 }}
               />
-              <Legend wrapperStyle={{ ...legendStyle, fontSize: 11 }} />
               {categories
                 .filter((cat) => visible.has(cat.name))
                 .map((cat) => (

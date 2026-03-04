@@ -14,20 +14,39 @@ export async function getCategoriesWithStats() {
     orderBy: { name: "asc" },
   });
 
-  const totals = await prisma.transaction.groupBy({
-    by: ["categoryId"],
-    _sum: { amount: true },
-    where: { amount: { not: null }, mergedIntoId: null },
-  });
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const [totals, monthlyTotals] = await Promise.all([
+    prisma.transaction.groupBy({
+      by: ["categoryId"],
+      _sum: { amount: true },
+      where: { amount: { not: null }, mergedIntoId: null },
+    }),
+    prisma.transaction.groupBy({
+      by: ["categoryId"],
+      _sum: { amount: true },
+      where: {
+        amount: { not: null },
+        mergedIntoId: null,
+        date: { gte: monthStart, lt: monthEnd },
+      },
+    }),
+  ]);
 
   const totalMap = new Map(
     totals.map((t) => [t.categoryId, Number(t._sum.amount ?? 0)])
+  );
+  const monthlyMap = new Map(
+    monthlyTotals.map((t) => [t.categoryId, Number(t._sum.amount ?? 0)])
   );
 
   return categories.map((cat) => ({
     ...cat,
     transactionCount: cat._count.transactions,
     totalAmount: Math.round((totalMap.get(cat.id) ?? 0) * 100) / 100,
+    monthlyAmount: Math.round((monthlyMap.get(cat.id) ?? 0) * 100) / 100,
   }));
 }
 

@@ -19,6 +19,7 @@ type CategoryWithStats = {
   icon: string | null;
   transactionCount: number;
   totalAmount: number;
+  monthlyAmount: number;
 };
 
 export function CategoriesContent() {
@@ -127,25 +128,25 @@ export function CategoriesContent() {
                       : "Set Budget"}
                   </Button>
                 </div>
-                {budgetMap.has(cat.id) && (
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        cat.totalAmount / budgetMap.get(cat.id)!.monthlyLimit >= 1
-                          ? "bg-red-500"
-                          : cat.totalAmount / budgetMap.get(cat.id)!.monthlyLimit >= 0.8
-                            ? "bg-orange-500"
-                            : "bg-green-500"
-                      }`}
-                      style={{
-                        width: `${Math.min(
-                          (cat.totalAmount / budgetMap.get(cat.id)!.monthlyLimit) * 100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                )}
+                {budgetMap.has(cat.id) && (() => {
+                  const budget = budgetMap.get(cat.id)!;
+                  const pct = Math.min((cat.monthlyAmount / budget.monthlyLimit) * 100, 100);
+                  const color = pct >= 100 ? "bg-red-500" : pct >= 80 ? "bg-orange-500" : "bg-green-500";
+                  return (
+                    <div className="mt-2 space-y-0.5">
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>{Math.round(pct)}% this month</span>
+                        <span>{formatCurrency(cat.monthlyAmount)} / {formatCurrency(budget.monthlyLimit)}</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-muted">
+                        <div
+                          className={`h-full rounded-full transition-all ${color}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           ))}

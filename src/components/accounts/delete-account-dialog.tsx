@@ -105,7 +105,7 @@ export function DeleteAccountDialog({
             value={reassignId}
             onValueChange={setReassignId}
           >
-            <SelectTrigger className="mt-2">
+            <SelectTrigger className="mt-2 w-full">
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
@@ -119,16 +119,19 @@ export function DeleteAccountDialog({
         </div>
 
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={deleting || !reassignId}
-          >
-            {deleting ? "Deleting..." : "Delete"}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={handleDelete}
+              disabled={deleting || !reassignId}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

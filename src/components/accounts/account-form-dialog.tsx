@@ -81,22 +81,24 @@ export function AccountFormDialog({
             {isEdit ? "Edit Account" : "New Account"}
           </ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label>Name</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Account name"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Bank (optional)</Label>
-            <Input
-              value={bank}
-              onChange={(e) => setBank(e.target.value)}
-              placeholder="Bank name"
-            />
+        <div className="grid gap-3 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1">
+              <Label>Name</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Account name"
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label>Bank (optional)</Label>
+              <Input
+                value={bank}
+                onChange={(e) => setBank(e.target.value)}
+                placeholder="Bank name"
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label>Color</Label>
@@ -133,12 +135,14 @@ export function AccountFormDialog({
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={saving || !name.trim()}>
-            {saving ? "Saving..." : isEdit ? "Update" : "Create"}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleSave} disabled={saving || !name.trim()}>
+              {saving ? "Saving..." : isEdit ? "Update" : "Create"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

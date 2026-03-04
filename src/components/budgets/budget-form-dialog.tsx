@@ -73,54 +73,56 @@ export function BudgetFormDialog({
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Budget for {categoryName}</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label>Monthly Limit (AED)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.monthlyLimit}
-              onChange={(e) => setForm({ ...form, monthlyLimit: e.target.value })}
-              placeholder="e.g. 5000"
-            />
+        <div className="grid gap-3 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1">
+              <Label>Monthly Limit (AED)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={form.monthlyLimit}
+                onChange={(e) => setForm({ ...form, monthlyLimit: e.target.value })}
+                placeholder="e.g. 5000"
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label>Alert Threshold (%)</Label>
+              <Input
+                type="number"
+                min="1"
+                max="100"
+                value={form.alertThreshold}
+                onChange={(e) =>
+                  setForm({ ...form, alertThreshold: e.target.value })
+                }
+                placeholder="80"
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Alert Threshold (%)</Label>
-            <Input
-              type="number"
-              min="1"
-              max="100"
-              value={form.alertThreshold}
-              onChange={(e) =>
-                setForm({ ...form, alertThreshold: e.target.value })
-              }
-              placeholder="80"
-            />
-            <p className="text-xs text-muted-foreground">
-              You&apos;ll be warned when spending reaches this % of the limit
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            You&apos;ll be warned when spending reaches this % of the limit
+          </p>
         </div>
         <ResponsiveDialogFooter>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleSave} disabled={saving || !form.monthlyLimit}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </div>
           {existingLimit && (
             <Button
-              variant="destructive"
+              variant="ghost"
+              size="sm"
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleDelete}
               disabled={saving}
-              className="mr-auto"
             >
               Remove Budget
             </Button>
           )}
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !form.monthlyLimit}
-          >
-            {saving ? "Saving..." : "Save"}
-          </Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

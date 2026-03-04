@@ -5,15 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { PersonFormDialog } from "./person-form-dialog";
 import { getPersonsWithDebt, deletePerson } from "@/actions/persons";
 import { formatCurrency } from "@/lib/utils";
@@ -165,14 +163,14 @@ export function PersonsContent() {
       )}
 
       {deletingPerson && (
-        <AlertDialog
+        <ResponsiveDialog
           open={!!deletingPerson}
           onOpenChange={(open) => !open && setDeletingPerson(null)}
         >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete {deletingPerson.name}?</AlertDialogTitle>
-              <AlertDialogDescription>
+          <ResponsiveDialogContent>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Delete &ldquo;{deletingPerson.name}&rdquo;?</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
                 This will remove the person. Existing transaction splits will
                 keep their amounts but lose the person reference.
                 {deletingPerson.balance !== 0 && (
@@ -182,19 +180,20 @@ export function PersonsContent() {
                     {formatCurrency(Math.abs(deletingPerson.balance))}.
                   </>
                 )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogFooter>
+              <div className="flex w-full gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setDeletingPerson(null)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" className="flex-1" onClick={handleDelete}>
+                  Delete
+                </Button>
+              </div>
+            </ResponsiveDialogFooter>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
       )}
     </div>
   );

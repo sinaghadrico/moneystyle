@@ -192,6 +192,7 @@ export type ItemPriceSummary = {
   normalizedName: string;
   displayName: string;
   isGroup: boolean;
+  groupId?: string;
   rawNames: string[];
   merchantNames: string[];
   avgPrice: number;

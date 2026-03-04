@@ -26,19 +26,22 @@ async function buildGroupMap(): Promise<{
   map: Map<string, string>;
   canonicalNames: Set<string>;
   groupMembers: Map<string, string[]>;
+  groupIds: Map<string, string>;
 }> {
   const groups = await prisma.itemGroup.findMany();
   const map = new Map<string, string>();
   const canonicalNames = new Set<string>();
   const groupMembers = new Map<string, string[]>();
+  const groupIds = new Map<string, string>();
   for (const g of groups) {
     canonicalNames.add(g.canonicalName);
     groupMembers.set(g.canonicalName, g.rawNames);
+    groupIds.set(g.canonicalName, g.id);
     for (const raw of g.rawNames) {
       map.set(basicNormalize(raw), g.canonicalName);
     }
   }
-  return { map, canonicalNames, groupMembers };
+  return { map, canonicalNames, groupMembers, groupIds };
 }
 
 // ---------------------------------------------------------------------------
@@ -58,7 +61,7 @@ export async function getItemPriceSummaries(
     },
   });
 
-  const { map: groupMap, canonicalNames, groupMembers } = await buildGroupMap();
+  const { map: groupMap, canonicalNames, groupMembers, groupIds } = await buildGroupMap();
 
   // Group items by resolved name
   const grouped = new Map<
@@ -155,6 +158,7 @@ export async function getItemPriceSummaries(
       normalizedName,
       displayName,
       isGroup,
+      groupId: isGroup ? groupIds.get(normalizedName) : undefined,
       rawNames,
       merchantNames: Array.from(data.merchants.keys()),
       avgPrice: Math.round(avg * 100) / 100,

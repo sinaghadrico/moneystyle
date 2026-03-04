@@ -52,7 +52,7 @@ export function TransactionsPageContent() {
   return (
     <div className="space-y-6">
       {/* Tab switcher */}
-      <div className="flex gap-1 rounded-lg border bg-muted/50 p-1 overflow-x-auto">
+      <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
@@ -61,14 +61,14 @@ export function TransactionsPageContent() {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`flex-1 flex flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              {tab.label}
             </button>
           );
         })}

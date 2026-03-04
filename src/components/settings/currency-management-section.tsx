@@ -30,6 +30,7 @@ export function CurrencyManagementSection() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CurrencyData | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<CurrencyData | null>(null);
 
   const loadCurrencies = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,7 @@ export function CurrencyManagementSection() {
 
   const handleDelete = async (id: string) => {
     setDeleting(id);
+    setDeleteConfirm(null);
     await deleteCurrency(id);
     toast.success("🗑️ Currency deleted");
     setDeleting(null);
@@ -116,7 +118,7 @@ export function CurrencyManagementSection() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(c.id)}
+                      onClick={() => setDeleteConfirm(c)}
                       disabled={deleting === c.id}
                     >
                       {deleting === c.id ? (
@@ -139,6 +141,31 @@ export function CurrencyManagementSection() {
         onOpenChange={setDialogOpen}
         onSuccess={loadCurrencies}
       />
+
+      <ResponsiveDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Delete Currency</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <p className="text-sm text-muted-foreground px-1">
+            Are you sure you want to delete <span className="font-medium text-foreground">{deleteConfirm?.name} ({deleteConfirm?.code})</span>? This cannot be undone.
+          </p>
+          <ResponsiveDialogFooter>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => deleteConfirm && handleDelete(deleteConfirm.id)}
+              >
+                Delete
+              </Button>
+            </div>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </>
   );
 }
@@ -266,15 +293,18 @@ function CurrencyDialog({
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !code.trim() || !name.trim() || !symbol.trim() || !rateToUsd}
-          >
-            {saving ? "Saving..." : isEdit ? "Update" : "Add"}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSave}
+              disabled={saving || !code.trim() || !name.trim() || !symbol.trim() || !rateToUsd}
+            >
+              {saving ? "Saving..." : isEdit ? "Update" : "Add"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

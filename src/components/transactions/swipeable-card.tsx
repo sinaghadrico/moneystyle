@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef, useEffect, useState, type ReactNode } from "react";
 import { useDrag } from "@use-gesture/react";
+import { ChevronLeft } from "lucide-react";
 
 type SwipeableCardProps = {
   children: ReactNode;
   actions: ReactNode;
   actionWidth?: number;
   onTap?: () => void;
+  showHint?: boolean;
 };
 
 export function SwipeableCard({
@@ -15,9 +17,29 @@ export function SwipeableCard({
   actions,
   actionWidth = 140,
   onTap,
+  showHint,
 }: SwipeableCardProps) {
   const offsetRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Auto-peek animation
+  useEffect(() => {
+    if (!showHint) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const timer = setTimeout(() => {
+      el.style.transition = "transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+      el.style.transform = "translateX(-70px)";
+      setTimeout(() => {
+        el.style.transition = "transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+        el.style.transform = "translateX(0px)";
+      }, 800);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [showHint]);
 
   const bind = useDrag(
     ({ movement: [mx], velocity: [vx], direction: [dx], active, cancel, tap }) => {
@@ -25,22 +47,22 @@ export function SwipeableCard({
         onTap();
         return;
       }
+
       const el = containerRef.current;
       if (!el) return;
 
       if (active) {
-        // Clamp between -actionWidth and 0
         const next = Math.max(-actionWidth, Math.min(0, offsetRef.current + mx));
         el.style.transition = "none";
         el.style.transform = `translateX(${next}px)`;
       } else {
-        // Snap logic
         const current = offsetRef.current + mx;
         const fastSwipeLeft = vx > 0.3 && dx < 0;
         const snapOpen = current < -actionWidth / 2 || fastSwipeLeft;
         const target = snapOpen ? -actionWidth : 0;
 
         offsetRef.current = target;
+        setIsOpen(target !== 0);
         el.style.transition = "transform 0.2s ease-out";
         el.style.transform = `translateX(${target}px)`;
       }
@@ -66,6 +88,12 @@ export function SwipeableCard({
         className="relative bg-card"
       >
         {children}
+        {/* Swipe hint chevron — hidden when card is swiped open */}
+        {!isOpen && (
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground/30 pointer-events-none">
+            <ChevronLeft className="h-4 w-4" />
+          </div>
+        )}
       </div>
     </div>
   );

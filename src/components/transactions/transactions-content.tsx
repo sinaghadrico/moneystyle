@@ -479,10 +479,11 @@ export function TransactionsContent() {
           ? [...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-[120px] rounded-xl" />
             ))
-          : result?.data.map((tx) => (
+          : result?.data.map((tx, txIdx) => (
               <SwipeableCard
                 key={tx.id}
                 onTap={() => toggleSelect(tx.id)}
+                showHint={txIdx === 0 && page === 1}
                 actionWidth={tx.amount != null && tx.amount > 0 ? 280 : 210}
                 actions={
                   <div className="flex h-full items-stretch">

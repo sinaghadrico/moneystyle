@@ -18,6 +18,7 @@ import { AccountsContent } from "@/components/accounts/accounts-content";
 import { PersonsContent } from "@/components/persons/persons-content";
 import { CategoriesContent } from "@/components/categories/categories-content";
 import { PriceAnalysisContent } from "@/components/price-analysis/price-analysis-content";
+import type { Category, Account, Person } from "@prisma/client";
 
 const TABS = [
   { key: "list", label: "List", icon: List },
@@ -36,7 +37,15 @@ const MANAGE_SECTIONS = [
 
 type ManageSection = (typeof MANAGE_SECTIONS)[number]["key"];
 
-export function TransactionsPageContent() {
+export function TransactionsPageContent({
+  initialCategories = [],
+  initialAccounts = [],
+  initialPersons = [],
+}: {
+  initialCategories?: Category[];
+  initialAccounts?: Account[];
+  initialPersons?: Person[];
+} = {}) {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("list");
   const [manageSection, setManageSection] =
@@ -84,7 +93,11 @@ export function TransactionsPageContent() {
             </div>
           }
         >
-          <TransactionsContent />
+          <TransactionsContent
+            initialCategories={initialCategories}
+            initialAccounts={initialAccounts}
+            initialPersons={initialPersons}
+          />
         </Suspense>
       )}
 

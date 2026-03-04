@@ -47,9 +47,169 @@ export function TransactionFilters({
   const expanded = showAll || showMore;
   const hasFilters = Object.values(filters).some((v) => v !== "");
 
+  // Mobile: sectioned layout
+  if (showAll) {
+    return (
+      <div className="space-y-4">
+        {/* Search */}
+        <div className="grid gap-1">
+          <Label className="text-xs text-muted-foreground">Search</Label>
+          <Input
+            placeholder="Search merchant or description..."
+            value={filters.search}
+            onChange={(e) => onChange("search", e.target.value)}
+          />
+        </div>
+
+        <div className="border-t" />
+
+        {/* Date range */}
+        <div className="space-y-2">
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">From</Label>
+              <Input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => onChange("dateFrom", e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">To</Label>
+              <Input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => onChange("dateTo", e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t" />
+
+        {/* Classification */}
+        <div className="space-y-2">
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">Account</Label>
+              <Select
+                value={filters.accountId || "all"}
+                onValueChange={(v) => onChange("accountId", v === "all" ? "" : v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Accounts</SelectItem>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">Category</Label>
+              <Select
+                value={filters.categoryId || "all"}
+                onValueChange={(v) => onChange("categoryId", v === "all" ? "" : v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">Type</Label>
+              <Select
+                value={filters.type || "all"}
+                onValueChange={(v) => onChange("type", v === "all" ? "" : v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {TRANSACTION_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">Source</Label>
+              <Select
+                value={filters.source || "all"}
+                onValueChange={(v) => onChange("source", v === "all" ? "" : v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="telegram">Telegram</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t" />
+
+        {/* Amount & Merchant */}
+        <div className="space-y-2">
+
+          <div className="grid gap-1">
+            <Label className="text-xs text-muted-foreground">Merchant</Label>
+            <Input
+              placeholder="Search merchant..."
+              value={filters.merchant}
+              onChange={(e) => onChange("merchant", e.target.value)}
+            />
+          </div>
+          <div className="border-t" />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">Min Amount</Label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={filters.amountMin}
+                onChange={(e) => onChange("amountMin", e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">Max Amount</Label>
+              <Input
+                type="number"
+                placeholder="∞"
+                value={filters.amountMax}
+                onChange={(e) => onChange("amountMax", e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: compact single/two row layout
   return (
     <div className="space-y-3">
-      {/* Primary filters — single row on desktop */}
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr_auto] lg:gap-2 lg:items-end">
         <div className="col-span-2 grid gap-1 lg:col-span-1">
           <Label className="text-xs text-muted-foreground">Search</Label>
@@ -133,21 +293,19 @@ export function TransactionFilters({
           </Select>
         </div>
         <div className="col-span-2 flex items-end gap-1 lg:col-span-1">
-          {!showAll && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 shrink-0"
-              onClick={() => setShowMore((v) => !v)}
-              title={showMore ? "Less filters" : "More filters"}
-            >
-              {showMore ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => setShowMore((v) => !v)}
+            title={showMore ? "Less filters" : "More filters"}
+          >
+            {showMore ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
           {hasFilters && (
             <Button
               variant="ghost"
@@ -162,7 +320,6 @@ export function TransactionFilters({
         </div>
       </div>
 
-      {/* Expanded filters */}
       {expanded && (
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr_auto] lg:gap-2 lg:items-end">
           <div className="col-span-2 grid gap-1 lg:col-span-1">

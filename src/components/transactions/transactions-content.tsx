@@ -118,7 +118,15 @@ function buildUrl(params: Record<string, string | number>) {
   return qs ? `/transactions?${qs}` : "/transactions";
 }
 
-export function TransactionsContent() {
+export function TransactionsContent({
+  initialCategories = [],
+  initialAccounts = [],
+  initialPersons = [],
+}: {
+  initialCategories?: Category[];
+  initialAccounts?: Account[];
+  initialPersons?: Person[];
+} = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { settings } = useAppSettings();
@@ -156,9 +164,9 @@ export function TransactionsContent() {
   const [page, setPage] = useState(urlPage);
   const [result, setResult] =
     useState<PaginatedResult<TransactionWithCategory> | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [persons, setPersons] = useState<Person[]>([]);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  const [persons, setPersons] = useState<Person[]>(initialPersons);
   const [loading, setLoading] = useState(true);
   const [editTx, setEditTx] = useState<TransactionWithCategory | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -258,13 +266,23 @@ export function TransactionsContent() {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    Promise.all([getCategories(), getAccountsList(), getPersons()]).then(([cats, accs, pers]) => {
-      setCategories(cats);
-      setAccounts(accs);
-      setPersons(pers);
-    });
+  const loadLookups = useCallback(async () => {
+    const [cats, accs, pers] = await Promise.all([
+      getCategories().catch(() => null),
+      getAccountsList().catch(() => null),
+      getPersons().catch(() => null),
+    ]);
+    if (cats) setCategories(cats);
+    if (accs) setAccounts(accs);
+    if (pers) setPersons(pers);
   }, []);
+
+  useEffect(() => {
+    // Only fetch client-side if server didn't provide data
+    if (initialCategories.length === 0 && initialAccounts.length === 0) {
+      loadLookups();
+    }
+  }, [loadLookups, initialCategories.length, initialAccounts.length]);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -383,7 +401,12 @@ export function TransactionsContent() {
       {(() => {
         return (
           <div className="md:hidden">
-            <Drawer open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
+            <Drawer open={filterDrawerOpen} onOpenChange={(open) => {
+              setFilterDrawerOpen(open);
+              if (open && (categories.length === 0 || accounts.length === 0)) {
+                loadLookups();
+              }
+            }}>
               <DrawerContent className="max-h-[60vh]">
                 <DrawerHeader>
                   <DrawerTitle>Filters</DrawerTitle>
@@ -414,9 +437,34 @@ export function TransactionsContent() {
                     }}
                   />
                 </div>
-                <div className="border-t p-3">
+                <div className="border-t p-3 flex gap-2">
+                  {Object.values(filters).some((v) => v !== "") && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setFilters({
+                          dateFrom: "",
+                          dateTo: "",
+                          categoryId: "",
+                          accountId: "",
+                          type: "",
+                          merchant: "",
+                          search: "",
+                          amountMin: "",
+                          amountMax: "",
+                          source: "",
+                        });
+                        setSortBy("date");
+                        setSortOrder("desc");
+                        setPage(1);
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  )}
                   <DrawerClose asChild>
-                    <Button className="w-full">Apply</Button>
+                    <Button className="flex-1">Apply</Button>
                   </DrawerClose>
                 </div>
               </DrawerContent>

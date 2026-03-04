@@ -24,17 +24,6 @@ export function LifestyleContent({ initialTab }: { initialTab?: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <PartyPopper className="h-6 w-6 shrink-0" />
-          Lifestyle
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          AI-powered planning and smart shopping.
-        </p>
-      </div>
-
       {/* Tab switcher */}
       <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
         {TABS.map((tab) => {

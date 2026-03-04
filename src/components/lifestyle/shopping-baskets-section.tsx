@@ -46,6 +46,7 @@ export function ShoppingBasketsSection() {
   const [analysis, setAnalysis] = useState<BasketAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [newListName, setNewListName] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemQty, setNewItemQty] = useState("1");
   const [analyzing, startAnalyzing] = useTransition();
@@ -70,6 +71,7 @@ export function ShoppingBasketsSection() {
       return;
     }
     setNewListName("");
+    setShowCreate(false);
     await loadLists();
     const detail = await getShoppingListDetail(result.id);
     if (detail) setActiveList(detail);
@@ -172,28 +174,31 @@ export function ShoppingBasketsSection() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <ShoppingCart className="h-6 w-6 shrink-0" />
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <ShoppingCart className="h-5 w-5 text-blue-500" />
           Shopping Lists
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Create lists and compare prices across stores.
-        </p>
-      </div>
-
-      <div className="flex gap-2">
-        <Input
-          placeholder="New list name..."
-          value={newListName}
-          onChange={(e) => setNewListName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleCreateList()}
-        />
-        <Button size="sm" onClick={handleCreateList} disabled={!newListName.trim()}>
-          <Plus className="h-4 w-4 mr-1" />
-          Create
+        </h3>
+        <Button size="sm" variant="outline" onClick={() => setShowCreate((v) => !v)}>
+          <Plus className="mr-1 h-4 w-4" />
+          New List
         </Button>
       </div>
+
+      {showCreate && (
+        <div className="flex gap-2">
+          <Input
+            placeholder="List name..."
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCreateList()}
+            autoFocus
+          />
+          <Button size="sm" onClick={handleCreateList} disabled={!newListName.trim()}>
+            Create
+          </Button>
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-2">

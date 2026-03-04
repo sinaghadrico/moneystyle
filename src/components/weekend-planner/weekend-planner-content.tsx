@@ -254,30 +254,24 @@ export function WeekendPlannerContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <CalendarHeart className="h-6 w-6 shrink-0" />
-            Weekend Planner
-          </h2>
-          <Button onClick={handleGenerate} disabled={loading} size="sm" className="shrink-0">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <CalendarHeart className="h-5 w-5 text-rose-500" />
+          Weekend Planner
+        </h3>
+        <Button onClick={handleGenerate} disabled={loading} size="sm" variant="outline">
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
               Generating...
             </>
           ) : (
             <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              {plans.length > 0 ? "New Plan" : "Generate Plan"}
+              <Sparkles className="mr-1 h-4 w-4" />
+              {plans.length > 0 ? "New Plan" : "Generate"}
             </>
           )}
         </Button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          AI-powered weekend plans based on your preferences and budget.
-        </p>
       </div>
 
       {/* Error */}

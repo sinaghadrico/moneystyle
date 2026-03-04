@@ -120,7 +120,7 @@ export function PreferencesSection({
           {saving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {/* City & Companion selects */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -136,7 +136,7 @@ export function PreferencesSection({
                 await save(updated);
               }}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="h-9 text-sm w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -161,7 +161,7 @@ export function PreferencesSection({
                 await save(updated);
               }}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="h-9 text-sm w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -178,36 +178,38 @@ export function PreferencesSection({
         {SECTIONS.map((section) => {
           const Icon = section.icon;
           return (
-            <div key={section.key} className="space-y-2">
+            <div key={section.key} className="space-y-2 border-t pt-4">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Icon className="h-4 w-4 text-muted-foreground" />
                 {section.label}
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {data[section.key].map((tag, i) => (
-                  <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeTag(section.key, i)}
-                      className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
+              {data[section.key].length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {data[section.key].map((tag, i) => (
+                    <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(section.key, i)}
+                        className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2">
                 <Input
                   ref={(el) => { inputRefs.current[section.key] = el; }}
                   placeholder={section.placeholder}
-                  className="h-8 text-sm"
+                  className="h-9 text-sm"
                   onKeyDown={(e) => handleKeyDown(e, section.key)}
                 />
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-2"
+                  className="h-9 px-2"
                   onClick={() => handleAdd(section.key)}
                 >
                   <Plus className="h-4 w-4" />

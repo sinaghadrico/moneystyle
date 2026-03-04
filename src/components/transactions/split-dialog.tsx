@@ -146,44 +146,61 @@ export function SplitDialog({
             Split Transaction — {formatCurrency(totalAmount)}
           </ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
-        <div className="space-y-3 py-4">
+        <div className="space-y-3 py-2">
           {rows.map((row, idx) => (
-            <div key={idx} className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
-                  Category
-                </Label>
-                <Select
-                  value={row.categoryId || "none"}
-                  onValueChange={(v) =>
-                    updateRow(idx, "categoryId", v === "none" ? "" : v)
-                  }
+            <div key={idx} className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Split {idx + 1}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  disabled={rows.length <= 2}
+                  onClick={() => removeRow(idx)}
                 >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
               </div>
-              <div className="sm:w-28">
-                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
-                  Person
-                </Label>
-                <div className="flex items-center gap-1">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-0.5">
+                  <Label className="text-[10px] text-muted-foreground">Category</Label>
+                  <Select
+                    value={row.categoryId || "none"}
+                    onValueChange={(v) =>
+                      updateRow(idx, "categoryId", v === "none" ? "" : v)
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-full text-sm">
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-0.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] text-muted-foreground">Person</Label>
+                    <button
+                      type="button"
+                      className="text-[10px] text-primary hover:underline"
+                      onClick={() => setShowPersonCreate(idx)}
+                    >
+                      + New
+                    </button>
+                  </div>
                   <Select
                     value={row.personId || "me"}
                     onValueChange={(v) =>
                       updateRow(idx, "personId", v === "me" ? "" : v)
                     }
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8 w-full text-sm">
                       <SelectValue placeholder="Me" />
                     </SelectTrigger>
                     <SelectContent>
@@ -195,90 +212,68 @@ export function SplitDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 shrink-0"
-                    onClick={() => setShowPersonCreate(idx)}
-                    type="button"
-                    title="Add person"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
+                </div>
+                <div className="grid gap-0.5">
+                  <Label className="text-[10px] text-muted-foreground">Amount</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    className="h-8 text-sm"
+                    value={row.amount}
+                    onChange={(e) => updateRow(idx, "amount", e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="grid gap-0.5">
+                  <Label className="text-[10px] text-muted-foreground">Note</Label>
+                  <Input
+                    className="h-8 text-sm"
+                    value={row.description}
+                    onChange={(e) =>
+                      updateRow(idx, "description", e.target.value)
+                    }
+                    placeholder="Optional"
+                  />
                 </div>
               </div>
-              <div className="sm:w-28">
-                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
-                  Amount
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  className="h-9"
-                  value={row.amount}
-                  onChange={(e) => updateRow(idx, "amount", e.target.value)}
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="flex-1">
-                <Label className={`text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}>
-                  Note
-                </Label>
-                <Input
-                  className="h-9"
-                  value={row.description}
-                  onChange={(e) =>
-                    updateRow(idx, "description", e.target.value)
-                  }
-                  placeholder="Optional"
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 shrink-0 self-end"
-                disabled={rows.length <= 2}
-                onClick={() => removeRow(idx)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
             </div>
           ))}
 
-          <Button variant="outline" size="sm" onClick={addRow}>
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            Add Split
-          </Button>
-
-          <div
-            className={`flex justify-between text-sm font-medium ${Math.abs(remaining) < 0.01 ? "text-green-600" : "text-destructive"}`}
-          >
-            <span>
-              Total: {formatCurrency(splitTotal)} / {formatCurrency(totalAmount)}
-            </span>
-            {Math.abs(remaining) >= 0.01 && (
-              <span>Remaining: {formatCurrency(remaining)}</span>
-            )}
+          <div className="flex items-center justify-between">
+            <Button variant="outline" size="sm" onClick={addRow}>
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              Add Split
+            </Button>
+            <div
+              className={`text-xs font-medium ${Math.abs(remaining) < 0.01 ? "text-green-600" : "text-destructive"}`}
+            >
+              {formatCurrency(splitTotal)} / {formatCurrency(totalAmount)}
+              {Math.abs(remaining) >= 0.01 && (
+                <span className="ml-1.5">({formatCurrency(remaining)} left)</span>
+              )}
+            </div>
           </div>
         </div>
-        <ResponsiveDialogFooter className="flex justify-between">
+        <ResponsiveDialogFooter>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleSave} disabled={saving || !isValid}>
+              {saving ? "Saving..." : "Save Split"}
+            </Button>
+          </div>
           {hasSplits && (
             <Button
-              variant="destructive"
+              variant="ghost"
+              size="sm"
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleUnsplit}
               disabled={saving}
             >
               Remove Split
             </Button>
           )}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={saving || !isValid}>
-              {saving ? "Saving..." : "Save Split"}
-            </Button>
-          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
 

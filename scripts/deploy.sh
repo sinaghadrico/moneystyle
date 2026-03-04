@@ -13,8 +13,8 @@ echo "==> Deploying to ${REMOTE_HOST}..."
 echo "==> Pulling latest code..."
 ssh -i "$REMOTE_KEY" "$REMOTE_USER@$REMOTE_HOST" "cd ~/revenue && git pull"
 
-echo "==> Restarting containers..."
-ssh -i "$REMOTE_KEY" "$REMOTE_USER@$REMOTE_HOST" "cd ~/revenue && docker compose -f docker-compose.prod.yml up -d"
+echo "==> Rebuilding & restarting containers..."
+ssh -i "$REMOTE_KEY" "$REMOTE_USER@$REMOTE_HOST" "cd ~/revenue && docker compose -f docker-compose.prod.yml up -d --build"
 
 echo ""
 echo "============================================"

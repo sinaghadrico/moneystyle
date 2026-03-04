@@ -6,6 +6,7 @@ services:
       POSTGRES_USER: revenue
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: revenue
+      TZ: Asia/Dubai
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -31,6 +32,7 @@ services:
       AWS_REGION: ${AWS_REGION:-me-south-1}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      TZ: Asia/Dubai
     depends_on:
       db:
         condition: service_healthy

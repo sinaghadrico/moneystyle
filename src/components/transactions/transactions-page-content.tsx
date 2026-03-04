@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   List,
   Merge,
@@ -36,9 +37,17 @@ const MANAGE_SECTIONS = [
 type ManageSection = (typeof MANAGE_SECTIONS)[number]["key"];
 
 export function TransactionsPageContent() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("list");
   const [manageSection, setManageSection] =
     useState<ManageSection>("accounts");
+
+  useEffect(() => {
+    const urlTab = searchParams.get("tab");
+    if (urlTab && TABS.some((t) => t.key === urlTab)) {
+      setActiveTab(urlTab as Tab);
+    }
+  }, [searchParams]);
 
   return (
     <div className="space-y-6">

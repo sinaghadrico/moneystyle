@@ -218,6 +218,7 @@ export type ItemPricePoint = {
   price: number;
   merchant: string;
   transactionId: string;
+  description: string;
 };
 
 export type ItemDetail = {

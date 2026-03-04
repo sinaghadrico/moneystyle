@@ -56,7 +56,7 @@ export async function getItemPriceSummaries(
   const items = await prisma.transactionItem.findMany({
     include: {
       transaction: {
-        select: { merchant: true, date: true, id: true },
+        select: { merchant: true, date: true, id: true, description: true },
       },
     },
   });
@@ -205,7 +205,7 @@ export async function getGroupDetail(
   const items = await prisma.transactionItem.findMany({
     include: {
       transaction: {
-        select: { merchant: true, date: true, id: true },
+        select: { merchant: true, date: true, id: true, description: true },
       },
     },
   });
@@ -249,6 +249,7 @@ export async function getGroupDetail(
       price: Math.round(price * 100) / 100,
       merchant,
       transactionId: item.transaction.id,
+      description: item.transaction.description ?? "",
     });
   }
 
@@ -286,7 +287,7 @@ export async function getIndividualItemSummaries(
   const items = await prisma.transactionItem.findMany({
     include: {
       transaction: {
-        select: { merchant: true, date: true, id: true },
+        select: { merchant: true, date: true, id: true, description: true },
       },
     },
   });
@@ -408,7 +409,7 @@ export async function getIndividualItemDetail(
     where: { normalizedName: key },
     include: {
       transaction: {
-        select: { merchant: true, date: true, id: true },
+        select: { merchant: true, date: true, id: true, description: true },
       },
     },
   });
@@ -437,6 +438,7 @@ export async function getIndividualItemDetail(
       price: Math.round(price * 100) / 100,
       merchant,
       transactionId: item.transaction.id,
+      description: item.transaction.description ?? "",
     });
   }
 

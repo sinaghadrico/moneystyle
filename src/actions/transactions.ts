@@ -71,6 +71,7 @@ export async function getTransactions(
   }
   if (search) {
     where.OR = [
+      { id: { equals: search } },
       { merchant: { contains: search, mode: "insensitive" } },
       { description: { contains: search, mode: "insensitive" } },
     ];

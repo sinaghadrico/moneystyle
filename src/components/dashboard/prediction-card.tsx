@@ -20,12 +20,12 @@ export function PredictionCard({ prediction }: { prediction: ExpensePrediction }
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">Spent so far</p>
-            <p className="text-2xl font-bold">{formatCurrency(spent)}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Spent so far</p>
+            <p className="text-base sm:text-2xl font-bold">{formatCurrency(spent)}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Predicted month-end</p>
-            <p className="text-2xl font-bold text-orange-500">
+            <p className="text-xs sm:text-sm text-muted-foreground">Predicted month-end</p>
+            <p className="text-base sm:text-2xl font-bold text-orange-500">
               {formatCurrency(predicted)}
             </p>
           </div>

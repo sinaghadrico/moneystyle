@@ -29,54 +29,51 @@ export function FinancialOverviewCard({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <TrendingUp className="h-4 w-4 text-green-500" />
-              Monthly Income
-            </div>
-            <p className="mt-1 text-xl font-bold">
-              {formatCurrency(overview.totalMonthlyIncome)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <TrendingDown className="h-4 w-4 text-red-500" />
-              Monthly Bills
-            </div>
-            <p className="mt-1 text-xl font-bold">
-              {formatCurrency(overview.totalMonthlyInstallments + overview.totalMonthlyBills)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Wallet className="h-4 w-4" />
-              Net Cashflow
-            </div>
-            <p
-              className={`mt-1 text-xl font-bold ${
-                isPositiveCashflow ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {formatCurrency(overview.netMonthlyCashflow)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <PiggyBank className="h-4 w-4 text-amber-500" />
-              Total Reserves
-            </div>
-            <p className="mt-1 text-xl font-bold">
-              {formatCurrency(overview.totalReserves)}
-            </p>
-          </CardContent>
-        </Card>
+        {([
+          {
+            icon: TrendingUp,
+            iconColor: "text-green-500",
+            label: "Income",
+            value: formatCurrency(overview.totalMonthlyIncome),
+            valueColor: "",
+          },
+          {
+            icon: TrendingDown,
+            iconColor: "text-red-500",
+            label: "Bills",
+            value: formatCurrency(overview.totalMonthlyInstallments + overview.totalMonthlyBills),
+            valueColor: "",
+          },
+          {
+            icon: Wallet,
+            iconColor: "",
+            label: "Cashflow",
+            value: formatCurrency(overview.netMonthlyCashflow),
+            valueColor: isPositiveCashflow ? "text-green-600" : "text-red-600",
+          },
+          {
+            icon: PiggyBank,
+            iconColor: "text-amber-500",
+            label: "Reserves",
+            value: formatCurrency(overview.totalReserves),
+            valueColor: "",
+          },
+        ] as const).map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.label}>
+              <CardContent className="pt-3 pb-3">
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                  <Icon className={`h-3.5 w-3.5 shrink-0 ${item.iconColor}`} />
+                  {item.label}
+                </div>
+                <p className={`mt-1 text-lg font-bold truncate ${item.valueColor}`}>
+                  {item.value}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {(overview.upcomingPayments.length > 0 ||

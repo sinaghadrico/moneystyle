@@ -4,6 +4,13 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { BillDialog } from "./bill-dialog";
 import { BillHistoryDialog } from "./bill-history-dialog";
 import { RecordBillPaymentDialog } from "./record-bill-payment-dialog";
@@ -24,8 +31,10 @@ export function BillsSection({
   const [editItem, setEditItem] = useState<BillData | null>(null);
   const [historyItem, setHistoryItem] = useState<BillData | null>(null);
   const [payItem, setPayItem] = useState<BillData | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<BillData | null>(null);
 
   const handleDelete = async (id: string) => {
+    setDeleteConfirm(null);
     await deleteBill(id);
     toast.success("🗑️ Bill deleted");
     onRefresh();
@@ -58,7 +67,7 @@ export function BillsSection({
               key={bill.id}
               bill={bill}
               onEdit={() => setEditItem(bill)}
-              onDelete={() => handleDelete(bill.id)}
+              onDelete={() => setDeleteConfirm(bill)}
               onRecordPayment={() => setPayItem(bill)}
               onShowHistory={() => setHistoryItem(bill)}
             />
@@ -71,7 +80,7 @@ export function BillsSection({
                   key={bill.id}
                   bill={bill}
                   onEdit={() => setEditItem(bill)}
-                  onDelete={() => handleDelete(bill.id)}
+                  onDelete={() => setDeleteConfirm(bill)}
                   onRecordPayment={() => setPayItem(bill)}
                   onShowHistory={() => setHistoryItem(bill)}
                 />
@@ -114,6 +123,31 @@ export function BillsSection({
           onSuccess={onRefresh}
         />
       )}
+
+      <ResponsiveDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Delete Bill</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <p className="text-sm text-muted-foreground px-1">
+            Are you sure you want to delete <span className="font-medium text-foreground">{deleteConfirm?.name}</span>? This cannot be undone.
+          </p>
+          <ResponsiveDialogFooter>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => deleteConfirm && handleDelete(deleteConfirm.id)}
+              >
+                Delete
+              </Button>
+            </div>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </section>
   );
 }
@@ -133,80 +167,68 @@ function BillCard({
 }) {
   return (
     <Card className={`group ${!bill.isActive ? "opacity-60" : ""}`}>
-      <CardContent className="pt-4 pb-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0 space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-semibold">{bill.name}</h4>
-              <span className="text-lg font-bold">
-                ~{formatCurrency(bill.amount, bill.currency)}
-              </span>
-              <Badge variant="outline" className="text-xs">
-                Due {bill.dueDay}
-                {getOrdinalSuffix(bill.dueDay)}
-              </Badge>
-            </div>
+      <CardContent className="pt-4 pb-4 space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h4 className="font-semibold">{bill.name}</h4>
+          <Badge variant="outline" className="text-xs">
+            Due {bill.dueDay}
+            {getOrdinalSuffix(bill.dueDay)}
+          </Badge>
+        </div>
+        <p className="text-lg font-bold">
+          ~{formatCurrency(bill.amount, bill.currency)}
+        </p>
 
-            {bill.lastPaidAt && (
-              <p className="text-xs text-muted-foreground">
-                Last paid{" "}
-                {bill.lastPaidAmount !== null &&
-                  formatCurrency(bill.lastPaidAmount, bill.currency) + " on "}
-                {new Date(bill.lastPaidAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
-            )}
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Bell className="h-3 w-3 shrink-0" />
+          Remind {bill.reminderDays} day
+          {bill.reminderDays !== 1 ? "s" : ""} before
+        </p>
 
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Bell className="h-3 w-3" />
-              Remind {bill.reminderDays} day
-              {bill.reminderDays !== 1 ? "s" : ""} before
-            </p>
-          </div>
+        {bill.lastPaidAt && (
+          <p className="text-xs text-muted-foreground">
+            Last paid {bill.lastPaidAmount !== null && formatCurrency(bill.lastPaidAmount, bill.currency) + " on "}
+            {new Date(bill.lastPaidAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </p>
+        )}
 
-          <div className="flex items-center gap-1">
-            {bill.isActive && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={onRecordPayment}
-              >
-                <CheckCircle className="mr-1 h-3 w-3" />
-                Record Payment
-              </Button>
-            )}
+        <div className="flex items-center justify-end gap-1 pt-1">
+          {bill.isActive && (
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={onShowHistory}
-              title="Payment history"
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs mr-auto"
+              onClick={onRecordPayment}
             >
-              <Clock className="h-3 w-3" />
+              <CheckCircle className="mr-1 h-3 w-3" />
+              Paid
             </Button>
-            <div className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={onEdit}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-destructive"
-                onClick={onDelete}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onShowHistory}
+            title="Payment history"
+          >
+            <Clock className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onEdit}
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
         </div>
       </CardContent>
     </Card>

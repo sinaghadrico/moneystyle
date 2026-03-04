@@ -4,6 +4,13 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { ReserveDialog } from "./reserve-dialog";
 import { RecordReserveDialog } from "./record-reserve-dialog";
 import { ReserveHistoryDialog } from "./reserve-history-dialog";
@@ -41,8 +48,10 @@ export function ReservesSection({
   const [editItem, setEditItem] = useState<ReserveData | null>(null);
   const [recordItem, setRecordItem] = useState<ReserveData | null>(null);
   const [historyItem, setHistoryItem] = useState<ReserveData | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<ReserveData | null>(null);
 
   const handleDelete = async (id: string) => {
+    setDeleteConfirm(null);
     await deleteReserve(id);
     toast.success("🗑️ Reserve deleted");
     onRefresh();
@@ -68,41 +77,41 @@ export function ReservesSection({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {reserves.map((reserve) => (
             <Card key={reserve.id} className="group relative">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold">{reserve.name}</h4>
-                      <Badge
-                        variant="secondary"
-                        className={TYPE_STYLES[reserve.type] || TYPE_STYLES.other}
-                      >
-                        {TYPE_LABELS[reserve.type] || reserve.type}
-                      </Badge>
-                    </div>
-                    <p className="text-lg font-bold">
-                      {formatCurrency(reserve.amount, reserve.currency)}
+              <CardContent className="pt-4 pb-4 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="font-semibold">{reserve.name}</h4>
+                  <Badge
+                    variant="secondary"
+                    className={TYPE_STYLES[reserve.type] || TYPE_STYLES.other}
+                  >
+                    {TYPE_LABELS[reserve.type] || reserve.type}
+                  </Badge>
+                </div>
+                <p className="text-lg font-bold">
+                  {formatCurrency(reserve.amount, reserve.currency)}
+                </p>
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  {reserve.location}
+                </p>
+                {reserve.note && (
+                  <p className="text-xs text-muted-foreground">
+                    {reserve.note}
+                  </p>
+                )}
+                <div className="flex items-center justify-between pt-1">
+                  {reserve.lastRecordedAt ? (
+                    <p className="text-xs text-muted-foreground">
+                      Updated{" "}
+                      {new Date(reserve.lastRecordedAt).toLocaleDateString(
+                        "en-US",
+                        { month: "short", day: "numeric" }
+                      )}
                     </p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {reserve.location}
-                    </p>
-                    {reserve.note && (
-                      <p className="text-xs text-muted-foreground">
-                        {reserve.note}
-                      </p>
-                    )}
-                    {reserve.lastRecordedAt && (
-                      <p className="text-xs text-muted-foreground">
-                        Updated{" "}
-                        {new Date(reserve.lastRecordedAt).toLocaleDateString(
-                          "en-US",
-                          { month: "short", day: "numeric" }
-                        )}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                  ) : (
+                    <span />
+                  )}
+                  <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -133,7 +142,7 @@ export function ReservesSection({
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive"
-                      onClick={() => handleDelete(reserve.id)}
+                      onClick={() => setDeleteConfirm(reserve)}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -178,6 +187,31 @@ export function ReservesSection({
           onOpenChange={(open) => !open && setHistoryItem(null)}
         />
       )}
+
+      <ResponsiveDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Delete Reserve</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <p className="text-sm text-muted-foreground px-1">
+            Are you sure you want to delete <span className="font-medium text-foreground">{deleteConfirm?.name}</span>? This cannot be undone.
+          </p>
+          <ResponsiveDialogFooter>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => deleteConfirm && handleDelete(deleteConfirm.id)}
+              >
+                Delete
+              </Button>
+            </div>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </section>
   );
 }

@@ -93,12 +93,14 @@ export function RecordPaymentDialog({
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={saving || !amount}>
-            {saving ? "Saving..." : "Record Payment"}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleSave} disabled={saving || !amount}>
+              {saving ? "Saving..." : "Record"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

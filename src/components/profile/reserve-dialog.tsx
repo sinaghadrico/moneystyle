@@ -124,7 +124,7 @@ export function ReserveDialog({
           <div className="grid gap-2">
             <Label>Type</Label>
             <Select value={type} onValueChange={setType}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -155,15 +155,18 @@ export function ReserveDialog({
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !name.trim() || !amount || !location.trim()}
-          >
-            {saving ? "Saving..." : isEdit ? "Update" : "Add"}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSave}
+              disabled={saving || !name.trim() || !amount || !location.trim()}
+            >
+              {saving ? "Saving..." : isEdit ? "Update" : "Add"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

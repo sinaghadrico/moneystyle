@@ -4,6 +4,13 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/components/ui/responsive-dialog";
 import { IncomeSourceDialog } from "./income-source-dialog";
 import { deleteIncomeSource } from "@/actions/profile";
 import { formatCurrency } from "@/lib/utils";
@@ -20,8 +27,10 @@ export function IncomeSourcesSection({
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<IncomeSourceData | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<IncomeSourceData | null>(null);
 
   const handleDelete = async (id: string) => {
+    setDeleteConfirm(null);
     await deleteIncomeSource(id);
     toast.success("🗑️ Income source deleted");
     onRefresh();
@@ -79,7 +88,7 @@ export function IncomeSourcesSection({
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive"
-                      onClick={() => handleDelete(source.id)}
+                      onClick={() => setDeleteConfirm(source)}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -107,6 +116,31 @@ export function IncomeSourcesSection({
           onSuccess={onRefresh}
         />
       )}
+
+      <ResponsiveDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Delete Income Source</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <p className="text-sm text-muted-foreground px-1">
+            Are you sure you want to delete <span className="font-medium text-foreground">{deleteConfirm?.name}</span>? This cannot be undone.
+          </p>
+          <ResponsiveDialogFooter>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => deleteConfirm && handleDelete(deleteConfirm.id)}
+              >
+                Delete
+              </Button>
+            </div>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </section>
   );
 }

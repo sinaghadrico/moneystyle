@@ -115,12 +115,14 @@ export function MergeDialog({
         </div>
 
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleMerge} disabled={merging}>
-            {merging ? "Merging..." : `Merge ${transactions.length} into 1`}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleMerge} disabled={merging}>
+              {merging ? "Merging..." : `Merge ${transactions.length} into 1`}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

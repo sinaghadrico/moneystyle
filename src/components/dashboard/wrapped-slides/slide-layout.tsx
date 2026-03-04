@@ -16,7 +16,7 @@ export function SlideLayout({
   return (
     <div
       className={cn(
-        "relative flex min-h-[400px] w-full shrink-0 max-w-sm flex-col items-center justify-center rounded-lg p-8 text-center transition-opacity duration-500",
+        "relative flex h-full w-full shrink-0 flex-col items-center justify-center p-8 text-center transition-opacity duration-500",
         gradient,
         isActive ? "opacity-100" : "opacity-0",
       )}

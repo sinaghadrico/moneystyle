@@ -2,12 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useDrag } from "@use-gesture/react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -144,10 +138,11 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "Escape") onOpenChange(false);
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [open, goNext, goPrev]);
+  }, [open, goNext, goPrev, onOpenChange]);
 
   // Swipe gesture
   const bind = useDrag(
@@ -160,21 +155,42 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
 
   const isEmpty = data && data.transactionCount === 0;
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className="gap-0 overflow-hidden p-0 sm:max-w-sm max-h-[470px]"
-      >
-        <DialogTitle className="sr-only">Spending Wrapped</DialogTitle>
-        <DialogDescription className="sr-only">
-          Monthly spending summary with animated slides
-        </DialogDescription>
+  if (!open) return null;
 
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3">
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Story container */}
+      <div className="relative z-10 w-full h-full sm:h-[600px] sm:max-w-sm sm:rounded-2xl overflow-hidden bg-black flex flex-col">
+        {/* Progress bars (Instagram-style) */}
+        {totalSlides > 0 && !loading && !isEmpty && (
+          <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 px-3 pt-3">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setSlideIndex(i)}
+                className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/30"
+              >
+                <div
+                  className={cn(
+                    "h-full rounded-full bg-white transition-all duration-500",
+                    i < slideIndex ? "w-full" : i === slideIndex ? "w-full" : "w-0",
+                  )}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Header overlay */}
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-3 pt-7 pb-2">
           <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[160px] h-8 border-white/20 bg-black/30 text-white text-sm backdrop-blur-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -187,45 +203,60 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
           </Select>
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
+            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
             onClick={() => onOpenChange(false)}
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
         {/* Slide area */}
-        <div className="relative" {...bind()}>
+        <div className="flex-1 relative" {...bind()}>
           {loading ? (
-            <div className="flex min-h-[400px] items-center justify-center">
-              <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+            <div className="flex h-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
             </div>
           ) : isEmpty ? (
-            <div className="flex min-h-[400px] flex-col items-center justify-center gap-2 p-8 text-center">
-              <span className="text-5xl">📭</span>
-              <p className="text-muted-foreground text-lg">
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+              <span className="text-6xl">📭</span>
+              <p className="text-white/70 text-lg">
                 No spending data for this month
               </p>
             </div>
           ) : (
-            <div className="relative overflow-hidden">
+            <div className="relative h-full overflow-hidden">
               <div
-                className="flex transition-transform duration-500 ease-in-out"
+                className="flex h-full transition-transform duration-500 ease-in-out"
                 style={{ transform: `translateX(-${slideIndex * 100}%)` }}
               >
                 {slides.map((slide, i) => (
-                  <div key={i} className="w-full shrink-0">
+                  <div key={i} className="w-full h-full shrink-0">
                     {slide}
                   </div>
                 ))}
               </div>
 
-              {/* Navigation arrows */}
+              {/* Tap zones (left/right like Instagram) */}
+              {canPrev && (
+                <div
+                  className="absolute inset-y-0 left-0 w-1/4 cursor-pointer"
+                  onClick={goPrev}
+                />
+              )}
+              {canNext && (
+                <div
+                  className="absolute inset-y-0 right-0 w-1/4 cursor-pointer"
+                  onClick={goNext}
+                />
+              )}
+
+              {/* Navigation arrows (desktop hover) */}
               {canPrev && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/20 text-white hover:bg-black/40"
+                  className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/30 text-white hover:bg-black/50 hidden sm:flex"
                   onClick={goPrev}
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -235,7 +266,7 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/20 text-white hover:bg-black/40"
+                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/30 text-white hover:bg-black/50 hidden sm:flex"
                   onClick={goNext}
                 >
                   <ChevronRight className="h-5 w-5" />
@@ -244,25 +275,7 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
             </div>
           )}
         </div>
-
-        {/* Progress dots */}
-        {totalSlides > 0 && !loading && !isEmpty && (
-          <div className="flex items-center justify-center gap-1.5 border-t py-3">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setSlideIndex(i)}
-                className={cn(
-                  "h-2 rounded-full transition-all",
-                  i === slideIndex
-                    ? "bg-primary w-6"
-                    : "bg-muted-foreground/30 w-2",
-                )}
-              />
-            ))}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

@@ -79,10 +79,10 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
           Monthly Income vs Expense
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="h-[320px]">
+      <CardContent className="pt-0 px-2 sm:px-6">
+        <div className="h-[280px] sm:h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={4} barCategoryGap="20%">
+            <BarChart data={chartData} barGap={2} barCategoryGap="30%">
               <defs>
                 <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
@@ -104,14 +104,14 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
                 tick={axisStyle}
                 axisLine={false}
                 tickLine={false}
-                dy={8}
+                dy={4}
               />
               <YAxis
                 tickFormatter={shortCurrencyFormatter}
                 tick={axisStyle}
                 axisLine={false}
                 tickLine={false}
-                dx={-4}
+                width={44}
               />
               <Tooltip
                 formatter={currencyFormatter}
@@ -123,14 +123,16 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
               <Bar
                 dataKey="income"
                 fill="url(#incomeGrad)"
-                radius={[6, 6, 0, 0]}
+                radius={[4, 4, 0, 0]}
                 name="Income"
+                maxBarSize={24}
               />
               <Bar
                 dataKey="expense"
                 fill="url(#expenseGrad)"
-                radius={[6, 6, 0, 0]}
+                radius={[4, 4, 0, 0]}
                 name="Expense"
+                maxBarSize={24}
               />
             </BarChart>
           </ResponsiveContainer>

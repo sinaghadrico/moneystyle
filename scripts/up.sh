@@ -3,25 +3,47 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "==> Starting database + MinIO..."
-docker compose up db minio -d
+MODE="${1:---local}"
+REMOTE_HOST="13.60.56.91"
+REMOTE_KEY="~/Downloads/revenue-key.pem"
+REMOTE_USER="ec2-user"
+REMOTE_DB_PASSWORD="RevenueProd2024!"
 
-echo "==> Waiting for database to be healthy..."
-until docker compose exec db pg_isready -U revenue -q 2>/dev/null; do
-  sleep 1
-done
-echo "    Database ready."
+if [ "$MODE" = "--remote" ]; then
+  echo "==> Mode: REMOTE (server database)"
+  echo "==> Starting SSH tunnel..."
+  ssh -i "$REMOTE_KEY" -L 5433:localhost:5432 "$REMOTE_USER@$REMOTE_HOST" -N -f 2>/dev/null
+  echo "    SSH tunnel ready (localhost:5433)"
 
-echo "==> Initializing MinIO bucket..."
-docker compose up minio-init --wait 2>/dev/null || docker compose run --rm minio-init
-echo "    MinIO ready (console at http://localhost:9001)"
+  export DATABASE_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
+  export DIRECT_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
 
-echo "==> Running migrations..."
-npx prisma migrate deploy
+  echo "==> Starting dev server on port 3020..."
+  PORT=3020 pnpm dev &
+  DEV_PID=$!
 
-echo "==> Starting dev server on port 3020..."
-PORT=3020 pnpm dev &
-DEV_PID=$!
+else
+  echo "==> Mode: LOCAL (local database)"
+  echo "==> Starting database + MinIO..."
+  docker compose up db minio -d
+
+  echo "==> Waiting for database to be healthy..."
+  until docker compose exec db pg_isready -U revenue -q 2>/dev/null; do
+    sleep 1
+  done
+  echo "    Database ready."
+
+  echo "==> Initializing MinIO bucket..."
+  docker compose up minio-init --wait 2>/dev/null || docker compose run --rm minio-init
+  echo "    MinIO ready (console at http://localhost:9001)"
+
+  echo "==> Running migrations..."
+  npx prisma migrate deploy
+
+  echo "==> Starting dev server on port 3020..."
+  PORT=3020 pnpm dev &
+  DEV_PID=$!
+fi
 
 # Wait for server
 echo "==> Waiting for server..."
@@ -82,12 +104,25 @@ fi
 echo ""
 echo "============================================"
 echo "  Revenue is running!"
+echo "  Mode:   $([ "$MODE" = "--remote" ] && echo "REMOTE" || echo "LOCAL")"
 echo "  Local:  http://localhost:3020"
 [ -n "$TUNNEL_URL" ] && echo "  Public: $TUNNEL_URL"
 echo "============================================"
 echo ""
 echo "Press Ctrl+C to stop everything."
 
-trap "echo '==> Shutting down...'; kill $DEV_PID $TUNNEL_PID 2>/dev/null; docker compose stop db minio; echo 'Done.'; exit 0" INT TERM
+cleanup() {
+  echo '==> Shutting down...'
+  kill $DEV_PID $TUNNEL_PID 2>/dev/null
+  if [ "$MODE" = "--remote" ]; then
+    pkill -f "ssh.*5433:localhost:5432" 2>/dev/null
+    echo "    SSH tunnel closed."
+  else
+    docker compose stop db minio
+  fi
+  echo 'Done.'
+  exit 0
+}
 
+trap cleanup INT TERM
 wait

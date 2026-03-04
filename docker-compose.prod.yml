@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: revenue
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: revenue
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

@@ -37,9 +37,9 @@ const MEAL_ICONS = {
 } as const;
 
 const MEAL_LABELS: Record<string, string> = {
-  breakfast: "صبحانه",
-  lunch: "ناهار",
-  dinner: "شام",
+  breakfast: "Breakfast",
+  lunch: "Lunch",
+  dinner: "Dinner",
 };
 
 export function MealPlannerContent() {
@@ -88,29 +88,29 @@ export function MealPlannerContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <ChefHat className="h-6 w-6" />
+            <ChefHat className="h-6 w-6 shrink-0" />
             Meal Planner
           </h2>
-          <p className="text-muted-foreground">
-            برنامه غذایی هفتگی بر اساس خریدهایت
-          </p>
+          <Button onClick={handleGenerate} disabled={loading} size="sm" className="shrink-0">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                {plans.length > 0 ? "New Plan" : "Generate Plan"}
+              </>
+            )}
+          </Button>
         </div>
-        <Button onClick={handleGenerate} disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              {plans.length > 0 ? "New Plan" : "Generate Plan"}
-            </>
-          )}
-        </Button>
+        <p className="text-sm text-muted-foreground">
+          AI-generated weekly meal plan based on your recent grocery purchases.
+        </p>
       </div>
 
       {error && (
@@ -224,7 +224,7 @@ export function MealPlannerContent() {
               <CardContent className="pt-4 pb-4 space-y-2">
                 <h3 className="font-bold text-base flex items-center gap-2">
                   <ShoppingCart className="h-4 w-4 text-orange-500" />
-                  لیست خرید اضافی
+                  Shopping List
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {current.shoppingList.map((item, idx) => (
@@ -292,7 +292,7 @@ function MealCard({
               className="text-xs text-green-600 bg-green-500/10"
             >
               <Check className="h-3 w-3 mr-0.5" />
-              موجود
+              Available
             </Badge>
           ) : (
             <Badge
@@ -300,7 +300,7 @@ function MealCard({
               className="text-xs text-orange-600 bg-orange-500/10"
             >
               <X className="h-3 w-3 mr-0.5" />
-              نیاز به خرید
+              Need to Buy
             </Badge>
           )}
           {expanded ? (
@@ -315,7 +315,7 @@ function MealCard({
           {Array.isArray(meal.ingredients) && meal.ingredients.length > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1">
-                مواد لازم
+                Ingredients
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {meal.ingredients.map((ing, i) => (
@@ -329,11 +329,10 @@ function MealCard({
           {meal.recipe && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1">
-                دستور پخت
+                Recipe
               </p>
               <p
                 className="text-sm leading-relaxed whitespace-pre-line"
-                dir="rtl"
               >
                 {meal.recipe}
               </p>

@@ -171,7 +171,17 @@ export function ShoppingBasketsSection() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <ShoppingCart className="h-6 w-6 shrink-0" />
+          Shopping Lists
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Create lists and compare prices across stores.
+        </p>
+      </div>
+
       <div className="flex gap-2">
         <Input
           placeholder="New list name..."

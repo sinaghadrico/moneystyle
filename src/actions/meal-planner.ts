@@ -85,11 +85,12 @@ export async function generateMealPlan(): Promise<
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 4096,
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Here are the grocery items I've purchased recently:\n${itemLines.join("\n")}\n\nPlease create a weekly Iranian meal plan using these ingredients.`,
+          content: `Here are the grocery items I've purchased recently:\n${itemLines.join("\n")}\n\nPlease create a weekly meal plan using these ingredients.`,
         },
       ],
     });
@@ -99,9 +100,15 @@ export async function generateMealPlan(): Promise<
       return { error: "No response from AI" };
     }
 
-    const jsonStr = content
-      .replace(/^```(?:json)?\n?/, "")
-      .replace(/\n?```$/, "");
+    // Extract JSON from response — handle markdown fences and extra text
+    let jsonStr = content;
+    const fenceMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (fenceMatch) {
+      jsonStr = fenceMatch[1];
+    } else {
+      const braceMatch = content.match(/\{[\s\S]*\}/);
+      if (braceMatch) jsonStr = braceMatch[0];
+    }
 
     const parsed = JSON.parse(jsonStr) as {
       days: DayPlan[];
@@ -114,7 +121,7 @@ export async function generateMealPlan(): Promise<
 
     // Build week label
     const now = new Date();
-    const weekLabel = `${now.toLocaleDateString("fa-IR", { month: "long", day: "numeric" })} — هفته`;
+    const weekLabel = `Week of ${now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 
     // Save to DB
     const saved = await prisma.mealPlan.create({

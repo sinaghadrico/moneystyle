@@ -44,16 +44,16 @@ import { LinkTransactionsDialog } from "./link-transactions-dialog";
 import { SpendingComparison } from "./spending-comparison";
 
 const OFFER_TABS = [
-  { key: 0, label: "اقتصادی" },
-  { key: 1, label: "متعادل" },
-  { key: 2, label: "ویژه" },
+  { key: 0, label: "Budget" },
+  { key: 1, label: "Balanced" },
+  { key: 2, label: "Premium" },
 ] as const;
 
 const TIME_SLOT_COLORS: Record<string, string> = {
-  "صبح": "bg-amber-500/10 text-amber-700",
-  "ظهر": "bg-orange-500/10 text-orange-700",
-  "عصر": "bg-blue-500/10 text-blue-700",
-  "شب": "bg-indigo-500/10 text-indigo-700",
+  "Morning": "bg-amber-500/10 text-amber-700",
+  "Noon": "bg-orange-500/10 text-orange-700",
+  "Afternoon": "bg-blue-500/10 text-blue-700",
+  "Evening": "bg-indigo-500/10 text-indigo-700",
 };
 
 const FOOD_TYPE_COLORS: Record<string, string> = {
@@ -63,9 +63,9 @@ const FOOD_TYPE_COLORS: Record<string, string> = {
 };
 
 const FOOD_TYPE_LABELS: Record<string, string> = {
-  restaurant: "رستوران",
-  homemade: "خانگی",
-  cafe: "کافه",
+  restaurant: "Restaurant",
+  homemade: "Homemade",
+  cafe: "Cafe",
 };
 
 export function WeekendPlannerContent() {
@@ -255,17 +255,13 @@ export function WeekendPlannerContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <CalendarHeart className="h-6 w-6 shrink-0" />
             Weekend Planner
           </h2>
-          <p className="text-sm text-muted-foreground">
-            برنامه‌ریزی آخر هفته بر اساس علایق و بودجه شما
-          </p>
-        </div>
-        <Button onClick={handleGenerate} disabled={loading} size="sm" className="shrink-0">
+          <Button onClick={handleGenerate} disabled={loading} size="sm" className="shrink-0">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -278,6 +274,10 @@ export function WeekendPlannerContent() {
             </>
           )}
         </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          AI-powered weekend plans based on your preferences and budget.
+        </p>
       </div>
 
       {/* Error */}
@@ -378,7 +378,7 @@ export function WeekendPlannerContent() {
                         : "border-border hover:bg-muted"
                     }`}
                   >
-                    <span dir="rtl">{tab.label}</span>
+                    <span>{tab.label}</span>
                     <p className="text-xs mt-0.5 opacity-80">
                       {formatCurrency(offer.totalCost)}
                     </p>
@@ -390,14 +390,14 @@ export function WeekendPlannerContent() {
 
           {/* Summary card */}
           <Card>
-            <CardContent className="pt-4 pb-4 space-y-2" dir="rtl">
+            <CardContent className="pt-4 pb-4 space-y-2">
               <h3 className="font-bold text-base">{currentOffer.title}</h3>
               <p className="text-sm text-muted-foreground">
                 {currentOffer.summary}
               </p>
               <div className="flex items-center gap-2 text-sm font-medium">
                 <DollarSign className="h-4 w-4 text-green-500" />
-                هزینه کل: {formatCurrency(currentOffer.totalCost)}
+                Total Cost: {formatCurrency(currentOffer.totalCost)}
               </div>
             </CardContent>
           </Card>
@@ -413,7 +413,7 @@ export function WeekendPlannerContent() {
                 const itemKey = `activity:${activeTab}:${i}`;
                 return (
                   <Card key={i}>
-                    <CardContent className="pt-3 pb-3 space-y-1.5" dir="rtl">
+                    <CardContent className="pt-3 pb-3 space-y-1.5">
                       <div className="flex items-start justify-between gap-2">
                         <h5 className="font-medium text-sm">
                           {activity.name}
@@ -489,7 +489,7 @@ export function WeekendPlannerContent() {
                 const itemKey = `food:${activeTab}:${i}`;
                 return (
                   <Card key={i}>
-                    <CardContent className="pt-3 pb-3 space-y-1.5" dir="rtl">
+                    <CardContent className="pt-3 pb-3 space-y-1.5">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <span className="text-xs text-muted-foreground">
@@ -551,10 +551,10 @@ export function WeekendPlannerContent() {
           {/* Tips */}
           {currentOffer.tips.length > 0 && (
             <Card>
-              <CardContent className="pt-4 pb-4 space-y-2" dir="rtl">
+              <CardContent className="pt-4 pb-4 space-y-2">
                 <h4 className="font-medium text-sm flex items-center gap-2">
                   <Lightbulb className="h-4 w-4 text-yellow-500" />
-                  نکات
+                  Tips
                 </h4>
                 <ul className="space-y-1">
                   {currentOffer.tips.map((tip, i) => (
@@ -583,39 +583,39 @@ export function WeekendPlannerContent() {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="text-xs text-muted-foreground">
-              Generated by AI based on your preferences and budget.
-            </p>
-            <div className="flex items-center gap-1">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs"
+                className="h-8 text-xs gap-1"
                 onClick={handleCalendarExport}
               >
-                <Calendar className="h-3 w-3 mr-1" />
-                Add to Calendar
+                <Calendar className="h-3.5 w-3.5" />
+                Calendar
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs"
+                className="h-8 text-xs gap-1"
                 onClick={() => setLinkDialogOpen(true)}
               >
-                <Link2 className="h-3 w-3 mr-1" />
-                Link Transactions
+                <Link2 className="h-3.5 w-3.5" />
+                Link
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs text-destructive"
+                className="h-8 text-xs text-destructive gap-1"
                 onClick={() => handleDelete(current.id)}
               >
-                <Trash2 className="h-3 w-3 mr-1" />
+                <Trash2 className="h-3.5 w-3.5" />
                 Delete
               </Button>
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Generated by AI based on your preferences and budget.
+            </p>
           </div>
 
           {/* Link Transactions Dialog */}

@@ -155,7 +155,7 @@ My budget status this month:
 ${budgetLines.length > 0 ? budgetLines.join("\n") : "No budgets set"}
 ${feedbackSummary ? `\nFeedback from past plans:\n${feedbackSummary}` : ""}
 
-Please generate 3 weekend plan offers (اقتصادی، متعادل، ویژه).`;
+Please generate 3 weekend plan offers (Budget, Balanced, Premium).`;
 
   const { default: OpenAI } = await import("openai");
   const openai = new OpenAI({ apiKey });
@@ -164,6 +164,7 @@ Please generate 3 weekend plan offers (اقتصادی، متعادل، ویژه)
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 4096,
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
@@ -175,9 +176,14 @@ Please generate 3 weekend plan offers (اقتصادی، متعادل، ویژه)
       return { error: "No response from AI" };
     }
 
-    const jsonStr = content
-      .replace(/^```(?:json)?\n?/, "")
-      .replace(/\n?```$/, "");
+    let jsonStr = content;
+    const fenceMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (fenceMatch) {
+      jsonStr = fenceMatch[1];
+    } else {
+      const braceMatch = content.match(/\{[\s\S]*\}/);
+      if (braceMatch) jsonStr = braceMatch[0];
+    }
 
     const parsed = JSON.parse(jsonStr) as { offers: WeekendOffer[] };
 
@@ -187,7 +193,7 @@ Please generate 3 weekend plan offers (اقتصادی، متعادل، ویژه)
 
     // Build week label
     const now = new Date();
-    const weekLabel = `${now.toLocaleDateString("fa-IR", { month: "long", day: "numeric" })} — آخر هفته`;
+    const weekLabel = `Weekend of ${now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 
     const saved = await prisma.weekendPlan.create({
       data: {
@@ -321,6 +327,7 @@ Generate a replacement ${itemType}.`;
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 1024,
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
@@ -330,9 +337,14 @@ Generate a replacement ${itemType}.`;
     const content = response.choices[0]?.message?.content?.trim();
     if (!content) return { error: "No response from AI" };
 
-    const jsonStr = content
-      .replace(/^```(?:json)?\n?/, "")
-      .replace(/\n?```$/, "");
+    let jsonStr = content;
+    const fenceMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (fenceMatch) {
+      jsonStr = fenceMatch[1];
+    } else {
+      const braceMatch = content.match(/\{[\s\S]*\}/);
+      if (braceMatch) jsonStr = braceMatch[0];
+    }
     const result = JSON.parse(jsonStr);
 
     if (itemType === "activity" && result.activity) {

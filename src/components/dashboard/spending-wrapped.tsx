@@ -132,6 +132,33 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
     setSlideIndex((i) => Math.max(i - 1, 0));
   }, []);
 
+  const isEmpty = data && data.transactionCount === 0;
+
+  // Auto-advance timer (6 seconds per slide)
+  const SLIDE_DURATION = 6000;
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!open || loading || isEmpty || totalSlides === 0) return;
+    setProgress(0);
+    const start = Date.now();
+    const tick = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const pct = Math.min(elapsed / SLIDE_DURATION, 1);
+      setProgress(pct);
+      if (pct >= 1) {
+        clearInterval(tick);
+        // Auto-advance or close on last slide
+        if (slideIndex < totalSlides - 1) {
+          setSlideIndex((i) => i + 1);
+        } else {
+          onOpenChange(false);
+        }
+      }
+    }, 30);
+    return () => clearInterval(tick);
+  }, [open, loading, isEmpty, slideIndex, totalSlides, onOpenChange, SLIDE_DURATION]);
+
   // Keyboard navigation
   useEffect(() => {
     if (!open) return;
@@ -153,12 +180,10 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
     { axis: "x", swipe: { distance: 50 } },
   );
 
-  const isEmpty = data && data.transactionCount === 0;
-
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -177,10 +202,11 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
                 className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/30"
               >
                 <div
-                  className={cn(
-                    "h-full rounded-full bg-white transition-all duration-500",
-                    i < slideIndex ? "w-full" : i === slideIndex ? "w-full" : "w-0",
-                  )}
+                  className="h-full rounded-full bg-white"
+                  style={{
+                    width: i < slideIndex ? "100%" : i === slideIndex ? `${progress * 100}%` : "0%",
+                    transition: i === slideIndex ? "none" : "width 300ms",
+                  }}
                 />
               </button>
             ))}

@@ -3,27 +3,28 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Load env vars from .env
+set -a
+source .env
+set +a
+
 MODE="${1:---local}"
-REMOTE_HOST="13.60.56.91"
-REMOTE_KEY="~/Downloads/revenue-key.pem"
-REMOTE_USER="ec2-user"
-REMOTE_DB_PASSWORD="RevenueProd2024!"
+
+# Save original DATABASE_URL from .env
+ORIGINAL_DB_URL=$(grep '^DATABASE_URL=' .env)
+ORIGINAL_DIRECT_URL=$(grep '^DIRECT_URL=' .env)
 
 if [ "$MODE" = "--remote" ]; then
   echo "==> Mode: REMOTE (server database)"
-  echo "==> Starting SSH tunnel..."
+  echo "==> Starting SSH tunnel to ${REMOTE_HOST}..."
   ssh -i "$REMOTE_KEY" -L 5433:localhost:5432 "$REMOTE_USER@$REMOTE_HOST" -N -f 2>/dev/null
   echo "    SSH tunnel ready (localhost:5433)"
 
-  export DATABASE_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
-  export DIRECT_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
-
-  # Write .env.local to override .env for Prisma/Next.js
-  cat > .env.local << ENVEOF
-DATABASE_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
-DIRECT_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
-ENVEOF
-  echo "    .env.local created (overrides .env)"
+  # Override DATABASE_URL in .env
+  sed -i.bak "s|^DATABASE_URL=.*|DATABASE_URL=\"postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue\"|" .env
+  sed -i.bak "s|^DIRECT_URL=.*|DIRECT_URL=\"postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue\"|" .env
+  rm -f .env.bak
+  echo "    .env updated to use remote database"
 
   echo "==> Starting dev server on port 3020..."
   PORT=3020 pnpm dev &
@@ -122,9 +123,12 @@ cleanup() {
   echo '==> Shutting down...'
   kill $DEV_PID $TUNNEL_PID 2>/dev/null
   if [ "$MODE" = "--remote" ]; then
+    # Restore original DATABASE_URL
+    sed -i.bak "s|^DATABASE_URL=.*|${ORIGINAL_DB_URL}|" .env
+    sed -i.bak "s|^DIRECT_URL=.*|${ORIGINAL_DIRECT_URL}|" .env
+    rm -f .env.bak .env.local
     pkill -f "ssh.*5433:localhost:5432" 2>/dev/null
-    rm -f .env.local
-    echo "    SSH tunnel closed. .env.local removed."
+    echo "    .env restored. SSH tunnel closed."
   else
     docker compose stop db minio
   fi

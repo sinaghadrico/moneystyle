@@ -32,6 +32,12 @@ import { formatMonth } from "@/lib/utils";
 const currencyFormatter = (value: number | undefined) =>
   `AED ${(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
+const shortCurrencyFormatter = (value: number | undefined) => {
+  const v = value ?? 0;
+  if (v >= 1000) return `${(v / 1000).toFixed(0)}K`;
+  return `${v}`;
+};
+
 const tooltipStyle = {
   backgroundColor: "var(--card)",
   border: "1px solid var(--border)",
@@ -101,7 +107,7 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
                 dy={8}
               />
               <YAxis
-                tickFormatter={currencyFormatter}
+                tickFormatter={shortCurrencyFormatter}
                 tick={axisStyle}
                 axisLine={false}
                 tickLine={false}
@@ -202,11 +208,11 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 px-2 pb-2 sm:w-[140px] sm:flex-col sm:flex-nowrap sm:justify-center sm:px-0 sm:pr-2 sm:pb-0">
+          <div className="flex gap-3 overflow-x-auto scrollbar-none px-2 pb-2 sm:w-[140px] sm:flex-col sm:overflow-x-visible sm:justify-center sm:px-0 sm:pr-2 sm:pb-0">
             {data.slice(0, 7).map((entry, i) => (
               <div
                 key={entry.name}
-                className="flex items-center gap-2 text-xs"
+                className="flex items-center gap-1.5 text-xs shrink-0"
                 onMouseEnter={() => setActiveIndex(i)}
                 onMouseLeave={() => setActiveIndex(null)}
                 style={{
@@ -219,7 +225,7 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
                   className="h-2.5 w-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="truncate text-muted-foreground">
+                <span className="whitespace-nowrap text-muted-foreground">
                   {entry.name}
                 </span>
                 <span className="font-medium tabular-nums">
@@ -260,7 +266,7 @@ export function TopMerchantsChart({ data }: { data: MerchantTotal[] }) {
               />
               <XAxis
                 type="number"
-                tickFormatter={currencyFormatter}
+                tickFormatter={shortCurrencyFormatter}
                 tick={axisStyle}
                 axisLine={false}
                 tickLine={false}
@@ -361,29 +367,37 @@ export function MonthlyCategoryChart({
           ))}
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="h-[320px] sm:h-[500px]">
+      <CardContent className="pt-0 px-2 sm:px-6">
+        <div className="h-[280px] sm:h-[420px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barCategoryGap="15%">
+            <BarChart data={chartData} barCategoryGap="12%" margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <defs>
+                {categories.map((cat) => (
+                  <linearGradient key={cat.name} id={`catGrad-${cat.name.replace(/\s+/g, "-")}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={cat.color} stopOpacity={1} />
+                    <stop offset="100%" stopColor={cat.color} stopOpacity={0.6} />
+                  </linearGradient>
+                ))}
+              </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
                 stroke="var(--border)"
-                opacity={0.5}
+                opacity={0.4}
               />
               <XAxis
                 dataKey="label"
                 tick={axisStyle}
                 axisLine={false}
                 tickLine={false}
-                dy={8}
+                dy={4}
               />
               <YAxis
-                tickFormatter={currencyFormatter}
+                tickFormatter={shortCurrencyFormatter}
                 tick={axisStyle}
                 axisLine={false}
                 tickLine={false}
-                dx={-4}
+                width={44}
               />
               <Tooltip
                 formatter={currencyFormatter}
@@ -398,7 +412,7 @@ export function MonthlyCategoryChart({
                     key={cat.name}
                     dataKey={cat.name}
                     stackId="category"
-                    fill={cat.color}
+                    fill={`url(#catGrad-${cat.name.replace(/\s+/g, "-")})`}
                     radius={[0, 0, 0, 0]}
                   />
                 ))}
@@ -450,7 +464,7 @@ export function MonthlyTrendChart({ data }: { data: MonthlyData[] }) {
                 dy={8}
               />
               <YAxis
-                tickFormatter={currencyFormatter}
+                tickFormatter={shortCurrencyFormatter}
                 tick={axisStyle}
                 axisLine={false}
                 tickLine={false}

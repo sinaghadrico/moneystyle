@@ -151,7 +151,7 @@ export function DashboardContent() {
 
       {loading || !stats ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-[100px] rounded-xl" />
             ))}

@@ -29,9 +29,7 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
       {NAV_ITEMS.map((item) => {
         const Icon = item.icon;
         const isActive =
-          item.href === "/"
-            ? pathname === "/"
-            : pathname.startsWith(item.href);
+          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
         return (
           <Link
@@ -42,7 +40,7 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors md:py-2",
               isActive
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <Icon className="h-4 w-4" />
@@ -59,7 +57,7 @@ export function Sidebar() {
     <aside className="hidden md:flex h-screen w-56 flex-col border-r bg-card px-3 py-4">
       <div className="mb-6 px-3 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold tracking-tight">Revenue</h1>
+          <h1 className="text-lg font-bold tracking-tight">MoneyLoom</h1>
           <p className="text-xs text-muted-foreground">💰 Finance Tracker</p>
         </div>
         <WrappedButton />
@@ -71,4 +69,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

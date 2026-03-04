@@ -218,7 +218,7 @@ export function LandingContent() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
             <Wallet className="h-6 w-6 text-primary" />
-            <span className="text-lg font-bold tracking-tight">Revenue</span>
+            <span className="text-lg font-bold tracking-tight">MoneyLoom</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -312,9 +312,7 @@ export function LandingContent() {
                 key={feature.title}
                 className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-md hover:border-primary/20"
               >
-                <div
-                  className={`inline-flex rounded-xl p-2.5 ${feature.bg}`}
-                >
+                <div className={`inline-flex rounded-xl p-2.5 ${feature.bg}`}>
                   <feature.icon className={`h-5 w-5 ${feature.color}`} />
                 </div>
                 <h3 className="mt-4 font-semibold">{feature.title}</h3>
@@ -368,7 +366,7 @@ export function LandingContent() {
               AI That Knows Your Finances
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground text-lg">
-              Revenue uses AI to scan receipts, normalize product names for
+              MoneyLoom uses AI to scan receipts, normalize product names for
               price comparison, and analyze your complete financial picture to
               suggest how to put idle money to work — with specific numbers
               based on your actual data.
@@ -458,7 +456,7 @@ export function LandingContent() {
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Wallet className="h-4 w-4" />
-              <span>Revenue</span>
+              <span>MoneyLoom</span>
             </div>
             <p>Self-hosted personal finance tracker</p>
           </div>

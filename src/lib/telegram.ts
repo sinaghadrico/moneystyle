@@ -113,9 +113,13 @@ export async function getDefaultAccount(): Promise<{
   name: string;
 } | null> {
   // Check DB settings first
-  const settings = await prisma.appSettings.findFirst({ where: { id: "default" } });
+  const settings = await prisma.appSettings.findFirst({
+    where: { id: "default" },
+  });
   if (settings?.defaultAccountId) {
-    const acc = await prisma.account.findUnique({ where: { id: settings.defaultAccountId } });
+    const acc = await prisma.account.findUnique({
+      where: { id: settings.defaultAccountId },
+    });
     if (acc) return { id: acc.id, name: acc.name };
   }
 
@@ -166,8 +170,16 @@ export async function resolveTagsByHints(
     if (!tag) {
       // Auto-create the tag
       const TAG_COLORS = [
-        "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
-        "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280", "#0ea5e9",
+        "#ef4444",
+        "#f97316",
+        "#eab308",
+        "#22c55e",
+        "#14b8a6",
+        "#3b82f6",
+        "#8b5cf6",
+        "#ec4899",
+        "#6b7280",
+        "#0ea5e9",
       ];
       const count = await prisma.tag.count();
       tag = await prisma.tag.create({
@@ -501,10 +513,8 @@ export async function generateTodayStats(): Promise<string> {
   }
 
   lines.push("");
-  if (totalExpense > 0)
-    lines.push(`💸 Spent: ${fmtAmount(totalExpense)} AED`);
-  if (totalIncome > 0)
-    lines.push(`💰 Earned: ${fmtAmount(totalIncome)} AED`);
+  if (totalExpense > 0) lines.push(`💸 Spent: ${fmtAmount(totalExpense)} AED`);
+  if (totalIncome > 0) lines.push(`💰 Earned: ${fmtAmount(totalIncome)} AED`);
   lines.push(`📝 ${transactions.length} transaction(s)`);
 
   return lines.join("\n");
@@ -512,7 +522,7 @@ export async function generateTodayStats(): Promise<string> {
 
 export function generateHelp(): string {
   return [
-    "💰 Revenue Bot — Commands",
+    "💰 MoneyLoom Bot — Commands",
     "",
     "📝 Record a transaction:",
     "  250 Carrefour #grocery",
@@ -579,15 +589,20 @@ export async function generateSavingsReport(): Promise<string> {
       : "";
 
     lines.push(`${g.name}${deadline}`);
-    lines.push(`  ${bar} ${pct}%  ${fmtAmount(current)} / ${fmtAmount(target)} AED`);
+    lines.push(
+      `  ${bar} ${pct}%  ${fmtAmount(current)} / ${fmtAmount(target)} AED`,
+    );
     lines.push("");
 
     totalSaved += current;
     totalTarget += target;
   }
 
-  const overallPct = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
-  lines.push(`Total: ${fmtAmount(totalSaved)} / ${fmtAmount(totalTarget)} AED (${overallPct}%)`);
+  const overallPct =
+    totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+  lines.push(
+    `Total: ${fmtAmount(totalSaved)} / ${fmtAmount(totalTarget)} AED (${overallPct}%)`,
+  );
   lines.push(`${goals.length} active goal(s)`);
 
   return lines.join("\n");
@@ -636,13 +651,20 @@ export async function generateDebtsReport(): Promise<string> {
   let anyDebt = false;
   for (const p of persons) {
     const totalSplits = p.splits.reduce((s, sp) => s + Number(sp.amount), 0);
-    const totalSettled = p.settlements.reduce((s, st) => s + Number(st.amount), 0);
+    const totalSettled = p.settlements.reduce(
+      (s, st) => s + Number(st.amount),
+      0,
+    );
     const balance = totalSplits - totalSettled;
     if (Math.abs(balance) < 0.01) continue;
     anyDebt = true;
     const icon = balance > 0 ? "🔴" : "🟢";
-    lines.push(`${icon} ${p.name}: ${fmtAmount(Math.abs(balance))} AED ${balance > 0 ? "owes you" : "you owe"}`);
-    lines.push(`   splits: ${fmtAmount(totalSplits)} | settled: ${fmtAmount(totalSettled)}`);
+    lines.push(
+      `${icon} ${p.name}: ${fmtAmount(Math.abs(balance))} AED ${balance > 0 ? "owes you" : "you owe"}`,
+    );
+    lines.push(
+      `   splits: ${fmtAmount(totalSplits)} | settled: ${fmtAmount(totalSettled)}`,
+    );
     lines.push("");
   }
 
@@ -653,7 +675,9 @@ export async function generateDebtsReport(): Promise<string> {
   return lines.join("\n");
 }
 
-export async function generateMonthlyReport(monthStr?: string): Promise<string> {
+export async function generateMonthlyReport(
+  monthStr?: string,
+): Promise<string> {
   const now = new Date();
   const month =
     monthStr ||
@@ -671,24 +695,46 @@ export async function generateMonthlyReport(monthStr?: string): Promise<string> 
 
   const [expenses, incomes, prevExpenses, prevIncomes] = await Promise.all([
     prisma.transaction.findMany({
-      where: { date: { gte: startDate, lte: endDate }, type: "expense", mergedIntoId: null },
+      where: {
+        date: { gte: startDate, lte: endDate },
+        type: "expense",
+        mergedIntoId: null,
+      },
       include: { category: true },
     }),
     prisma.transaction.findMany({
-      where: { date: { gte: startDate, lte: endDate }, type: "income", mergedIntoId: null },
+      where: {
+        date: { gte: startDate, lte: endDate },
+        type: "income",
+        mergedIntoId: null,
+      },
     }),
     prisma.transaction.findMany({
-      where: { date: { gte: prevStart, lte: prevEnd }, type: "expense", mergedIntoId: null },
+      where: {
+        date: { gte: prevStart, lte: prevEnd },
+        type: "expense",
+        mergedIntoId: null,
+      },
     }),
     prisma.transaction.findMany({
-      where: { date: { gte: prevStart, lte: prevEnd }, type: "income", mergedIntoId: null },
+      where: {
+        date: { gte: prevStart, lte: prevEnd },
+        type: "income",
+        mergedIntoId: null,
+      },
     }),
   ]);
 
   const totalExpense = expenses.reduce((s, t) => s + Number(t.amount ?? 0), 0);
   const totalIncome = incomes.reduce((s, t) => s + Number(t.amount ?? 0), 0);
-  const prevTotalExpense = prevExpenses.reduce((s, t) => s + Number(t.amount ?? 0), 0);
-  const prevTotalIncome = prevIncomes.reduce((s, t) => s + Number(t.amount ?? 0), 0);
+  const prevTotalExpense = prevExpenses.reduce(
+    (s, t) => s + Number(t.amount ?? 0),
+    0,
+  );
+  const prevTotalIncome = prevIncomes.reduce(
+    (s, t) => s + Number(t.amount ?? 0),
+    0,
+  );
 
   // Top merchants
   const merchantMap = new Map<string, number>();
@@ -716,7 +762,9 @@ export async function generateMonthlyReport(monthStr?: string): Promise<string> 
     const limit = Number(b.monthlyLimit);
     const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
     const icon = pct >= 100 ? "🔴" : pct >= b.alertThreshold ? "🟡" : "🟢";
-    budgetLines.push(`  ${icon} ${b.category.name}: ${fmtAmount(spent)} / ${fmtAmount(limit)} AED (${pct}%)`);
+    budgetLines.push(
+      `  ${icon} ${b.category.name}: ${fmtAmount(spent)} / ${fmtAmount(limit)} AED (${pct}%)`,
+    );
   }
 
   const lines: string[] = [];
@@ -729,17 +777,21 @@ export async function generateMonthlyReport(monthStr?: string): Promise<string> 
 
   // Month-over-month comparison
   if (prevTotalExpense > 0) {
-    const expChange = ((totalExpense - prevTotalExpense) / prevTotalExpense) * 100;
+    const expChange =
+      ((totalExpense - prevTotalExpense) / prevTotalExpense) * 100;
     const arrow = expChange > 0 ? "📈" : "📉";
     lines.push("");
-    lines.push(`${arrow} vs last month: ${expChange > 0 ? "+" : ""}${expChange.toFixed(0)}% expenses`);
+    lines.push(
+      `${arrow} vs last month: ${expChange > 0 ? "+" : ""}${expChange.toFixed(0)}% expenses`,
+    );
   }
 
   if (sortedCats.length > 0) {
     lines.push("");
     lines.push("📂 By Category:");
     for (const [name, total] of sortedCats.slice(0, 8)) {
-      const pct = totalExpense > 0 ? ((total / totalExpense) * 100).toFixed(0) : "0";
+      const pct =
+        totalExpense > 0 ? ((total / totalExpense) * 100).toFixed(0) : "0";
       lines.push(`  ${name}: ${fmtAmount(total)} AED (${pct}%)`);
     }
   }

@@ -28,12 +28,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Revenue - Finance Tracker",
+  title: "MoneyLoom - Finance Tracker",
   description: "Personal finance dashboard for tracking transactions",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "Revenue",
+    title: "MoneyLoom",
   },
   icons: {
     apple: "/icons/apple-touch-icon.svg",
@@ -52,17 +52,17 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SettingsProvider>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <Header />
-              <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6">
-                {children}
-              </main>
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar />
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <Header />
+                <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
-          <BottomNav />
-          <Toaster />
+            <BottomNav />
+            <Toaster />
           </SettingsProvider>
         </ThemeProvider>
       </body>

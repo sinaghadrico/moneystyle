@@ -1,6 +1,6 @@
 {
-  "name": "Revenue - Finance Tracker",
-  "short_name": "Revenue",
+  "name": "MoneyLoom - Finance Tracker",
+  "short_name": "MoneyLoom",
   "display": "standalone",
   "start_url": "/",
   "theme_color": "#09090b",

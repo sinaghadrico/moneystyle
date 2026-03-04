@@ -20,11 +20,16 @@ export function Header() {
 
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-4 md:hidden">
-      <h1 className="text-lg font-bold tracking-tight">Revenue</h1>
+      <h1 className="text-lg font-bold tracking-tight">MoneyLoom</h1>
       <div className="flex items-center gap-2">
         <WrappedButton />
         {mounted && (
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cycleTheme}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={cycleTheme}
+          >
             {theme === "light" ? (
               <Sun className="h-4 w-4" />
             ) : theme === "dark" ? (

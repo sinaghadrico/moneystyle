@@ -72,7 +72,7 @@ export async function testTelegramConnection(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
-          text: "Revenue app connected successfully!",
+          text: "MoneyLoom app connected successfully!",
         }),
       },
     );
@@ -80,7 +80,9 @@ export async function testTelegramConnection(
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       return {
-        error: (body as { description?: string }).description || `HTTP ${res.status}`,
+        error:
+          (body as { description?: string }).description ||
+          `HTTP ${res.status}`,
       };
     }
 
@@ -152,7 +154,8 @@ export async function exportTransactions(
 const DEFAULT_SMS_PATTERNS: SmsPatternCreateInput[] = [
   {
     name: "Mashreq Purchase",
-    regex: "for\\s+AED\\s+([\\d,]+\\.?\\d*)\\s+at\\s+(.+?)\\s+on\\s+\\d{2}-[A-Z]{3}-\\d{4}",
+    regex:
+      "for\\s+AED\\s+([\\d,]+\\.?\\d*)\\s+at\\s+(.+?)\\s+on\\s+\\d{2}-[A-Z]{3}-\\d{4}",
     type: "expense",
     priority: 10,
     amountCaptureGroup: 1,
@@ -210,9 +213,7 @@ export async function getSmsPatterns() {
   // Auto-seed if table is empty
   if (patterns.length === 0) {
     await prisma.$transaction(
-      DEFAULT_SMS_PATTERNS.map((p) =>
-        prisma.smsPattern.create({ data: p }),
-      ),
+      DEFAULT_SMS_PATTERNS.map((p) => prisma.smsPattern.create({ data: p })),
     );
     patterns = await prisma.smsPattern.findMany({
       orderBy: { priority: "asc" },
@@ -234,7 +235,9 @@ export async function createSmsPattern(
   try {
     new RegExp(parsed.data.regex, "i");
   } catch (e) {
-    return { error: `Invalid regex: ${e instanceof Error ? e.message : "unknown error"}` };
+    return {
+      error: `Invalid regex: ${e instanceof Error ? e.message : "unknown error"}`,
+    };
   }
 
   try {
@@ -262,7 +265,9 @@ export async function updateSmsPattern(
     try {
       new RegExp(parsed.data.regex, "i");
     } catch (e) {
-      return { error: `Invalid regex: ${e instanceof Error ? e.message : "unknown error"}` };
+      return {
+        error: `Invalid regex: ${e instanceof Error ? e.message : "unknown error"}`,
+      };
     }
   }
 
@@ -302,7 +307,9 @@ export async function testSmsPattern(
   try {
     re = new RegExp(regex, "i");
   } catch (e) {
-    return { error: `Invalid regex: ${e instanceof Error ? e.message : "unknown error"}` };
+    return {
+      error: `Invalid regex: ${e instanceof Error ? e.message : "unknown error"}`,
+    };
   }
 
   const match = smsText.replace(/\s+/g, " ").trim().match(re);
@@ -321,9 +328,7 @@ export async function testSmsPattern(
   }
 
   const merchant =
-    merchantGroup && match[merchantGroup]
-      ? match[merchantGroup].trim()
-      : null;
+    merchantGroup && match[merchantGroup] ? match[merchantGroup].trim() : null;
 
   return { success: true, amount: amount.toFixed(2), merchant };
 }
@@ -377,9 +382,8 @@ export type NotificationTemplateData = {
 export async function getNotificationTemplates(): Promise<
   NotificationTemplateData[]
 > {
-  const { DEFAULT_NOTIFICATION_TEMPLATES } = await import(
-    "@/lib/notification-templates"
-  );
+  const { DEFAULT_NOTIFICATION_TEMPLATES } =
+    await import("@/lib/notification-templates");
   const rows = await prisma.notificationTemplate.findMany();
   const customMap = new Map(rows.map((r) => [r.key, r.content]));
 
@@ -392,10 +396,7 @@ export async function getNotificationTemplates(): Promise<
   }));
 }
 
-export async function updateNotificationTemplate(
-  key: string,
-  content: string,
-) {
+export async function updateNotificationTemplate(key: string, content: string) {
   await prisma.notificationTemplate.upsert({
     where: { key },
     create: { key, content },

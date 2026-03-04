@@ -131,9 +131,9 @@ export function EditTransactionDialog({
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Edit Transaction</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-3 py-2">
           <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-2">
+            <div className="grid gap-1">
               <Label>Amount</Label>
               <Input
                 type="number"
@@ -142,7 +142,7 @@ export function EditTransactionDialog({
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1 min-w-0">
               <Label>Currency</Label>
               <CurrencySelect
                 value={form.currency}
@@ -150,71 +150,75 @@ export function EditTransactionDialog({
               />
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Type</Label>
-            <Select
-              value={form.type}
-              onValueChange={(v) => setForm({ ...form, type: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TRANSACTION_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1">
+              <Label>Type</Label>
+              <Select
+                value={form.type}
+                onValueChange={(v) => setForm({ ...form, type: v })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRANSACTION_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1">
+              <Label>Account</Label>
+              <Select
+                value={form.accountId}
+                onValueChange={(v) => setForm({ ...form, accountId: v })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Account</Label>
-            <Select
-              value={form.accountId}
-              onValueChange={(v) => setForm({ ...form, accountId: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((acc) => (
-                  <SelectItem key={acc.id} value={acc.id}>
-                    {acc.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1">
+              <Label>Category</Label>
+              <Select
+                value={form.categoryId || "none"}
+                onValueChange={(v) =>
+                  setForm({ ...form, categoryId: v === "none" ? "" : v })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1">
+              <Label>Merchant</Label>
+              <Input
+                value={form.merchant}
+                onChange={(e) => setForm({ ...form, merchant: e.target.value })}
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Category</Label>
-            <Select
-              value={form.categoryId || "none"}
-              onValueChange={(v) =>
-                setForm({ ...form, categoryId: v === "none" ? "" : v })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label>Merchant</Label>
-            <Input
-              value={form.merchant}
-              onChange={(e) => setForm({ ...form, merchant: e.target.value })}
-            />
-          </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1">
             <Label>Description</Label>
             <Input
               value={form.description}

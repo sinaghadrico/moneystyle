@@ -36,8 +36,12 @@ export function CurrencySelect({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger id={id} className="w-full">
-        <SelectValue placeholder="Select currency" />
+      <SelectTrigger id={id} className="w-full truncate">
+        <SelectValue placeholder="Select currency">
+          {currencies.find((c) => c.code === value)
+            ? `${value} (${currencies.find((c) => c.code === value)!.symbol})`
+            : value}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {currencies.map((c) => (

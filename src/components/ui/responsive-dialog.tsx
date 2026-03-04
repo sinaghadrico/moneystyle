@@ -45,22 +45,26 @@ function ResponsiveDialogContent({
     )
   }
 
-  // Separate footer from other children so it stays fixed at the bottom
+  // Separate header & footer from other children so they stay fixed
   const childArray = React.Children.toArray(children)
+  const header: React.ReactNode[] = []
   const footer: React.ReactNode[] = []
   const rest: React.ReactNode[] = []
 
   for (const child of childArray) {
     if (React.isValidElement(child) && child.type === ResponsiveDialogFooter) {
       footer.push(child)
+    } else if (React.isValidElement(child) && child.type === ResponsiveDialogHeader) {
+      header.push(child)
     } else {
       rest.push(child)
     }
   }
 
   return (
-    <DrawerContent>
-      <div className="flex-1 overflow-y-auto px-4 pb-4">{rest}</div>
+    <DrawerContent className="max-h-[70vh]">
+      {header}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-2">{rest}</div>
       {footer}
     </DrawerContent>
   )
@@ -91,7 +95,7 @@ function ResponsiveDialogFooter({ className, ...props }: React.ComponentProps<ty
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   if (isDesktop) return <DialogFooter className={className} {...props} />
-  return <DrawerFooter className={cn("border-t pt-4", className)} {...props} />
+  return <DrawerFooter className={cn("shrink-0 border-t pt-4", className)} {...props} />
 }
 
 function ResponsiveDialogClose(props: React.ComponentProps<typeof DialogClose>) {

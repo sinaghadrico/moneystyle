@@ -375,15 +375,18 @@ export function ItemsDialog({
         )}
 
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || loading || (rows.length > 0 && !isValid)}
-          >
-            {saving ? "Saving..." : "Save"}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSave}
+              disabled={saving || loading || (rows.length > 0 && !isValid)}
+            >
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

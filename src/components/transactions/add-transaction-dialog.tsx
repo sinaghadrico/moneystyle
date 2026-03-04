@@ -263,15 +263,18 @@ export function AddTransactionDialog({
           </div>
         </div>
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !form.accountId || !form.date}
-          >
-            {saving ? "Creating..." : "Create"}
-          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSave}
+              disabled={saving || !form.accountId || !form.date}
+            >
+              {saving ? "Creating..." : "Create"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

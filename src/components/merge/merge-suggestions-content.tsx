@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -108,27 +107,25 @@ export function MergeSuggestionsContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
+          <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
             Merge Suggestions
           </h2>
-          <p className="text-muted-foreground">
-            {remaining} potential duplicate group{remaining !== 1 && "s"}{" "}
-            remaining
-            {mergedCount > 0 && ` · ${mergedCount} merged this session`}
+          <p className="text-sm text-muted-foreground">
+            {remaining} group{remaining !== 1 && "s"} remaining
+            {mergedCount > 0 && ` · ${mergedCount} merged`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {currentIndex + 1} / {suggestions.length}
-          </span>
-        </div>
+        <span className="text-sm text-muted-foreground">
+          {currentIndex + 1}/{suggestions.length}
+        </span>
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+      <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
         <div
           className="h-full rounded-full bg-primary transition-all"
           style={{
@@ -137,129 +134,131 @@ export function MergeSuggestionsContent() {
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-base">
-            <div className="flex items-center gap-2">
-              <span>{formatDate(current.date)}</span>
-              {current.amount != null && (
-                <Badge variant="secondary" className="font-bold">
-                  {formatCurrency(current.amount)}
-                </Badge>
-              )}
-              {current.merchant && (
-                <span className="text-muted-foreground">
-                  @ {current.merchant}
-                </span>
-              )}
-            </div>
-            <Badge variant="outline">
-              {current.transactions.length} transactions
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Select the primary transaction to keep. The others will be merged
-            into it.
-          </p>
+      {/* Group summary */}
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="font-medium">{formatDate(current.date)}</span>
+        {current.amount != null && (
+          <Badge variant="secondary" className="font-bold">
+            {formatCurrency(current.amount)}
+          </Badge>
+        )}
+        {current.merchant && (
+          <span className="text-muted-foreground">@ {current.merchant}</span>
+        )}
+        <Badge variant="outline">
+          {current.transactions.length} transactions
+        </Badge>
+      </div>
 
-          <div className="space-y-2">
-            {current.transactions.map((tx) => (
-              <div
-                key={tx.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setPrimaryId(tx.id)}
-                onKeyDown={(e) => e.key === "Enter" && setPrimaryId(tx.id)}
-                className={`w-full rounded-lg border p-4 text-left transition-colors cursor-pointer ${
-                  primaryId === tx.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-muted/50"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium">{tx.id}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {tx.type}
-                      </Badge>
-                      {tx.source && (
-                        <Badge variant="secondary" className="text-xs">
-                          {tx.source}
-                        </Badge>
-                      )}
-                      {tx.categoryName && (
-                        <div className="flex items-center gap-1">
-                          <div
-                            className="h-2 w-2 rounded-full"
-                            style={{
-                              backgroundColor: tx.categoryColor ?? "#6b7280",
-                            }}
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            {tx.categoryName}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {tx.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {tx.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 mt-1.5">
-                      {tx.time && (
-                        <span className="text-xs text-muted-foreground">
-                          {tx.time}
-                        </span>
-                      )}
-                      {tx.mediaFiles.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 gap-1 px-2 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setViewMedia(tx.mediaFiles);
-                          }}
-                        >
-                          {tx.mediaFiles.some((f) =>
-                            /\.(jpg|jpeg|png)$/i.test(f),
-                          ) ? (
-                            <ImageIcon className="h-3 w-3" />
-                          ) : (
-                            <FileText className="h-3 w-3" />
-                          )}
-                          {tx.mediaFiles.length} file(s)
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  {primaryId === tx.id && (
-                    <div className="flex items-center gap-1 shrink-0 text-primary">
-                      <Check className="h-4 w-4" />
-                      <span className="text-xs font-medium">Primary</span>
-                    </div>
+      <p className="text-xs text-muted-foreground">
+        Tap to select the primary transaction. The others will be merged into
+        it.
+      </p>
+
+      {/* Transaction list — flat, no outer card */}
+      <div className="space-y-2">
+        {current.transactions.map((tx) => {
+          const isPrimary = primaryId === tx.id;
+          return (
+            <button
+              key={tx.id}
+              type="button"
+              onClick={() => setPrimaryId(tx.id)}
+              className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                isPrimary
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-card hover:bg-muted/50"
+              }`}
+            >
+              {/* Row 1: merchant/id + type + primary badge */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                  <span className="text-sm font-medium truncate">
+                    {tx.description || tx.id.slice(0, 12)}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {tx.type}
+                  </Badge>
+                  {tx.source && (
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {tx.source}
+                    </Badge>
                   )}
                 </div>
+                {isPrimary && (
+                  <div className="flex items-center gap-1 shrink-0 text-primary">
+                    <Check className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">Primary</span>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={goNext}>
-              <SkipForward className="mr-1.5 h-4 w-4" />
-              Skip
-            </Button>
-            <Button onClick={handleMerge} disabled={merging}>
-              <Merge className="mr-1.5 h-4 w-4" />
-              {merging ? "Merging..." : "Merge Into Primary"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              {/* Row 2: category + time + files */}
+              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                {tx.categoryName && (
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-2 w-2 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: tx.categoryColor ?? "#6b7280",
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {tx.categoryName}
+                    </span>
+                  </div>
+                )}
+                {tx.time && (
+                  <span className="text-xs text-muted-foreground">
+                    {tx.time}
+                  </span>
+                )}
+                {tx.mediaFiles.length > 0 && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewMedia(tx.mediaFiles);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.stopPropagation();
+                        setViewMedia(tx.mediaFiles);
+                      }
+                    }}
+                  >
+                    {tx.mediaFiles.some((f) =>
+                      /\.(jpg|jpeg|png)$/i.test(f),
+                    ) ? (
+                      <ImageIcon className="h-3 w-3" />
+                    ) : (
+                      <FileText className="h-3 w-3" />
+                    )}
+                    {tx.mediaFiles.length} file(s)
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Actions — 50/50 buttons */}
+      <div className="flex w-full gap-2 pt-2">
+        <Button variant="outline" className="flex-1" onClick={goNext}>
+          <SkipForward className="mr-1.5 h-4 w-4" />
+          Skip
+        </Button>
+        <Button className="flex-1" onClick={handleMerge} disabled={merging}>
+          <Merge className="mr-1.5 h-4 w-4" />
+          {merging ? "Merging..." : "Merge"}
+        </Button>
+      </div>
 
       <MediaViewerDialog
         files={viewMedia}

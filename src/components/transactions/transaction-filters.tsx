@@ -13,6 +13,7 @@ import { TRANSACTION_TYPES } from "@/lib/constants";
 import type { Category, Account } from "@prisma/client";
 import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { Label } from "@/components/ui/label";
 
 type FiltersState = {
   dateFrom: string;
@@ -47,42 +48,40 @@ export function TransactionFilters({
   const hasFilters = Object.values(filters).some((v) => v !== "");
 
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:items-end">
-        <div className="col-span-2 space-y-0.5 lg:col-span-1">
-          <label className="text-xs text-muted-foreground">Search</label>
+    <div className="space-y-3">
+      {/* Primary filters — single row on desktop */}
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr_auto] lg:gap-2 lg:items-end">
+        <div className="col-span-2 grid gap-1 lg:col-span-1">
+          <Label className="text-xs text-muted-foreground">Search</Label>
           <Input
             placeholder="Search merchant or description..."
             value={filters.search}
             onChange={(e) => onChange("search", e.target.value)}
-            className="w-full lg:w-[220px]"
           />
         </div>
-        <div className="space-y-0.5">
-          <label className="text-xs text-muted-foreground">From</label>
+        <div className="grid gap-1">
+          <Label className="text-xs text-muted-foreground">From</Label>
           <Input
             type="date"
             value={filters.dateFrom}
             onChange={(e) => onChange("dateFrom", e.target.value)}
-            className="w-full lg:w-[150px]"
           />
         </div>
-        <div className="space-y-0.5">
-          <label className="text-xs text-muted-foreground">To</label>
+        <div className="grid gap-1">
+          <Label className="text-xs text-muted-foreground">To</Label>
           <Input
             type="date"
             value={filters.dateTo}
             onChange={(e) => onChange("dateTo", e.target.value)}
-            className="w-full lg:w-[150px]"
           />
         </div>
-        <div className="space-y-0.5">
-          <label className="text-xs text-muted-foreground">Account</label>
+        <div className="grid gap-1">
+          <Label className="text-xs text-muted-foreground">Account</Label>
           <Select
             value={filters.accountId || "all"}
             onValueChange={(v) => onChange("accountId", v === "all" ? "" : v)}
           >
-            <SelectTrigger className="w-full lg:w-[170px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
@@ -95,13 +94,13 @@ export function TransactionFilters({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-0.5">
-          <label className="text-xs text-muted-foreground">Category</label>
+        <div className="grid gap-1">
+          <Label className="text-xs text-muted-foreground">Category</Label>
           <Select
             value={filters.categoryId || "all"}
             onValueChange={(v) => onChange("categoryId", v === "all" ? "" : v)}
           >
-            <SelectTrigger className="w-full lg:w-[150px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
@@ -114,13 +113,13 @@ export function TransactionFilters({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-0.5">
-          <label className="text-xs text-muted-foreground">Type</label>
+        <div className="grid gap-1">
+          <Label className="text-xs text-muted-foreground">Type</Label>
           <Select
             value={filters.type || "all"}
             onValueChange={(v) => onChange("type", v === "all" ? "" : v)}
           >
-            <SelectTrigger className="w-full lg:w-[130px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
@@ -133,63 +132,72 @@ export function TransactionFilters({
             </SelectContent>
           </Select>
         </div>
-        <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
+        <div className="col-span-2 flex items-end gap-1 lg:col-span-1">
           {!showAll && (
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
+              className="h-9 w-9 shrink-0"
               onClick={() => setShowMore((v) => !v)}
+              title={showMore ? "Less filters" : "More filters"}
             >
-              {showMore ? <ChevronUp className="mr-1 h-3 w-3" /> : <ChevronDown className="mr-1 h-3 w-3" />}
-              More Filters
+              {showMore ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
             </Button>
           )}
           {hasFilters && (
-            <Button variant="ghost" size="sm" onClick={onReset}>
-              <X className="mr-1 h-3 w-3" />
-              Clear
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={onReset}
+              title="Clear filters"
+            >
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
       </div>
+
+      {/* Expanded filters */}
       {expanded && (
-        <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:items-end">
-          <div className="col-span-2 space-y-0.5 lg:col-span-1">
-            <label className="text-xs text-muted-foreground">Merchant</label>
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr_auto] lg:gap-2 lg:items-end">
+          <div className="col-span-2 grid gap-1 lg:col-span-1">
+            <Label className="text-xs text-muted-foreground">Merchant</Label>
             <Input
               placeholder="Search merchant..."
               value={filters.merchant}
               onChange={(e) => onChange("merchant", e.target.value)}
-              className="w-full lg:w-[180px]"
             />
           </div>
-          <div className="space-y-0.5">
-            <label className="text-xs text-muted-foreground">Min Amount</label>
+          <div className="grid gap-1">
+            <Label className="text-xs text-muted-foreground">Min Amount</Label>
             <Input
               type="number"
               placeholder="0"
               value={filters.amountMin}
               onChange={(e) => onChange("amountMin", e.target.value)}
-              className="w-full lg:w-[120px]"
             />
           </div>
-          <div className="space-y-0.5">
-            <label className="text-xs text-muted-foreground">Max Amount</label>
+          <div className="grid gap-1">
+            <Label className="text-xs text-muted-foreground">Max Amount</Label>
             <Input
               type="number"
               placeholder="∞"
               value={filters.amountMax}
               onChange={(e) => onChange("amountMax", e.target.value)}
-              className="w-full lg:w-[120px]"
             />
           </div>
-          <div className="space-y-0.5">
-            <label className="text-xs text-muted-foreground">Source</label>
+          <div className="grid gap-1">
+            <Label className="text-xs text-muted-foreground">Source</Label>
             <Select
               value={filters.source || "all"}
               onValueChange={(v) => onChange("source", v === "all" ? "" : v)}
             >
-              <SelectTrigger className="w-full lg:w-[140px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>

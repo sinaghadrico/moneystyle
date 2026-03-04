@@ -120,17 +120,20 @@ export function SavingsFormDialog({
             </div>
           </div>
         </div>
-        <ResponsiveDialogFooter className="flex justify-between">
-          {goal && (
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={saving}
-            >
-              Delete
-            </Button>
-          )}
-          <div className="flex gap-2">
+        <ResponsiveDialogFooter>
+          <div className="flex w-full items-center gap-2">
+            {goal && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={handleDelete}
+                disabled={saving}
+              >
+                Delete
+              </Button>
+            )}
+            <div className="flex-1" />
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

@@ -94,15 +94,17 @@ export function AddSavingsDialog({
           )}
         </div>
         <ResponsiveDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAdd}
-            disabled={saving || !amount || parseFloat(amount) <= 0}
-          >
-            {saving ? "Adding..." : "Add"}
-          </Button>
+          <div className="flex w-full items-center gap-2 justify-end">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAdd}
+              disabled={saving || !amount || parseFloat(amount) <= 0}
+            >
+              {saving ? "Adding..." : "Add"}
+            </Button>
+          </div>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

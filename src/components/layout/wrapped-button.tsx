@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { SpendingWrapped } from "@/components/dashboard/spending-wrapped";
 
 export function WrappedButton() {
@@ -15,7 +15,7 @@ export function WrappedButton() {
         title="Spending Wrapped"
       >
         <div className="flex h-full w-full items-center justify-center rounded-full bg-card transition-colors group-hover:bg-card/80">
-          <Sparkles className="h-4 w-4 text-pink-500" />
+          <Trophy className="h-4 w-4 text-pink-500" />
         </div>
       </button>
       <SpendingWrapped open={open} onOpenChange={setOpen} />

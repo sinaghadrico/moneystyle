@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
@@ -64,6 +64,7 @@ import {
   List,
   Loader2,
   ArrowDown,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -164,6 +165,8 @@ export function TransactionsContent() {
   const [viewMedia, setViewMedia] = useState<string[]>([]);
   const [viewMediaTxId, setViewMediaTxId] = useState<string | undefined>();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
   const [showMerge, setShowMerge] = useState(false);
   const [splitTx, setSplitTx] = useState<TransactionWithCategory | null>(null);
   const [itemsTx, setItemsTx] = useState<TransactionWithCategory | null>(null);
@@ -328,26 +331,25 @@ export function TransactionsContent() {
             {result ? `${result.total} transactions` : "Loading..."}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="hidden sm:flex flex-wrap gap-2">
           {selected.size >= 1 && (
             <Button
               variant="destructive"
               onClick={() => setDeleteIds([...selected])}
             >
               <Trash2 className="mr-1.5 h-4 w-4" />
-              <span className="sm:inline hidden">Delete</span> {selected.size}
+              Delete {selected.size}
             </Button>
           )}
           {selected.size >= 2 && (
             <Button onClick={() => setShowMerge(true)}>
               <Merge className="mr-1.5 h-4 w-4" />
-              <span className="sm:inline hidden">Merge</span> {selected.size}<span className="sm:inline hidden"> Selected</span>
+              Merge {selected.size} Selected
             </Button>
           )}
           <Button onClick={() => setShowAdd(true)}>
             <Plus className="mr-1 h-4 w-4" />
-            <span className="sm:inline hidden">Add Transaction</span>
-            <span className="sm:hidden">Add</span>
+            Add Transaction
           </Button>
         </div>
       </div>
@@ -471,6 +473,7 @@ export function TransactionsContent() {
           : result?.data.map((tx) => (
               <SwipeableCard
                 key={tx.id}
+                onTap={() => toggleSelect(tx.id)}
                 actionWidth={tx.amount != null && tx.amount > 0 ? 280 : 210}
                 actions={
                   <div className="flex h-full items-stretch">
@@ -507,12 +510,19 @@ export function TransactionsContent() {
                   className={`border p-3 space-y-2 ${selected.has(tx.id) ? "bg-primary/5 border-primary/20" : ""}`}
                 >
                   <div className="flex items-start gap-2 min-w-0">
-                    <input
-                      type="checkbox"
-                      className="mt-1 h-4 w-4 shrink-0 rounded border-input accent-primary"
-                      checked={selected.has(tx.id)}
-                      onChange={() => toggleSelect(tx.id)}
-                    />
+                    <div
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                        selected.has(tx.id)
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground/30"
+                      }`}
+                    >
+                      {selected.has(tx.id) && (
+                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">
@@ -536,7 +546,7 @@ export function TransactionsContent() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm pl-6">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm pl-7">
                     {tx.splits && tx.splits.length > 0 ? (
                       <div className="space-y-0.5 w-full">
                         {tx.splits.map((s, i) => (
@@ -866,13 +876,53 @@ export function TransactionsContent() {
         </div>
       )}
 
-      {/* Quick-Add FAB (mobile only) */}
-      <button
-        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 md:hidden"
-        onClick={() => setShowAdd(true)}
-      >
-        <Plus className="h-6 w-6" />
-      </button>
+      {/* Mobile selection bar + FAB */}
+      {selected.size > 0 ? (
+        <div className="fixed bottom-16 left-3 right-3 z-40 flex flex-col items-end gap-2 md:hidden">
+          <button
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95"
+            onClick={() => setShowAdd(true)}
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+          <div className="flex w-full items-center justify-between rounded-2xl bg-primary px-4 py-2.5 shadow-xl">
+            <span className="text-sm font-medium text-primary-foreground">
+              {selected.size} selected
+            </span>
+            <div className="flex items-center gap-2">
+              {selected.size >= 2 && (
+                <button
+                  className="flex items-center gap-1.5 rounded-full bg-primary-foreground/20 px-3 py-1.5 text-sm font-medium text-primary-foreground active:scale-95"
+                  onClick={() => setShowMerge(true)}
+                >
+                  <Merge className="h-4 w-4" />
+                  Merge
+                </button>
+              )}
+              <button
+                className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-sm font-medium text-white active:scale-95"
+                onClick={() => setDeleteIds([...selected])}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
+              <button
+                className="flex items-center justify-center rounded-full bg-primary-foreground/20 p-1.5 text-primary-foreground active:scale-95"
+                onClick={() => setSelected(new Set())}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <button
+          className="fixed bottom-[4.5rem] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 md:hidden"
+          onClick={() => setShowAdd(true)}
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
 
       {editTx && (
         <EditTransactionDialog

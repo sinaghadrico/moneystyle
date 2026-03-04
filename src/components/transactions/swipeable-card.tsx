@@ -7,18 +7,24 @@ type SwipeableCardProps = {
   children: ReactNode;
   actions: ReactNode;
   actionWidth?: number;
+  onTap?: () => void;
 };
 
 export function SwipeableCard({
   children,
   actions,
   actionWidth = 140,
+  onTap,
 }: SwipeableCardProps) {
   const offsetRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const bind = useDrag(
-    ({ movement: [mx], velocity: [vx], direction: [dx], active, cancel }) => {
+    ({ movement: [mx], velocity: [vx], direction: [dx], active, cancel, tap }) => {
+      if (tap && onTap) {
+        onTap();
+        return;
+      }
       const el = containerRef.current;
       if (!el) return;
 

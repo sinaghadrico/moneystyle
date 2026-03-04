@@ -146,8 +146,8 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-[320px] flex">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row sm:h-[320px]">
+          <div className="h-[250px] sm:h-auto sm:flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -202,7 +202,7 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="w-[140px] flex flex-col justify-center gap-1.5 pr-2">
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 px-2 pb-2 sm:w-[140px] sm:flex-col sm:flex-nowrap sm:justify-center sm:px-0 sm:pr-2 sm:pb-0">
             {data.slice(0, 7).map((entry, i) => (
               <div
                 key={entry.name}
@@ -219,7 +219,7 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
                   className="h-2.5 w-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="truncate flex-1 text-muted-foreground">
+                <span className="truncate text-muted-foreground">
                   {entry.name}
                 </span>
                 <span className="font-medium tabular-nums">

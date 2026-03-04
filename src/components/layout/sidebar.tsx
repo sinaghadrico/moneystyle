@@ -11,6 +11,7 @@ import {
   Palette,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { WrappedButton } from "./wrapped-button";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -56,9 +57,12 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
 export function Sidebar() {
   return (
     <aside className="hidden md:flex h-screen w-56 flex-col border-r bg-card px-3 py-4">
-      <div className="mb-6 px-3">
-        <h1 className="text-lg font-bold tracking-tight">Revenue</h1>
-        <p className="text-xs text-muted-foreground">💰 Finance Tracker</p>
+      <div className="mb-6 px-3 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">Revenue</h1>
+          <p className="text-xs text-muted-foreground">💰 Finance Tracker</p>
+        </div>
+        <WrappedButton />
       </div>
       <NavLinks />
       <div className="mt-auto pt-4 border-t">

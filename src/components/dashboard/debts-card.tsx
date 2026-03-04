@@ -37,7 +37,7 @@ export function DebtsCard({ data }: { data: DebtSummary[] }) {
                 {d.balance > 0 ? "owes " : "you owe "}
                 {formatCurrency(Math.abs(d.balance))}
               </span>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground truncate max-w-[180px]">
                 splits: {formatCurrency(d.totalSplits)} | settled: {formatCurrency(d.totalSettled)}
               </div>
             </div>

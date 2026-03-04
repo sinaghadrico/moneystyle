@@ -255,17 +255,17 @@ export function WeekendPlannerContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <CalendarHeart className="h-6 w-6" />
+            <CalendarHeart className="h-6 w-6 shrink-0" />
             Weekend Planner
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             برنامه‌ریزی آخر هفته بر اساس علایق و بودجه شما
           </p>
         </div>
-        <Button onClick={handleGenerate} disabled={loading}>
+        <Button onClick={handleGenerate} disabled={loading} size="sm" className="shrink-0">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -27,6 +27,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+function shortAmount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
 const RISK_CONFIG = {
   low: { label: "Low Risk", color: "text-green-600" },
   medium: { label: "Medium Risk", color: "text-yellow-600" },
@@ -134,82 +140,73 @@ export function MoneyAdviceSection() {
       {current && (
         <div className="space-y-3">
           {/* History navigation */}
-          {history.length > 1 && (
-            <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
+            {history.length > 1 ? (
               <Button
                 variant="ghost"
                 size="sm"
+                className="h-8 px-2"
                 disabled={viewIndex >= history.length - 1}
                 onClick={() => setViewIndex((i) => i + 1)}
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Older
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <History className="h-3 w-3" />
+            ) : <div />}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <History className="h-3 w-3 shrink-0" />
+              <span>
                 {new Date(current.createdAt).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
                 })}
+              </span>
+              {history.length > 1 && (
                 <span>
                   ({viewIndex + 1}/{history.length})
                 </span>
-              </div>
+              )}
+            </div>
+            {history.length > 1 ? (
               <Button
                 variant="ghost"
                 size="sm"
+                className="h-8 px-2"
                 disabled={viewIndex <= 0}
                 onClick={() => setViewIndex((i) => i - 1)}
               >
-                Newer
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
-            </div>
-          )}
-
-          {history.length === 1 && (
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <History className="h-3 w-3" />
-              {new Date(current.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </div>
-          )}
+            ) : <div />}
+          </div>
 
           {/* Summary */}
           <Card>
             <CardContent className="pt-4 pb-4 space-y-3">
               <p className="text-sm">{current.summary}</p>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg border p-2">
+                <div className="rounded-lg border p-2 min-w-0">
                   <ShieldCheck className="h-4 w-4 mx-auto text-blue-500 mb-1" />
-                  <p className="text-xs text-muted-foreground">
-                    Emergency Fund
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Emergency
                   </p>
-                  <p className="text-sm font-bold">
-                    {formatCurrency(current.emergencyFundNeeded)}
+                  <p className="text-sm font-bold tabular-nums">
+                    {shortAmount(current.emergencyFundNeeded)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    have {formatCurrency(current.emergencyFundCurrent)}
+                  <p className="text-[10px] text-muted-foreground tabular-nums">
+                    have {shortAmount(current.emergencyFundCurrent)}
                   </p>
                 </div>
-                <div className="rounded-lg border p-2">
+                <div className="rounded-lg border p-2 min-w-0">
                   <TrendingUp className="h-4 w-4 mx-auto text-green-500 mb-1" />
-                  <p className="text-xs text-muted-foreground">Investable</p>
-                  <p className="text-sm font-bold">
-                    {formatCurrency(current.investableAmount)}
+                  <p className="text-[10px] text-muted-foreground leading-tight">Investable</p>
+                  <p className="text-sm font-bold tabular-nums">
+                    {shortAmount(current.investableAmount)}
                   </p>
                 </div>
-                <div className="rounded-lg border p-2">
+                <div className="rounded-lg border p-2 min-w-0">
                   <PiggyBank className="h-4 w-4 mx-auto text-amber-500 mb-1" />
-                  <p className="text-xs text-muted-foreground">Suggestions</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">Suggestions</p>
                   <p className="text-sm font-bold">
                     {current.suggestions.length}
                   </p>

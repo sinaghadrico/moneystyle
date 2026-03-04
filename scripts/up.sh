@@ -10,9 +10,8 @@ set +a
 
 MODE="${1:---local}"
 
-# Save original DATABASE_URL from .env
-ORIGINAL_DB_URL=$(grep '^DATABASE_URL=' .env)
-ORIGINAL_DIRECT_URL=$(grep '^DIRECT_URL=' .env)
+# Always start clean
+rm -rf .next
 
 if [ "$MODE" = "--remote" ]; then
   echo "==> Mode: REMOTE (server database)"
@@ -20,11 +19,15 @@ if [ "$MODE" = "--remote" ]; then
   ssh -i "$REMOTE_KEY" -L 5433:localhost:5432 "$REMOTE_USER@$REMOTE_HOST" -N -f 2>/dev/null
   echo "    SSH tunnel ready (localhost:5433)"
 
-  # Override DATABASE_URL in .env
-  sed -i.bak "s|^DATABASE_URL=.*|DATABASE_URL=\"postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue\"|" .env
-  sed -i.bak "s|^DIRECT_URL=.*|DIRECT_URL=\"postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue\"|" .env
-  rm -f .env.bak
-  echo "    .env updated to use remote database"
+  # Backup .env and swap DATABASE_URL
+  cp .env .env.backup
+  sed -i '' 's|^DATABASE_URL=.*|DATABASE_URL="postgresql://revenue:'"${REMOTE_DB_PASSWORD}"'@localhost:5433/revenue"|' .env
+  sed -i '' 's|^DIRECT_URL=.*|DIRECT_URL="postgresql://revenue:'"${REMOTE_DB_PASSWORD}"'@localhost:5433/revenue"|' .env
+  echo "    .env switched to REMOTE database"
+
+  # Re-export new DATABASE_URL so pnpm dev inherits it
+  export DATABASE_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
+  export DIRECT_URL="postgresql://revenue:${REMOTE_DB_PASSWORD}@localhost:5433/revenue"
 
   echo "==> Starting dev server on port 3020..."
   PORT=3020 pnpm dev &
@@ -32,6 +35,10 @@ if [ "$MODE" = "--remote" ]; then
 
 else
   echo "==> Mode: LOCAL (local database)"
+
+  # Restore .env if backup exists (from previous remote session)
+  [ -f .env.backup ] && cp .env.backup .env && rm .env.backup
+
   echo "==> Starting database + MinIO..."
   docker compose up db minio -d
 
@@ -123,15 +130,14 @@ cleanup() {
   echo '==> Shutting down...'
   kill $DEV_PID $TUNNEL_PID 2>/dev/null
   if [ "$MODE" = "--remote" ]; then
-    # Restore original DATABASE_URL
-    sed -i.bak "s|^DATABASE_URL=.*|${ORIGINAL_DB_URL}|" .env
-    sed -i.bak "s|^DIRECT_URL=.*|${ORIGINAL_DIRECT_URL}|" .env
-    rm -f .env.bak .env.local
     pkill -f "ssh.*5433:localhost:5432" 2>/dev/null
-    echo "    .env restored. SSH tunnel closed."
+    # Restore original .env
+    [ -f .env.backup ] && cp .env.backup .env && rm .env.backup
+    echo "    SSH tunnel closed. .env restored to LOCAL."
   else
     docker compose stop db minio
   fi
+  rm -f .env.local
   echo 'Done.'
   exit 0
 }

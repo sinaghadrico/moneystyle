@@ -47,9 +47,9 @@ export function TransactionFilters({
   const hasFilters = Object.values(filters).some((v) => v !== "");
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
-        <div className="space-y-1">
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:items-end">
+        <div className="col-span-2 space-y-0.5 lg:col-span-1">
           <label className="text-xs text-muted-foreground">Search</label>
           <Input
             placeholder="Search merchant or description..."
@@ -58,7 +58,7 @@ export function TransactionFilters({
             className="w-full lg:w-[220px]"
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <label className="text-xs text-muted-foreground">From</label>
           <Input
             type="date"
@@ -67,7 +67,7 @@ export function TransactionFilters({
             className="w-full lg:w-[150px]"
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <label className="text-xs text-muted-foreground">To</label>
           <Input
             type="date"
@@ -76,7 +76,7 @@ export function TransactionFilters({
             className="w-full lg:w-[150px]"
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <label className="text-xs text-muted-foreground">Account</label>
           <Select
             value={filters.accountId || "all"}
@@ -95,7 +95,7 @@ export function TransactionFilters({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <label className="text-xs text-muted-foreground">Category</label>
           <Select
             value={filters.categoryId || "all"}
@@ -114,7 +114,7 @@ export function TransactionFilters({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <label className="text-xs text-muted-foreground">Type</label>
           <Select
             value={filters.type || "all"}
@@ -133,7 +133,7 @@ export function TransactionFilters({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
+        <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
           {!showAll && (
             <Button
               variant="ghost"
@@ -153,8 +153,8 @@ export function TransactionFilters({
         </div>
       </div>
       {expanded && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
-          <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:items-end">
+          <div className="col-span-2 space-y-0.5 lg:col-span-1">
             <label className="text-xs text-muted-foreground">Merchant</label>
             <Input
               placeholder="Search merchant..."
@@ -163,7 +163,7 @@ export function TransactionFilters({
               className="w-full lg:w-[180px]"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <label className="text-xs text-muted-foreground">Min Amount</label>
             <Input
               type="number"
@@ -173,7 +173,7 @@ export function TransactionFilters({
               className="w-full lg:w-[120px]"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <label className="text-xs text-muted-foreground">Max Amount</label>
             <Input
               type="number"
@@ -183,7 +183,7 @@ export function TransactionFilters({
               className="w-full lg:w-[120px]"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <label className="text-xs text-muted-foreground">Source</label>
             <Select
               value={filters.source || "all"}

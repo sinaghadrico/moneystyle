@@ -373,11 +373,11 @@ export function TransactionsContent() {
               )}
             </Button>
             <Drawer open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
-              <DrawerContent>
+              <DrawerContent className="max-h-[60vh]">
                 <DrawerHeader>
                   <DrawerTitle>Filters</DrawerTitle>
                 </DrawerHeader>
-                <div className="flex-1 overflow-y-auto px-4 pb-4">
+                <div className="flex-1 overflow-y-auto px-4 pb-2">
                   <TransactionFilters
                     showAll
                     filters={filters}
@@ -403,7 +403,7 @@ export function TransactionsContent() {
                     }}
                   />
                 </div>
-                <div className="border-t p-4">
+                <div className="border-t p-3">
                   <DrawerClose asChild>
                     <Button className="w-full">Apply</Button>
                   </DrawerClose>

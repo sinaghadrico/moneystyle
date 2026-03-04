@@ -12,7 +12,7 @@ export default function LifestylePage() {
         </div>
       }
     >
-      <LifestyleContent />
+      <LifestyleContent initialTab="money-advice" />
     </Suspense>
   );
 }

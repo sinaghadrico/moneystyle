@@ -37,10 +37,10 @@ const MORE_NAV = [
 ];
 
 const QUICK_ACTIONS = [
-  { href: "/lifestyle?tab=advice", label: "Money Advice", icon: Brain, color: "text-amber-500", bg: "bg-amber-500/10" },
-  { href: "/lifestyle?tab=weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10" },
-  { href: "/lifestyle?tab=meal", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10" },
-  { href: "/lifestyle?tab=shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { href: "/lifestyle/advice", label: "Money Advice", icon: Brain, color: "text-amber-500", bg: "bg-amber-500/10" },
+  { href: "/lifestyle/weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10" },
+  { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10" },
+  { href: "/lifestyle/shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10" },
 ];
 
 function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -67,7 +67,7 @@ function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
   const handleAction = useCallback(
     (href: string) => {
       onClose();
-      setTimeout(() => window.open(href, "_blank"), 200);
+      setTimeout(() => router.push(href), 200);
     },
     [onClose]
   );

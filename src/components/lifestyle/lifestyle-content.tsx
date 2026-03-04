@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles, CalendarHeart, ChefHat, ShoppingCart, PartyPopper } from "lucide-react";
 import { MoneyAdviceSection } from "@/components/profile/money-advice-section";
 import { WeekendPlannerContent } from "@/components/weekend-planner/weekend-planner-content";
@@ -8,15 +9,16 @@ import { MealPlannerContent } from "@/components/meal-planner/meal-planner-conte
 import { ShoppingBasketsSection } from "./shopping-baskets-section";
 
 const TABS = [
-  { key: "money-advice", label: "Advice", icon: Sparkles },
-  { key: "weekend", label: "Weekend", icon: CalendarHeart },
-  { key: "meals", label: "Meals", icon: ChefHat },
-  { key: "shopping", label: "Shopping", icon: ShoppingCart },
+  { key: "money-advice", label: "Advice", icon: Sparkles, route: "/lifestyle/advice" },
+  { key: "weekend", label: "Weekend", icon: CalendarHeart, route: "/lifestyle/weekend" },
+  { key: "meals", label: "Meals", icon: ChefHat, route: "/lifestyle/meals" },
+  { key: "shopping", label: "Shopping", icon: ShoppingCart, route: "/lifestyle/shopping" },
 ] as const;
 
 type Tab = (typeof TABS)[number]["key"];
 
 export function LifestyleContent({ initialTab }: { initialTab?: string }) {
+  const router = useRouter();
   const validTab = TABS.find((t) => t.key === initialTab)?.key;
   const [activeTab, setActiveTab] = useState<Tab>(validTab ?? "money-advice");
 
@@ -42,7 +44,10 @@ export function LifestyleContent({ initialTab }: { initialTab?: string }) {
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                router.push(tab.route);
+              }}
               className={`flex-1 flex flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-background text-foreground shadow-sm"

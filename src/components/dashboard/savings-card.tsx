@@ -58,7 +58,7 @@ export function SavingsCard({
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground text-xs">
-                      {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
+                      {formatCurrency(goal.currentAmount, goal.currency)} / {formatCurrency(goal.targetAmount, goal.currency)}
                     </span>
                     <Button
                       variant="ghost"

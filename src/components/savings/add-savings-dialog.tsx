@@ -46,7 +46,7 @@ export function AddSavingsDialog({
       onOpenChange(false);
       onSuccess();
     } else {
-      toast.success(`✅ Added ${formatCurrency(num)} to ${goal.name}`);
+      toast.success(`✅ Added ${formatCurrency(num, goal.currency)} to ${goal.name}`);
       onOpenChange(false);
       onSuccess();
     }
@@ -61,8 +61,8 @@ export function AddSavingsDialog({
         </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Current: {formatCurrency(goal.currentAmount)}</span>
-            <span>Target: {formatCurrency(goal.targetAmount)}</span>
+            <span>Current: {formatCurrency(goal.currentAmount, goal.currency)}</span>
+            <span>Target: {formatCurrency(goal.targetAmount, goal.currency)}</span>
           </div>
           <div className="h-2 w-full rounded-full bg-muted">
             <div
@@ -74,13 +74,13 @@ export function AddSavingsDialog({
             />
           </div>
           <div className="grid gap-2">
-            <Label>Amount (AED)</Label>
+            <Label>Amount ({goal.currency})</Label>
             <Input
               type="number"
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder={remaining > 0 ? `Remaining: ${formatCurrency(remaining)}` : "0"}
+              placeholder={remaining > 0 ? `Remaining: ${formatCurrency(remaining, goal.currency)}` : "0"}
             />
           </div>
           {remaining > 0 && (
@@ -89,7 +89,7 @@ export function AddSavingsDialog({
               size="sm"
               onClick={() => setAmount(remaining.toString())}
             >
-              Fill remaining ({formatCurrency(remaining)})
+              Fill remaining ({formatCurrency(remaining, goal.currency)})
             </Button>
           )}
         </div>

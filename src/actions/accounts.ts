@@ -1,15 +1,19 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { accountCreateSchema, accountUpdateSchema } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
 
 export async function getAccounts() {
-  return prisma.account.findMany({ orderBy: { name: "asc" } });
+  const userId = await requireAuth();
+  return prisma.account.findMany({ where: { userId }, orderBy: { name: "asc" } });
 }
 
 export async function getAccountsWithStats() {
+  const userId = await requireAuth();
   const accounts = await prisma.account.findMany({
+    where: { userId },
     include: {
       _count: {
         select: { transactions: { where: { mergedIntoId: null } } },
@@ -21,7 +25,7 @@ export async function getAccountsWithStats() {
   const totals = await prisma.transaction.groupBy({
     by: ["accountId"],
     _sum: { amount: true },
-    where: { amount: { not: null }, mergedIntoId: null },
+    where: { userId, amount: { not: null }, mergedIntoId: null },
   });
 
   const totalMap = new Map(
@@ -36,19 +40,20 @@ export async function getAccountsWithStats() {
 }
 
 export async function createAccount(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = accountCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
   const existing = await prisma.account.findUnique({
-    where: { name: parsed.data.name },
+    where: { userId_name: { userId, name: parsed.data.name } },
   });
   if (existing) {
     return { error: { name: ["Account already exists"] } };
   }
 
-  await prisma.account.create({ data: parsed.data });
+  await prisma.account.create({ data: { ...parsed.data, userId } });
 
   revalidatePath("/accounts");
   revalidatePath("/");
@@ -59,6 +64,7 @@ export async function updateAccount(
   id: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = accountUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -66,7 +72,7 @@ export async function updateAccount(
 
   if (parsed.data.name) {
     const existing = await prisma.account.findFirst({
-      where: { name: parsed.data.name, id: { not: id } },
+      where: { userId, name: parsed.data.name, id: { not: id } },
     });
     if (existing) {
       return { error: { name: ["Account already exists"] } };
@@ -74,7 +80,7 @@ export async function updateAccount(
   }
 
   await prisma.account.update({
-    where: { id },
+    where: { id, userId },
     data: parsed.data,
   });
 
@@ -84,8 +90,9 @@ export async function updateAccount(
 }
 
 export async function deleteAccount(id: string, reassignToId: string) {
+  const userId = await requireAuth();
   const account = await prisma.account.findUnique({
-    where: { id },
+    where: { id, userId },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -98,7 +105,7 @@ export async function deleteAccount(id: string, reassignToId: string) {
   }
 
   const target = await prisma.account.findUnique({
-    where: { id: reassignToId },
+    where: { id: reassignToId, userId },
   });
   if (!target) {
     return { error: "Target account not found" };
@@ -106,12 +113,12 @@ export async function deleteAccount(id: string, reassignToId: string) {
 
   if (account._count.transactions > 0) {
     await prisma.transaction.updateMany({
-      where: { accountId: id },
+      where: { accountId: id, userId },
       data: { accountId: reassignToId },
     });
   }
 
-  await prisma.account.delete({ where: { id } });
+  await prisma.account.delete({ where: { id, userId } });
 
   revalidatePath("/accounts");
   revalidatePath("/transactions");

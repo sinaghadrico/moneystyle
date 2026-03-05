@@ -1,12 +1,15 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { budgetUpsertSchema } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
 import { getSpreadFraction } from "@/lib/spread-utils";
 
 export async function getBudgets() {
+  const userId = await requireAuth();
   return prisma.budget.findMany({
+    where: { category: { userId } },
     include: { category: true },
     orderBy: { category: { name: "asc" } },
   });
@@ -26,10 +29,11 @@ export type BudgetProgress = {
  * Split-aware budget progress:
  * spent = direct expenses (no splits) in this category + my splits (personId IS NULL) in this category
  */
-async function getMySpentForCategory(categoryId: string, startOfMonth: Date, endOfMonth: Date): Promise<number> {
+async function getMySpentForCategory(userId: string, categoryId: string, startOfMonth: Date, endOfMonth: Date): Promise<number> {
   const targetMonth = `${startOfMonth.getFullYear()}-${String(startOfMonth.getMonth() + 1).padStart(2, "0")}`;
 
   const baseDateWhere = {
+    userId,
     type: "expense" as const,
     date: { gte: startOfMonth, lte: endOfMonth },
     mergedIntoId: null,
@@ -58,6 +62,7 @@ async function getMySpentForCategory(categoryId: string, startOfMonth: Date, end
     // Spread transactions that may cover this month
     prisma.transaction.findMany({
       where: {
+        userId,
         type: "expense",
         mergedIntoId: null,
         amount: { not: null },
@@ -83,7 +88,9 @@ async function getMySpentForCategory(categoryId: string, startOfMonth: Date, end
 }
 
 export async function getBudgetProgress(): Promise<BudgetProgress[]> {
+  const userId = await requireAuth();
   const budgets = await prisma.budget.findMany({
+    where: { category: { userId } },
     include: { category: true },
   });
 
@@ -96,7 +103,7 @@ export async function getBudgetProgress(): Promise<BudgetProgress[]> {
   const results: BudgetProgress[] = [];
 
   for (const budget of budgets) {
-    const spent = await getMySpentForCategory(budget.categoryId, startOfMonth, endOfMonth);
+    const spent = await getMySpentForCategory(userId, budget.categoryId, startOfMonth, endOfMonth);
     const limit = Number(budget.monthlyLimit);
     const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
 
@@ -115,12 +122,17 @@ export async function getBudgetProgress(): Promise<BudgetProgress[]> {
 }
 
 export async function upsertBudget(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = budgetUpsertSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
   const values = parsed.data;
+
+  // Verify user owns this category
+  const cat = await prisma.category.findFirst({ where: { id: values.categoryId, userId } });
+  if (!cat) return { error: { categoryId: ["Category not found"] } };
 
   await prisma.budget.upsert({
     where: { categoryId: values.categoryId },
@@ -141,7 +153,8 @@ export async function upsertBudget(data: Record<string, unknown>) {
 }
 
 export async function deleteBudget(categoryId: string) {
-  await prisma.budget.deleteMany({ where: { categoryId } });
+  const userId = await requireAuth();
+  await prisma.budget.deleteMany({ where: { categoryId, category: { userId } } });
   revalidatePath("/");
   revalidatePath("/categories");
   return { success: true };
@@ -150,8 +163,9 @@ export async function deleteBudget(categoryId: string) {
 export async function checkBudgetAlert(
   categoryId: string,
 ): Promise<string | null> {
-  const budget = await prisma.budget.findUnique({
-    where: { categoryId },
+  const userId = await requireAuth();
+  const budget = await prisma.budget.findFirst({
+    where: { categoryId, category: { userId } },
     include: { category: true },
   });
 
@@ -161,7 +175,7 @@ export async function checkBudgetAlert(
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const spent = await getMySpentForCategory(categoryId, startOfMonth, endOfMonth);
+  const spent = await getMySpentForCategory(userId, categoryId, startOfMonth, endOfMonth);
   const limit = Number(budget.monthlyLimit);
   const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
 

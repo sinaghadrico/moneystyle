@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WrappedButton } from "./wrapped-button";
+import { UserMenu } from "@/components/auth/user-menu";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
@@ -23,6 +24,7 @@ export function Header() {
       <h1 className="text-lg font-bold tracking-tight">MoneyLoom</h1>
       <div className="flex items-center gap-2">
         <WrappedButton />
+        <UserMenu />
         {mounted && (
           <Button
             variant="ghost"

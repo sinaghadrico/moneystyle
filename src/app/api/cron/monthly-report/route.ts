@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 import { generateMonthlyReport, sendTelegramMessage } from "@/lib/telegram";
-import { getSettings } from "@/actions/settings";
 
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -11,34 +11,30 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const settings = await getSettings();
+  // Find all users with monthly report enabled and telegram configured
+  const allSettings = await prisma.appSettings.findMany({
+    where: {
+      notifyMonthlyReport: true,
+      telegramChatId: { not: null },
+    },
+  });
 
-  if (!settings.notifyMonthlyReport) {
-    return NextResponse.json({ ok: true, sent: false, reason: "Notification disabled" });
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const monthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
+
+  let sent = 0;
+  for (const settings of allSettings) {
+    const chatId = settings.telegramChatId!;
+    const botToken = settings.telegramBotToken || undefined;
+    try {
+      const report = await generateMonthlyReport(monthStr, settings.userId);
+      await sendTelegramMessage(chatId, report, undefined, botToken);
+      sent++;
+    } catch (err) {
+      console.error(`Monthly report error for user ${settings.userId}:`, err);
+    }
   }
 
-  const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-  const botToken = settings.telegramBotToken || undefined;
-
-  if (!chatId) {
-    return NextResponse.json(
-      { error: "TELEGRAM_CHAT_ID not configured" },
-      { status: 500 },
-    );
-  }
-
-  try {
-    // Generate report for previous month
-    const now = new Date();
-    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const monthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
-
-    const report = await generateMonthlyReport(monthStr);
-    await sendTelegramMessage(chatId, report, undefined, botToken);
-
-    return NextResponse.json({ ok: true, month: monthStr });
-  } catch (err) {
-    console.error("Monthly report cron error:", err);
-    return NextResponse.json({ error: "Failed to send report" }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true, month: monthStr, sent });
 }

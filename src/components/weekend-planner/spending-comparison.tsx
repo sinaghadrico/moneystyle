@@ -50,6 +50,7 @@ export function SpendingComparison({
     if (linkedTransactionIds.length > 0) {
       load();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planId, offerIndex, linkedTransactionIds.length]);
 
   const handleUnlink = async (txId: string) => {

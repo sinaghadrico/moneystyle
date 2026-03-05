@@ -93,7 +93,10 @@ export function renderTemplate(
  */
 export async function getNotificationTemplate(
   key: NotificationTemplateKey,
+  userId?: string,
 ): Promise<string> {
-  const row = await prisma.notificationTemplate.findUnique({ where: { key } });
+  const row = userId
+    ? await prisma.notificationTemplate.findUnique({ where: { userId_key: { userId, key } } })
+    : await prisma.notificationTemplate.findFirst({ where: { key } });
   return row?.content ?? DEFAULT_NOTIFICATION_TEMPLATES[key].content;
 }

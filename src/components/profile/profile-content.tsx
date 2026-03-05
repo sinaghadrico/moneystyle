@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { signOut, useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FinancialOverviewCard } from "./financial-overview-card";
 import { IncomeSourcesSection } from "./income-sources-section";
@@ -22,6 +25,7 @@ import {
   BarChart3,
   TrendingUp,
   CreditCard,
+  LogOut,
 } from "lucide-react";
 import type {
   IncomeSourceData,
@@ -48,6 +52,7 @@ const FINANCE_SECTIONS = [
 type FinanceSection = (typeof FINANCE_SECTIONS)[number]["key"];
 
 export function ProfileContent() {
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<Tab>("finance");
   const [financeSection, setFinanceSection] =
     useState<FinanceSection>("overview");
@@ -111,12 +116,29 @@ export function ProfileContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Profile</h2>
-        <p className="text-muted-foreground">
-          Manage your financial and personal information
-        </p>
+      {/* User info */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={session?.user?.image ?? undefined} />
+            <AvatarFallback className="text-lg">
+              {session?.user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase() ?? "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">{session?.user?.name ?? "Profile"}</h2>
+            <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="text-destructive hover:text-destructive"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
+        </Button>
       </div>
 
       {/* Tab switcher */}

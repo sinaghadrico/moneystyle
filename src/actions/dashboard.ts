@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import type {
   DashboardStats,
   MonthlyData,
@@ -24,9 +25,9 @@ async function getPrimaryCurrency(): Promise<string> {
   return settings?.currency ?? "AED";
 }
 
-function getDateFilter(period: string, accountId?: string): Prisma.TransactionWhereInput {
+function getDateFilter(period: string, userId: string, accountId?: string): Prisma.TransactionWhereInput {
   const fromDate = getDateRange(period);
-  const where: Prisma.TransactionWhereInput = { ...NOT_MERGED };
+  const where: Prisma.TransactionWhereInput = { ...NOT_MERGED, userId };
   if (fromDate) where.date = { gte: fromDate };
   if (accountId) where.accountId = accountId;
   return where;
@@ -109,7 +110,8 @@ export async function getDashboardStats(
   period: string = "all",
   accountId?: string
 ): Promise<DashboardStats> {
-  const where = getDateFilter(period, accountId);
+  const userId = await requireAuth();
+  const where = getDateFilter(period, userId, accountId);
   const [primaryCurrency, rates] = await Promise.all([
     getPrimaryCurrency(),
     getCurrencyRates(),
@@ -141,7 +143,8 @@ export async function getMonthlyData(
   period: string = "all",
   accountId?: string
 ): Promise<MonthlyData[]> {
-  const where = getDateFilter(period, accountId);
+  const userId = await requireAuth();
+  const where = getDateFilter(period, userId, accountId);
   // Extend date range for spread transactions
   const extendedWhere = { ...where };
   if (extendedWhere.date && typeof extendedWhere.date === "object") {
@@ -221,7 +224,8 @@ export async function getCategoryBreakdown(
   period: string = "all",
   accountId?: string
 ): Promise<CategoryBreakdown[]> {
-  const where = getDateFilter(period, accountId);
+  const userId = await requireAuth();
+  const where = getDateFilter(period, userId, accountId);
   const extendedWhere = { ...where };
   if (extendedWhere.date && typeof extendedWhere.date === "object") {
     extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
@@ -243,7 +247,7 @@ export async function getCategoryBreakdown(
     },
   });
 
-  const allCategories = await prisma.category.findMany();
+  const allCategories = await prisma.category.findMany({ where: { userId } });
   const categoryMap = new Map(allCategories.map((c) => [c.id, c]));
 
   const origDate = where.date as { gte?: Date; lte?: Date } | undefined;
@@ -305,7 +309,8 @@ export async function getTopMerchants(
   limit: number = 10,
   accountId?: string
 ): Promise<MerchantTotal[]> {
-  const where = getDateFilter(period, accountId);
+  const userId = await requireAuth();
+  const where = getDateFilter(period, userId, accountId);
   const [primaryCurrency, rates] = await Promise.all([
     getPrimaryCurrency(),
     getCurrencyRates(),
@@ -344,7 +349,8 @@ export async function getMonthlyCategoryBreakdown(
   period: string = "all",
   accountId?: string
 ): Promise<{ data: MonthlyCategoryData[]; categories: CategoryMeta[] }> {
-  const where = getDateFilter(period, accountId);
+  const userId = await requireAuth();
+  const where = getDateFilter(period, userId, accountId);
   const extendedWhere = { ...where };
   if (extendedWhere.date && typeof extendedWhere.date === "object") {
     extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
@@ -367,7 +373,7 @@ export async function getMonthlyCategoryBreakdown(
     orderBy: { date: "asc" },
   });
 
-  const categories = await prisma.category.findMany();
+  const categories = await prisma.category.findMany({ where: { userId } });
   const categoryLookup = new Map(categories.map((c) => [c.id, c]));
 
   const origDate = where.date as { gte?: Date } | undefined;
@@ -438,11 +444,14 @@ export async function getMonthlyCategoryBreakdown(
 }
 
 export async function getExpensePrediction(): Promise<ExpensePrediction> {
+  const userId = await requireAuth();
+
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
   const dateWhere: Prisma.TransactionWhereInput = {
+    userId,
     type: "expense",
     date: { gte: startOfMonth, lte: endOfMonth },
     mergedIntoId: null,
@@ -463,6 +472,8 @@ export async function getExpensePrediction(): Promise<ExpensePrediction> {
 }
 
 export async function getDailySpendData(): Promise<DailySpend[]> {
+  const userId = await requireAuth();
+
   const now = new Date();
   const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
   const [primaryCurrency, rates] = await Promise.all([
@@ -473,6 +484,7 @@ export async function getDailySpendData(): Promise<DailySpend[]> {
   const transactions = await prisma.transaction.findMany({
     where: {
       ...NOT_MERGED,
+      userId,
       type: "expense",
       amount: { not: null },
       date: { gte: threeMonthsAgo },

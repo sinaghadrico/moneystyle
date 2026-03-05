@@ -16,7 +16,6 @@ import {
   resolveAccountByHint,
   resolveCategoryByHint,
   resolveTagsByHints,
-  getDefaultAccount,
   sendTelegramMessage,
 } from "@/lib/telegram";
 import { checkBudgetAlert } from "@/actions/budgets";
@@ -24,17 +23,12 @@ import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { resolveCategory } from "@/lib/auto-categorize";
 import { getOrCreatePerson } from "@/actions/persons";
 import { splitTransaction } from "@/actions/transactions";
-import { getSettings } from "@/actions/settings";
 
 export async function POST(request: NextRequest) {
-  const settings = await getSettings();
-
-  // Validate webhook secret (DB settings first, env fallback)
-  const secret = settings.telegramWebhookSecret || process.env.TELEGRAM_WEBHOOK_SECRET;
+  // Validate webhook secret from env
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (secret) {
-    const headerSecret = request.headers.get(
-      "x-telegram-bot-api-secret-token"
-    );
+    const headerSecret = request.headers.get("x-telegram-bot-api-secret-token");
     if (headerSecret !== secret) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -47,7 +41,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Extract message from channel_post or message
   const message =
     (body.channel_post as Record<string, unknown>) ??
     (body.message as Record<string, unknown>);
@@ -58,9 +51,36 @@ export async function POST(request: NextRequest) {
 
   const chatId = (message.chat as Record<string, unknown>)?.id as number;
   const text = message.text as string;
-  const botToken = settings.telegramBotToken || undefined;
 
-  // Wrapper that passes DB bot token to all replies
+  // Look up user by telegramChatId
+  const settings = await prisma.appSettings.findFirst({
+    where: { telegramChatId: String(chatId) },
+  });
+
+  if (!settings) {
+    // Try env-level fallback — find first user with telegram enabled
+    const fallbackSettings = await prisma.appSettings.findFirst({
+      where: { telegramEnabled: true },
+    });
+    if (!fallbackSettings) {
+      return NextResponse.json({ ok: true });
+    }
+    return handleTelegram(text, chatId, fallbackSettings, fallbackSettings.userId);
+  }
+
+  return handleTelegram(text, chatId, settings, settings.userId);
+}
+
+async function handleTelegram(
+  text: string,
+  chatId: number,
+  settings: {
+    currency: string;
+    telegramBotToken: string | null;
+  },
+  userId: string,
+) {
+  const botToken = settings.telegramBotToken || undefined;
   const reply = (msg: string) => sendTelegramMessage(chatId, msg, undefined, botToken);
 
   // /help or /start
@@ -72,7 +92,7 @@ export async function POST(request: NextRequest) {
   // /savings
   if (/^\/?savings$/i.test(text.trim())) {
     try {
-      const report = await generateSavingsReport();
+      const report = await generateSavingsReport(userId);
       await reply(report);
     } catch (err) {
       console.error("Telegram savings error:", err);
@@ -84,7 +104,7 @@ export async function POST(request: NextRequest) {
   // /report
   if (/^\/?report$/i.test(text.trim())) {
     try {
-      const report = await generateMonthlyReport();
+      const report = await generateMonthlyReport(undefined, userId);
       await reply(report);
     } catch (err) {
       console.error("Telegram report error:", err);
@@ -96,7 +116,7 @@ export async function POST(request: NextRequest) {
   // /debts
   if (/^\/?debts$/i.test(text.trim())) {
     try {
-      const report = await generateDebtsReport();
+      const report = await generateDebtsReport(userId);
       await reply(report);
     } catch (err) {
       console.error("Telegram debts error:", err);
@@ -109,7 +129,7 @@ export async function POST(request: NextRequest) {
   const settleCmd = parseSettleCommand(text);
   if (settleCmd) {
     try {
-      const person = await getOrCreatePerson(settleCmd.personName);
+      const person = await getOrCreatePerson(settleCmd.personName, userId);
       if (!person) {
         await reply("Could not resolve person name.");
         return NextResponse.json({ ok: true });
@@ -135,7 +155,7 @@ export async function POST(request: NextRequest) {
   const statsCmd = parseStatsCommand(text);
   if (statsCmd) {
     try {
-      const report = await generateStats(statsCmd.month);
+      const report = await generateStats(statsCmd.month, userId);
       await reply(report);
     } catch (err) {
       console.error("Telegram stats error:", err);
@@ -150,9 +170,9 @@ export async function POST(request: NextRequest) {
     try {
       let result: { deleted: string[]; notFound?: string[] };
       if (delCmd.lastN) {
-        result = await deleteLastN(delCmd.lastN);
+        result = await deleteLastN(delCmd.lastN, userId);
       } else if (delCmd.shortIds) {
-        result = await deleteByShortIds(delCmd.shortIds);
+        result = await deleteByShortIds(delCmd.shortIds, userId);
       } else {
         return NextResponse.json({ ok: true });
       }
@@ -178,13 +198,9 @@ export async function POST(request: NextRequest) {
 
   const parsed = parseTelegramMessage(text);
   if (!parsed) {
-    // If it looks like a /command, reply with hint
     if (isUnknownCommand(text)) {
-      await reply(
-        "Unknown command. Send /help to see available commands.",
-      );
+      await reply("Unknown command. Send /help to see available commands.");
     }
-    // Otherwise ignore silently (random chat messages)
     return NextResponse.json({ ok: true });
   }
 
@@ -192,23 +208,24 @@ export async function POST(request: NextRequest) {
     // Resolve account
     let account: { id: string; name: string } | null = null;
     if (parsed.accountHint) {
-      account = await resolveAccountByHint(parsed.accountHint);
+      account = await resolveAccountByHint(parsed.accountHint, userId);
     }
     if (!account) {
-      account = await getDefaultAccount();
+      const defaultAcc = await prisma.account.findFirst({ where: { userId } });
+      if (defaultAcc) account = { id: defaultAcc.id, name: defaultAcc.name };
     }
     if (!account) {
       await reply("No accounts found in the database.");
       return NextResponse.json({ ok: true });
     }
 
-    // Resolve category — try hint first, then auto-categorize from merchant
+    // Resolve category
     let category: { id: string; name: string } | null = null;
     if (parsed.categoryHint) {
-      category = await resolveCategoryByHint(parsed.categoryHint);
+      category = await resolveCategoryByHint(parsed.categoryHint, userId);
     }
     if (!category && parsed.merchant) {
-      const autoCatId = await resolveCategory(parsed.merchant);
+      const autoCatId = await resolveCategory(parsed.merchant, userId);
       if (autoCatId) {
         const cat = await prisma.category.findUnique({ where: { id: autoCatId } });
         if (cat) category = { id: cat.id, name: cat.name };
@@ -218,11 +235,10 @@ export async function POST(request: NextRequest) {
     // Resolve tags
     let tags: { id: string; name: string }[] = [];
     if (parsed.tagHints && parsed.tagHints.length > 0) {
-      tags = await resolveTagsByHints(parsed.tagHints);
+      tags = await resolveTagsByHints(parsed.tagHints, userId);
     }
 
     // Create transaction
-    const settings = await getSettings();
     const transaction = await prisma.transaction.create({
       data: {
         date: new Date(),
@@ -234,6 +250,7 @@ export async function POST(request: NextRequest) {
         merchant: parsed.merchant ?? null,
         description: parsed.description ?? null,
         source: "telegram",
+        userId,
       },
     });
 
@@ -247,7 +264,7 @@ export async function POST(request: NextRequest) {
     // Auto-split 50/50 if /split was used
     let splitInfo = "";
     if (parsed.splitPersonName && parsed.type === "expense") {
-      const person = await getOrCreatePerson(parsed.splitPersonName);
+      const person = await getOrCreatePerson(parsed.splitPersonName, userId);
       if (person) {
         const halfAmount = Math.round((parsed.amount / 2) * 100) / 100;
         const myHalf = Math.round((parsed.amount - halfAmount) * 100) / 100;
@@ -256,7 +273,7 @@ export async function POST(request: NextRequest) {
             { categoryId: category?.id ?? null, personId: null, amount: myHalf, description: null },
             { categoryId: category?.id ?? null, personId: person.id, amount: halfAmount, description: null },
           ],
-        });
+        }, userId);
         splitInfo = `\n👥 Split: ${myHalf} you + ${halfAmount} ${person.name}`;
       }
     }

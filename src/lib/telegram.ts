@@ -100,43 +100,52 @@ const DEFAULT_ACCOUNT_NAME = "Farnoosh Mashreq";
 
 export async function resolveAccountByHint(
   hint: string,
+  userId?: string,
 ): Promise<{ id: string; name: string } | null> {
   const lower = hint.toLowerCase();
-  const accounts = await prisma.account.findMany();
+  const accounts = await prisma.account.findMany({
+    where: userId ? { userId } : undefined,
+  });
   // Substring match, case-insensitive
   const match = accounts.find((a) => a.name.toLowerCase().includes(lower));
   return match ? { id: match.id, name: match.name } : null;
 }
 
-export async function getDefaultAccount(): Promise<{
+export async function getDefaultAccount(userId?: string): Promise<{
   id: string;
   name: string;
 } | null> {
   // Check DB settings first
-  const settings = await prisma.appSettings.findFirst({
-    where: { id: "default" },
-  });
-  if (settings?.defaultAccountId) {
-    const acc = await prisma.account.findUnique({
-      where: { id: settings.defaultAccountId },
+  if (userId) {
+    const settings = await prisma.appSettings.findUnique({
+      where: { userId },
     });
-    if (acc) return { id: acc.id, name: acc.name };
+    if (settings?.defaultAccountId) {
+      const acc = await prisma.account.findUnique({
+        where: { id: settings.defaultAccountId },
+      });
+      if (acc) return { id: acc.id, name: acc.name };
+    }
   }
 
+  const userFilter = userId ? { userId } : {};
   const account = await prisma.account.findFirst({
-    where: { name: DEFAULT_ACCOUNT_NAME },
+    where: { name: DEFAULT_ACCOUNT_NAME, ...userFilter },
   });
   if (account) return { id: account.id, name: account.name };
-  // Fallback: return first account
-  const first = await prisma.account.findFirst();
+  // Fallback: return first account for user
+  const first = await prisma.account.findFirst({ where: userFilter });
   return first ? { id: first.id, name: first.name } : null;
 }
 
 export async function resolveCategoryByHint(
   hint: string,
+  userId?: string,
 ): Promise<{ id: string; name: string } | null> {
   const lower = hint.toLowerCase();
-  const categories = await prisma.category.findMany();
+  const categories = await prisma.category.findMany({
+    where: userId ? { userId } : undefined,
+  });
 
   // Exact match first
   const exact = categories.find((c) => c.name.toLowerCase() === lower);
@@ -155,20 +164,21 @@ export async function resolveCategoryByHint(
 
 export async function resolveTagsByHints(
   hints: string[],
+  userId?: string,
 ): Promise<{ id: string; name: string }[]> {
   const resolved: { id: string; name: string }[] = [];
   for (const hint of hints) {
     const lower = hint.toLowerCase();
     let tag = await prisma.tag.findFirst({
-      where: { name: { equals: lower, mode: "insensitive" } },
+      where: { name: { equals: lower, mode: "insensitive" }, ...(userId ? { userId } : {}) },
     });
     if (!tag) {
       tag = await prisma.tag.findFirst({
-        where: { name: { contains: lower, mode: "insensitive" } },
+        where: { name: { contains: lower, mode: "insensitive" }, ...(userId ? { userId } : {}) },
       });
     }
-    if (!tag) {
-      // Auto-create the tag
+    if (!tag && userId) {
+      // Auto-create the tag for this user
       const TAG_COLORS = [
         "#ef4444",
         "#f97316",
@@ -181,12 +191,12 @@ export async function resolveTagsByHints(
         "#6b7280",
         "#0ea5e9",
       ];
-      const count = await prisma.tag.count();
+      const count = await prisma.tag.count({ where: { userId } });
       tag = await prisma.tag.create({
-        data: { name: hint, color: TAG_COLORS[count % TAG_COLORS.length] },
+        data: { name: hint, color: TAG_COLORS[count % TAG_COLORS.length], userId },
       });
     }
-    resolved.push({ id: tag.id, name: tag.name });
+    if (tag) resolved.push({ id: tag.id, name: tag.name });
   }
   return resolved;
 }
@@ -237,13 +247,14 @@ export function parseDeleteCommand(raw: string): DeleteCommand | null {
 
 export async function deleteByShortIds(
   shortIds: string[],
+  userId?: string,
 ): Promise<{ deleted: string[]; notFound: string[] }> {
   const deleted: string[] = [];
   const notFound: string[] = [];
 
   for (const sid of shortIds) {
     const tx = await prisma.transaction.findFirst({
-      where: { id: { endsWith: sid } },
+      where: { id: { endsWith: sid }, ...(userId ? { userId } : {}) },
     });
     if (tx) {
       await prisma.transaction.delete({ where: { id: tx.id } });
@@ -256,9 +267,9 @@ export async function deleteByShortIds(
   return { deleted, notFound };
 }
 
-export async function deleteLastN(n: number): Promise<{ deleted: string[] }> {
+export async function deleteLastN(n: number, userId?: string): Promise<{ deleted: string[] }> {
   const txs = await prisma.transaction.findMany({
-    where: { source: "telegram" },
+    where: { source: "telegram", ...(userId ? { userId } : {}) },
     orderBy: { createdAt: "desc" },
     take: Math.min(n, 50),
   });
@@ -379,10 +390,10 @@ const MONTH_NAMES = [
   "December",
 ];
 
-export async function generateStats(monthStr?: string): Promise<string> {
+export async function generateStats(monthStr?: string, userId?: string): Promise<string> {
   // /today is handled separately
   if (monthStr === "__today__") {
-    return generateTodayStats();
+    return generateTodayStats(userId);
   }
 
   const now = new Date();
@@ -396,11 +407,13 @@ export async function generateStats(monthStr?: string): Promise<string> {
   const startDate = new Date(year, mon - 1, 1);
   const endDate = new Date(year, mon, 0, 23, 59, 59, 999);
 
+  const userFilter = userId ? { userId } : {};
   const transactions = await prisma.transaction.findMany({
     where: {
       date: { gte: startDate, lte: endDate },
       type: "expense",
       mergedIntoId: null,
+      ...userFilter,
     },
     include: { category: true },
   });
@@ -453,6 +466,7 @@ export async function generateStats(monthStr?: string): Promise<string> {
       date: { gte: startDate, lte: endDate },
       type: "income",
       mergedIntoId: null,
+      ...userFilter,
     },
   });
   const totalIncome = incomes.reduce((s, t) => s + Number(t.amount ?? 0), 0);
@@ -465,7 +479,7 @@ export async function generateStats(monthStr?: string): Promise<string> {
   return lines.join("\n");
 }
 
-export async function generateTodayStats(): Promise<string> {
+export async function generateTodayStats(userId?: string): Promise<string> {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(
@@ -482,6 +496,7 @@ export async function generateTodayStats(): Promise<string> {
     where: {
       date: { gte: startOfDay, lte: endOfDay },
       mergedIntoId: null,
+      ...(userId ? { userId } : {}),
     },
     include: { category: true },
     orderBy: { createdAt: "asc" },
@@ -562,9 +577,9 @@ export function generateHelp(): string {
   ].join("\n");
 }
 
-export async function generateSavingsReport(): Promise<string> {
+export async function generateSavingsReport(userId?: string): Promise<string> {
   const goals = await prisma.savingsGoal.findMany({
-    where: { status: "active" },
+    where: { status: "active", ...(userId ? { userId } : {}) },
     orderBy: { createdAt: "desc" },
   });
 
@@ -632,8 +647,9 @@ export function parseSettleCommand(raw: string): SettleCommand | null {
   return { kind: "settle", personName: match[1], amount };
 }
 
-export async function generateDebtsReport(): Promise<string> {
+export async function generateDebtsReport(userId?: string): Promise<string> {
   const persons = await prisma.person.findMany({
+    where: userId ? { userId } : undefined,
     include: {
       splits: { select: { amount: true } },
       settlements: { select: { amount: true } },
@@ -677,6 +693,7 @@ export async function generateDebtsReport(): Promise<string> {
 
 export async function generateMonthlyReport(
   monthStr?: string,
+  userId?: string,
 ): Promise<string> {
   const now = new Date();
   const month =
@@ -693,12 +710,14 @@ export async function generateMonthlyReport(
   const prevStart = new Date(year, mon - 2, 1);
   const prevEnd = new Date(year, mon - 1, 0, 23, 59, 59, 999);
 
+  const uf = userId ? { userId } : {};
   const [expenses, incomes, prevExpenses, prevIncomes] = await Promise.all([
     prisma.transaction.findMany({
       where: {
         date: { gte: startDate, lte: endDate },
         type: "expense",
         mergedIntoId: null,
+        ...uf,
       },
       include: { category: true },
     }),
@@ -707,6 +726,7 @@ export async function generateMonthlyReport(
         date: { gte: startDate, lte: endDate },
         type: "income",
         mergedIntoId: null,
+        ...uf,
       },
     }),
     prisma.transaction.findMany({
@@ -714,6 +734,7 @@ export async function generateMonthlyReport(
         date: { gte: prevStart, lte: prevEnd },
         type: "expense",
         mergedIntoId: null,
+        ...uf,
       },
     }),
     prisma.transaction.findMany({
@@ -721,6 +742,7 @@ export async function generateMonthlyReport(
         date: { gte: prevStart, lte: prevEnd },
         type: "income",
         mergedIntoId: null,
+        ...uf,
       },
     }),
   ]);

@@ -52,8 +52,8 @@ else
   docker compose up minio-init --wait 2>/dev/null || docker compose run --rm minio-init
   echo "    MinIO ready (console at http://localhost:9001)"
 
-  echo "==> Running migrations..."
-  npx prisma migrate deploy
+  echo "==> Syncing database schema..."
+  npx prisma db push
 
   echo "==> Starting dev server on port 3020..."
   PORT=3020 pnpm dev &

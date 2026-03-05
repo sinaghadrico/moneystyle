@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import type { WrappedData } from "@/lib/types";
 import { Prisma } from "@prisma/client";
 
@@ -9,6 +10,8 @@ const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null };
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export async function getWrappedData(month: string): Promise<WrappedData> {
+  const userId = await requireAuth();
+
   const [year, mon] = month.split("-").map(Number);
   const startOfMonth = new Date(year, mon - 1, 1);
   const endOfMonth = new Date(year, mon, 0, 23, 59, 59, 999);
@@ -24,6 +27,7 @@ export async function getWrappedData(month: string): Promise<WrappedData> {
 
   const baseWhere: Prisma.TransactionWhereInput = {
     ...NOT_MERGED,
+    userId,
     date: { gte: startOfMonth, lte: endOfMonth },
     amount: { not: null },
   };
@@ -54,6 +58,7 @@ export async function getWrappedData(month: string): Promise<WrappedData> {
       prisma.transaction.findMany({
         where: {
           ...NOT_MERGED,
+          userId,
           type: "expense",
           date: { gte: prevStart, lte: prevEnd },
           amount: { not: null },
@@ -73,7 +78,7 @@ export async function getWrappedData(month: string): Promise<WrappedData> {
           category: { select: { name: true } },
         },
       }),
-      prisma.category.findMany(),
+      prisma.category.findMany({ where: { userId } }),
     ]);
 
   const categoryMap = new Map(allCategories.map((c) => [c.id, c]));

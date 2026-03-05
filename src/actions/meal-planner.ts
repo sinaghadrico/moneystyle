@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { getPrompt, AI_PROMPT_KEYS } from "@/lib/ai-prompts";
 
 // ── Types ──
@@ -34,6 +35,8 @@ export type MealPlanData = {
 export async function generateMealPlan(): Promise<
   { data: MealPlanData } | { error: string }
 > {
+  const userId = await requireAuth();
+
   const settings = await prisma.appSettings.findFirst({
     where: { id: "default" },
   });
@@ -55,6 +58,7 @@ export async function generateMealPlan(): Promise<
     by: ["name"],
     where: {
       transaction: {
+        userId,
         date: { gte: sixtyDaysAgo },
       },
     },
@@ -126,6 +130,7 @@ export async function generateMealPlan(): Promise<
     // Save to DB
     const saved = await prisma.mealPlan.create({
       data: {
+        userId,
         weekLabel,
         plan: JSON.parse(JSON.stringify(parsed)),
       },
@@ -150,7 +155,10 @@ export async function generateMealPlan(): Promise<
 }
 
 export async function getMealPlans(): Promise<MealPlanData[]> {
+  const userId = await requireAuth();
+
   const rows = await prisma.mealPlan.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     take: 10,
   });
@@ -170,6 +178,8 @@ export async function getMealPlans(): Promise<MealPlanData[]> {
 }
 
 export async function deleteMealPlan(id: string) {
-  await prisma.mealPlan.delete({ where: { id } });
+  const userId = await requireAuth();
+
+  await prisma.mealPlan.delete({ where: { id, userId } });
   return { success: true };
 }

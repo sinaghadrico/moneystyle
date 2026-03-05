@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { storage } from "@/lib/storage";
 import { prisma } from "@/lib/db";
 import { randomUUID } from "crypto";
+import { auth } from "@/lib/auth";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -15,6 +16,12 @@ const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const userId = session.user.id;
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const transactionId = formData.get("transactionId") as string | null;
@@ -40,9 +47,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify transaction exists
-    const tx = await prisma.transaction.findUnique({
-      where: { id: transactionId },
+    // Verify transaction exists and belongs to user
+    const tx = await prisma.transaction.findFirst({
+      where: { id: transactionId, userId },
       select: { id: true, mediaFiles: true },
     });
     if (!tx) {

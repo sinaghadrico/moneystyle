@@ -12,9 +12,10 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { WrappedButton } from "./wrapped-button";
+import { UserMenu } from "@/components/auth/user-menu";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/lifestyle", label: "Lifestyle", icon: Palette },
   { href: "/profile", label: "Profile", icon: UserCircle },
@@ -29,7 +30,7 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
       {NAV_ITEMS.map((item) => {
         const Icon = item.icon;
         const isActive =
-          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
 
         return (
           <Link
@@ -56,15 +57,16 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex h-screen w-56 flex-col border-r bg-card px-3 py-4">
       <div className="mb-6 px-3 flex items-center justify-between">
-        <div>
+        <Link href="/">
           <h1 className="text-lg font-bold tracking-tight">MoneyLoom</h1>
           <p className="text-xs text-muted-foreground">💰 Finance Tracker</p>
-        </div>
+        </Link>
         <WrappedButton />
       </div>
       <NavLinks />
-      <div className="mt-auto pt-4 border-t">
+      <div className="mt-auto pt-4 border-t flex items-center justify-between">
         <ThemeToggle />
+        <UserMenu />
       </div>
     </aside>
   );

@@ -1,11 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { categoryCreateSchema, categoryUpdateSchema } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
 
 export async function getCategoriesWithStats() {
+  const userId = await requireAuth();
   const categories = await prisma.category.findMany({
+    where: { userId },
     include: {
       _count: {
         select: { transactions: { where: { mergedIntoId: null } } },
@@ -22,12 +25,13 @@ export async function getCategoriesWithStats() {
     prisma.transaction.groupBy({
       by: ["categoryId"],
       _sum: { amount: true },
-      where: { amount: { not: null }, mergedIntoId: null },
+      where: { userId, amount: { not: null }, mergedIntoId: null },
     }),
     prisma.transaction.groupBy({
       by: ["categoryId"],
       _sum: { amount: true },
       where: {
+        userId,
         amount: { not: null },
         mergedIntoId: null,
         date: { gte: monthStart, lt: monthEnd },
@@ -51,19 +55,20 @@ export async function getCategoriesWithStats() {
 }
 
 export async function createCategory(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = categoryCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
   const existing = await prisma.category.findUnique({
-    where: { name: parsed.data.name },
+    where: { userId_name: { userId, name: parsed.data.name } },
   });
   if (existing) {
     return { error: { name: ["Category already exists"] } };
   }
 
-  await prisma.category.create({ data: parsed.data });
+  await prisma.category.create({ data: { ...parsed.data, userId } });
 
   revalidatePath("/categories");
   revalidatePath("/");
@@ -74,6 +79,7 @@ export async function updateCategory(
   id: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = categoryUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -81,7 +87,7 @@ export async function updateCategory(
 
   if (parsed.data.name) {
     const existing = await prisma.category.findFirst({
-      where: { name: parsed.data.name, id: { not: id } },
+      where: { userId, name: parsed.data.name, id: { not: id } },
     });
     if (existing) {
       return { error: { name: ["Category already exists"] } };
@@ -89,7 +95,7 @@ export async function updateCategory(
   }
 
   await prisma.category.update({
-    where: { id },
+    where: { id, userId },
     data: parsed.data,
   });
 
@@ -99,8 +105,9 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(id: string, reassignToId?: string) {
+  const userId = await requireAuth();
   const category = await prisma.category.findUnique({
-    where: { id },
+    where: { id, userId },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -110,17 +117,17 @@ export async function deleteCategory(id: string, reassignToId?: string) {
 
   if (category._count.transactions > 0 && reassignToId) {
     await prisma.transaction.updateMany({
-      where: { categoryId: id },
+      where: { categoryId: id, userId },
       data: { categoryId: reassignToId },
     });
   } else if (category._count.transactions > 0) {
     await prisma.transaction.updateMany({
-      where: { categoryId: id },
+      where: { categoryId: id, userId },
       data: { categoryId: null },
     });
   }
 
-  await prisma.category.delete({ where: { id } });
+  await prisma.category.delete({ where: { id, userId } });
 
   revalidatePath("/categories");
   revalidatePath("/transactions");

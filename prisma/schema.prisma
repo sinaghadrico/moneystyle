@@ -8,11 +8,98 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ─── Auth Models ───────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  hashedPassword String?
+  image          String?
+  emailVerified  DateTime?
+  role           String    @default("user")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts       OAuthAccount[]
+  sessions       Session[]
+
+  categories            Category[]
+  bankAccounts          Account[]
+  tags                  Tag[]
+  persons               Person[]
+  smsPatterns           SmsPattern[]
+  merchantCategoryRules MerchantCategoryRule[]
+  itemGroups            ItemGroup[]
+  aiPrompts             AiPrompt[]
+  notificationTemplates NotificationTemplate[]
+  transactions          Transaction[]
+  savingsGoals          SavingsGoal[]
+  incomeSources         IncomeSource[]
+  reserves              Reserve[]
+  installments          Installment[]
+  bills                 Bill[]
+  mealPlans             MealPlan[]
+  moneyAdvices          MoneyAdvice[]
+  weekendPlans          WeekendPlan[]
+  shoppingLists         ShoppingList[]
+  appSettings           AppSettings?
+  userPreference        UserPreference?
+
+  @@map("users")
+}
+
+model OAuthAccount {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@map("oauth_accounts")
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── App Models ────────────────────────────────────────────────
+
 model Category {
   id            String                 @id @default(cuid())
-  name          String                 @unique
+  name          String
   color         String                 @default("#6b7280")
   icon          String?
+  userId        String
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
   transactions  Transaction[]
@@ -20,6 +107,8 @@ model Category {
   merchantRules MerchantCategoryRule[]
   splits        TransactionSplit[]     @relation("SplitCategories")
 
+  @@unique([userId, name])
+  @@index([userId])
   @@map("categories")
 }
 
@@ -37,12 +126,16 @@ model Budget {
 
 model Tag {
   id           String           @id @default(cuid())
-  name         String           @unique
+  name         String
   color        String           @default("#6b7280")
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   transactions TransactionTag[]
 
+  @@unique([userId, name])
+  @@index([userId])
   @@map("tags")
 }
 
@@ -58,14 +151,18 @@ model TransactionTag {
 
 model Account {
   id           String        @id @default(cuid())
-  name         String        @unique
+  name         String
   bank         String?
   color        String        @default("#3b82f6")
   icon         String?
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   transactions Transaction[]
 
+  @@unique([userId, name])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -90,6 +187,8 @@ model Transaction {
   mergedIntoId String?
   mergedInto   Transaction?         @relation("MergedTransactions", fields: [mergedIntoId], references: [id])
   mergedFrom   Transaction[]        @relation("MergedTransactions")
+  userId       String
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   tags         TransactionTag[]
   splits       TransactionSplit[]   @relation("TransactionSplits")
   lineItems    TransactionItem[]
@@ -102,16 +201,21 @@ model Transaction {
   @@index([type])
   @@index([merchant])
   @@index([mergedIntoId])
+  @@index([userId])
   @@map("transactions")
 }
 
 model MerchantCategoryRule {
   id         String   @id @default(cuid())
-  pattern    String   @unique
+  pattern    String
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 
+  @@unique([userId, pattern])
+  @@index([userId])
   @@map("merchant_category_rules")
 }
 
@@ -123,22 +227,29 @@ model SavingsGoal {
   deadline      DateTime?
   color         String    @default("#10b981")
   status        String    @default("active")
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  @@index([userId])
   @@map("savings_goals")
 }
 
 model Person {
   id          String             @id @default(cuid())
-  name        String             @unique
+  name        String
   phone       String?
   color       String             @default("#6b7280")
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   splits      TransactionSplit[]
   settlements Settlement[]
 
+  @@unique([userId, name])
+  @@index([userId])
   @@map("persons")
 }
 
@@ -191,22 +302,29 @@ model TransactionItem {
 
 model ItemGroup {
   id            String   @id @default(cuid())
-  canonicalName String   @unique
+  canonicalName String
   rawNames      String[]
   source        String   @default("manual")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@unique([userId, canonicalName])
+  @@index([userId])
   @@map("item_groups")
 }
 
 model ShoppingList {
   id        String             @id @default(cuid())
   name      String
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     ShoppingListItem[]
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
+  @@index([userId])
   @@map("shopping_lists")
 }
 
@@ -227,7 +345,7 @@ model ShoppingListItem {
 
 model SmsPattern {
   id                   String   @id @default(cuid())
-  name                 String   @unique
+  name                 String
   regex                String
   type                 String   // "income" | "expense" | "auto"
   priority             Int      @default(50)
@@ -235,10 +353,14 @@ model SmsPattern {
   merchantCaptureGroup Int?
   enabled              Boolean  @default(true)
   creditKeywords       String?  // comma-separated, for type="auto"
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
+  @@unique([userId, name])
   @@index([priority])
+  @@index([userId])
   @@map("sms_patterns")
 }
 
@@ -249,9 +371,12 @@ model IncomeSource {
   depositDay Int      @default(1)
   currency   String   @default("AED")
   isActive   Boolean  @default(true)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  @@index([userId])
   @@map("income_sources")
 }
 
@@ -263,10 +388,13 @@ model Reserve {
   type      String
   location  String
   note      String?
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   snapshots ReserveSnapshot[]
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
+  @@index([userId])
   @@map("reserves")
 }
 
@@ -292,10 +420,13 @@ model Installment {
   paidCount    Int                  @default(0)
   isActive     Boolean              @default(true)
   reminderDays Int                  @default(2)
+  userId       String
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments     InstallmentPayment[]
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
 
+  @@index([userId])
   @@map("installments")
 }
 
@@ -319,10 +450,13 @@ model Bill {
   dueDay       Int           @default(1)
   isActive     Boolean       @default(true)
   reminderDays Int           @default(2)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments     BillPayment[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
+  @@index([userId])
   @@map("bills")
 }
 
@@ -342,26 +476,37 @@ model MealPlan {
   id        String   @id @default(cuid())
   weekLabel String
   plan      Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
+  @@index([userId])
   @@map("meal_plans")
 }
 
 model AiPrompt {
   id        String   @id @default(cuid())
-  key       String   @unique
+  key       String
   content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   updatedAt DateTime @updatedAt
 
+  @@unique([userId, key])
+  @@index([userId])
   @@map("ai_prompts")
 }
 
 model NotificationTemplate {
   id        String   @id @default(cuid())
-  key       String   @unique
+  key       String
   content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   updatedAt DateTime @updatedAt
 
+  @@unique([userId, key])
+  @@index([userId])
   @@map("notification_templates")
 }
 
@@ -372,18 +517,23 @@ model MoneyAdvice {
   emergencyFundCurrent Float
   investableAmount     Float
   suggestions          Json
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt            DateTime @default(now())
 
+  @@index([userId])
   @@map("money_advices")
 }
 
 model UserPreference {
-  id            String   @id @default("default")
+  id            String   @id @default(cuid())
   entertainment String[]
   food          String[]
   likes         String[]
   city          String   @default("Dubai")
   companionType String   @default("solo")
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -396,13 +546,16 @@ model WeekendPlan {
   plan                 Json
   ratings              Json?
   linkedTransactionIds String[]
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt            DateTime @default(now())
 
+  @@index([userId])
   @@map("weekend_plans")
 }
 
 model AppSettings {
-  id                     String   @id @default("default")
+  id                     String   @id @default(cuid())
   currency               String   @default("AED")
   defaultPageSize        Int      @default(20)
   defaultAccountId       String?
@@ -421,6 +574,8 @@ model AppSettings {
   notifyMonthlyReport    Boolean  @default(true)
   notifyWebTransaction   Boolean  @default(true)
   notifySmsTransaction   Boolean  @default(true)
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

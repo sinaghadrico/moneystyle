@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { basicNormalize, fuzzyNormalize, resolveItemName } from "@/lib/item-normalization";
 import { itemGroupUpdateSchema } from "@/lib/validators";
 import { getPrompt, AI_PROMPT_KEYS } from "@/lib/ai-prompts";
@@ -22,13 +23,13 @@ function getEffectivePrice(unitPrice: number | null, totalPrice: number, quantit
   return quantity > 0 ? totalPrice / quantity : totalPrice;
 }
 
-async function buildGroupMap(): Promise<{
+async function buildGroupMap(userId: string): Promise<{
   map: Map<string, string>;
   canonicalNames: Set<string>;
   groupMembers: Map<string, string[]>;
   groupIds: Map<string, string>;
 }> {
-  const groups = await prisma.itemGroup.findMany();
+  const groups = await prisma.itemGroup.findMany({ where: { userId } });
   const map = new Map<string, string>();
   const canonicalNames = new Set<string>();
   const groupMembers = new Map<string, string[]>();
@@ -51,9 +52,12 @@ async function buildGroupMap(): Promise<{
 export async function getItemPriceSummaries(
   options: PriceAnalysisFilters = {},
 ): Promise<ItemPriceSummary[]> {
+  const userId = await requireAuth();
+
   const { search, fuzzy = false, sortBy = "totalPurchases", sortOrder = "desc" } = options;
 
   const items = await prisma.transactionItem.findMany({
+    where: { transaction: { userId } },
     include: {
       transaction: {
         select: { merchant: true, date: true, id: true, description: true },
@@ -61,7 +65,7 @@ export async function getItemPriceSummaries(
     },
   });
 
-  const { map: groupMap, canonicalNames, groupMembers, groupIds } = await buildGroupMap();
+  const { map: groupMap, canonicalNames, groupMembers, groupIds } = await buildGroupMap(userId);
 
   // Group items by resolved name
   const grouped = new Map<
@@ -202,7 +206,10 @@ export async function getGroupDetail(
   normalizedName: string,
   fuzzy = false,
 ): Promise<ItemDetail | null> {
+  const userId = await requireAuth();
+
   const items = await prisma.transactionItem.findMany({
+    where: { transaction: { userId } },
     include: {
       transaction: {
         select: { merchant: true, date: true, id: true, description: true },
@@ -210,7 +217,7 @@ export async function getGroupDetail(
     },
   });
 
-  const { map: groupMap } = await buildGroupMap();
+  const { map: groupMap } = await buildGroupMap(userId);
 
   const matchingItems = items.filter((item) => {
     const resolved = resolveItemName(item.name, groupMap, fuzzy);
@@ -282,9 +289,12 @@ export async function getGroupDetail(
 export async function getIndividualItemSummaries(
   options: PriceAnalysisFilters = {},
 ): Promise<ItemPriceSummary[]> {
+  const userId = await requireAuth();
+
   const { search, sortBy = "totalPurchases", sortOrder = "desc" } = options;
 
   const items = await prisma.transactionItem.findMany({
+    where: { transaction: { userId } },
     include: {
       transaction: {
         select: { merchant: true, date: true, id: true, description: true },
@@ -403,10 +413,12 @@ export async function getIndividualItemSummaries(
 export async function getIndividualItemDetail(
   rawName: string,
 ): Promise<ItemDetail | null> {
+  const userId = await requireAuth();
+
   const key = basicNormalize(rawName);
 
   const items = await prisma.transactionItem.findMany({
-    where: { normalizedName: key },
+    where: { normalizedName: key, transaction: { userId } },
     include: {
       transaction: {
         select: { merchant: true, date: true, id: true, description: true },
@@ -468,11 +480,14 @@ export async function getIndividualItemDetail(
 // ---------------------------------------------------------------------------
 
 export async function backfillNormalizedNames(): Promise<{ success: true; count: number }> {
+  const userId = await requireAuth();
+
   const items = await prisma.transactionItem.findMany({
+    where: { transaction: { userId } },
     select: { id: true, name: true },
   });
 
-  const { map: groupMap } = await buildGroupMap();
+  const { map: groupMap } = await buildGroupMap(userId);
 
   let count = 0;
   // Batch update in chunks of 50
@@ -501,6 +516,8 @@ export async function backfillNormalizedNames(): Promise<{ success: true; count:
 export async function normalizeItemNamesWithAI(): Promise<
   { success: true; groupsCreated: number } | { error: string }
 > {
+  const userId = await requireAuth();
+
   const settings = await prisma.appSettings.findFirst({ where: { id: "default" } });
   if (!settings?.aiEnabled) {
     return { error: "AI is not enabled. Enable it in Settings." };
@@ -513,6 +530,7 @@ export async function normalizeItemNamesWithAI(): Promise<
 
   // Get distinct item names
   const items = await prisma.transactionItem.findMany({
+    where: { transaction: { userId } },
     select: { name: true },
     distinct: ["name"],
   });
@@ -559,8 +577,9 @@ export async function normalizeItemNamesWithAI(): Promise<
       if (!group.canonical || !Array.isArray(group.members) || group.members.length === 0) continue;
 
       await prisma.itemGroup.upsert({
-        where: { canonicalName: group.canonical },
+        where: { userId_canonicalName: { userId, canonicalName: group.canonical } },
         create: {
+          userId,
           canonicalName: group.canonical,
           rawNames: group.members,
           source: "ai",
@@ -592,7 +611,10 @@ export async function normalizeItemNamesWithAI(): Promise<
 // ---------------------------------------------------------------------------
 
 export async function getItemGroups(): Promise<ItemGroupData[]> {
+  const userId = await requireAuth();
+
   const groups = await prisma.itemGroup.findMany({
+    where: { userId },
     orderBy: { canonicalName: "asc" },
   });
   return groups.map((g) => ({
@@ -607,13 +629,15 @@ export async function updateItemGroup(
   id: string,
   data: Record<string, unknown>,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = itemGroupUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: Object.values(parsed.error.flatten().fieldErrors).flat().join(", ") };
   }
 
   await prisma.itemGroup.update({
-    where: { id },
+    where: { id, userId },
     data: {
       canonicalName: parsed.data.canonicalName,
       rawNames: parsed.data.rawNames,
@@ -629,13 +653,15 @@ export async function updateItemGroup(
 export async function createItemGroup(
   data: Record<string, unknown>,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = itemGroupUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: Object.values(parsed.error.flatten().fieldErrors).flat().join(", ") };
   }
 
-  const existing = await prisma.itemGroup.findUnique({
-    where: { canonicalName: parsed.data.canonicalName },
+  const existing = await prisma.itemGroup.findFirst({
+    where: { userId, canonicalName: parsed.data.canonicalName },
   });
   if (existing) {
     return { error: "A group with this name already exists." };
@@ -643,6 +669,7 @@ export async function createItemGroup(
 
   await prisma.itemGroup.create({
     data: {
+      userId,
       canonicalName: parsed.data.canonicalName,
       rawNames: parsed.data.rawNames,
       source: "manual",
@@ -655,7 +682,9 @@ export async function createItemGroup(
 }
 
 export async function deleteItemGroup(id: string): Promise<{ success: true } | { error: string }> {
-  await prisma.itemGroup.delete({ where: { id } });
+  const userId = await requireAuth();
+
+  await prisma.itemGroup.delete({ where: { id, userId } });
   await backfillNormalizedNames();
   revalidatePath("/price-analysis");
   return { success: true };

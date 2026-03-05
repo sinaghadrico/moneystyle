@@ -231,7 +231,7 @@ export function LandingContent() {
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
             </Button>
             <Button asChild size="sm">
-              <Link href="/">
+              <Link href="/dashboard">
                 Open App
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -265,7 +265,7 @@ export function LandingContent() {
           </p>
           <div className="mt-8 flex items-center justify-center gap-3">
             <Button asChild size="lg" className="text-base">
-              <Link href="/">
+              <Link href="/dashboard">
                 Go to Dashboard
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
@@ -442,7 +442,7 @@ export function LandingContent() {
             your data, on your server.
           </p>
           <Button asChild size="lg" className="mt-8 text-base">
-            <Link href="/">
+            <Link href="/dashboard">
               Open Dashboard
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import type { DebtSummary } from "@/lib/types";
 import {
   personCreateSchema,
@@ -10,11 +11,14 @@ import {
 import { revalidatePath } from "next/cache";
 
 export async function getPersons() {
-  return prisma.person.findMany({ orderBy: { name: "asc" } });
+  const userId = await requireAuth();
+  return prisma.person.findMany({ where: { userId }, orderBy: { name: "asc" } });
 }
 
 export async function getPersonsWithDebt() {
+  const userId = await requireAuth();
   const persons = await prisma.person.findMany({
+    where: { userId },
     include: {
       splits: { select: { amount: true } },
       settlements: { select: { amount: true } },
@@ -38,12 +42,13 @@ export async function getPersonsWithDebt() {
   });
 }
 
-export async function getOrCreatePerson(name: string) {
+export async function getOrCreatePerson(name: string, overrideUserId?: string) {
+  const userId = overrideUserId ?? await requireAuth();
   const trimmed = name.trim();
   if (!trimmed) return null;
 
   const existing = await prisma.person.findFirst({
-    where: { name: { equals: trimmed, mode: "insensitive" } },
+    where: { userId, name: { equals: trimmed, mode: "insensitive" } },
   });
   if (existing) return existing;
 
@@ -51,30 +56,32 @@ export async function getOrCreatePerson(name: string) {
     "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
     "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280", "#0ea5e9",
   ];
-  const count = await prisma.person.count();
+  const count = await prisma.person.count({ where: { userId } });
 
   return prisma.person.create({
     data: {
       name: trimmed,
       color: PERSON_COLORS[count % PERSON_COLORS.length],
+      userId,
     },
   });
 }
 
 export async function createPerson(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = personCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
   const existing = await prisma.person.findUnique({
-    where: { name: parsed.data.name },
+    where: { userId_name: { userId, name: parsed.data.name } },
   });
   if (existing) {
     return { error: { name: ["Person already exists"] } };
   }
 
-  const person = await prisma.person.create({ data: parsed.data });
+  const person = await prisma.person.create({ data: { ...parsed.data, userId } });
 
   revalidatePath("/persons");
   revalidatePath("/");
@@ -85,6 +92,7 @@ export async function updatePerson(
   id: string,
   data: Record<string, unknown>,
 ) {
+  const userId = await requireAuth();
   const parsed = personUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -92,7 +100,7 @@ export async function updatePerson(
 
   if (parsed.data.name) {
     const existing = await prisma.person.findFirst({
-      where: { name: parsed.data.name, id: { not: id } },
+      where: { userId, name: parsed.data.name, id: { not: id } },
     });
     if (existing) {
       return { error: { name: ["Person already exists"] } };
@@ -100,7 +108,7 @@ export async function updatePerson(
   }
 
   await prisma.person.update({
-    where: { id },
+    where: { id, userId },
     data: parsed.data,
   });
 
@@ -110,14 +118,15 @@ export async function updatePerson(
 }
 
 export async function deletePerson(id: string) {
-  const person = await prisma.person.findUnique({ where: { id } });
+  const userId = await requireAuth();
+  const person = await prisma.person.findUnique({ where: { id, userId } });
   if (!person) {
     return { error: "Person not found" };
   }
 
   // TransactionSplit.personId has onDelete: SetNull, so splits stay
   // Settlement has onDelete: Cascade, so settlements get deleted
-  await prisma.person.delete({ where: { id } });
+  await prisma.person.delete({ where: { id, userId } });
 
   revalidatePath("/persons");
   revalidatePath("/");
@@ -125,7 +134,9 @@ export async function deletePerson(id: string) {
 }
 
 export async function getDebtSummary(): Promise<DebtSummary[]> {
+  const userId = await requireAuth();
   const persons = await prisma.person.findMany({
+    where: { userId },
     include: {
       splits: { select: { amount: true } },
       settlements: { select: { amount: true } },
@@ -150,8 +161,9 @@ export async function getDebtSummary(): Promise<DebtSummary[]> {
 }
 
 export async function getPersonSummary(personId: string) {
+  const userId = await requireAuth();
   const person = await prisma.person.findUnique({
-    where: { id: personId },
+    where: { id: personId, userId },
     include: {
       splits: {
         include: {
@@ -206,12 +218,17 @@ export async function getPersonSummary(personId: string) {
 }
 
 export async function createSettlement(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = settlementCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
   const values = parsed.data;
+
+  // Verify user owns this person
+  const person = await prisma.person.findFirst({ where: { id: values.personId, userId } });
+  if (!person) return { error: { personId: ["Person not found"] } };
 
   await prisma.settlement.create({
     data: {

@@ -558,15 +558,26 @@ async function main() {
   console.log("\nCopying media files...");
   copyMediaFiles(transactions);
 
+  // Ensure a user exists
+  const seedEmail = process.env.ADMIN_EMAIL || "admin@moneyloom.app";
+  const user = await prisma.user.upsert({
+    where: { email: seedEmail },
+    update: {},
+    create: { email: seedEmail, name: "Admin" },
+  });
+  const userId = user.id;
+  console.log(`Using user: ${user.email} (${userId})`);
+
   // Create/find Sina Mashreq account
   console.log("\nCreating/finding Sina Mashreq account...");
   const account = await prisma.account.upsert({
-    where: { name: "Sina Mashreq" },
+    where: { userId_name: { userId, name: "Sina Mashreq" } },
     update: {},
     create: {
       name: "Sina Mashreq",
       bank: "Mashreq",
       color: "#10b981",
+      userId,
     },
   });
   console.log(`Account ID: ${account.id}`);
@@ -646,6 +657,7 @@ async function main() {
           source: tx.source,
           hasReceipt: tx.hasReceipt,
           mediaFiles,
+          userId,
         },
       });
       inserted++;

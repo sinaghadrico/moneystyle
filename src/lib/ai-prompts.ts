@@ -170,7 +170,9 @@ Return ONLY the JSON, no markdown, no explanation.`,
  * Get prompt content for a given key.
  * Returns DB value if exists, otherwise the hardcoded default.
  */
-export async function getPrompt(key: AiPromptKey): Promise<string> {
-  const row = await prisma.aiPrompt.findUnique({ where: { key } });
+export async function getPrompt(key: AiPromptKey, userId?: string): Promise<string> {
+  const row = userId
+    ? await prisma.aiPrompt.findUnique({ where: { userId_key: { userId, key } } })
+    : await prisma.aiPrompt.findFirst({ where: { key } });
   return row?.content ?? DEFAULT_PROMPTS[key].content;
 }

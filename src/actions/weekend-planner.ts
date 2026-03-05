@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { Prisma } from "@prisma/client";
 import {
   userPreferenceSchema,
@@ -24,8 +25,10 @@ import type {
 // ── Preferences ──
 
 export async function getUserPreferences(): Promise<UserPreferenceData> {
+  const userId = await requireAuth();
+
   const row = await prisma.userPreference.findUnique({
-    where: { id: "default" },
+    where: { id: userId },
   });
   return {
     entertainment: row?.entertainment ?? [],
@@ -39,15 +42,17 @@ export async function getUserPreferences(): Promise<UserPreferenceData> {
 export async function updateUserPreferences(
   data: Record<string, unknown>
 ): Promise<{ success: boolean } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = userPreferenceSchema.safeParse(data);
   if (!parsed.success) {
     return { error: "Invalid preferences data" };
   }
 
   await prisma.userPreference.upsert({
-    where: { id: "default" },
+    where: { id: userId },
     update: parsed.data,
-    create: { id: "default", ...parsed.data },
+    create: { id: userId, userId, ...parsed.data },
   });
 
   return { success: true };
@@ -55,11 +60,11 @@ export async function updateUserPreferences(
 
 // ── Internal: Past Ratings Summary ──
 
-async function getPastRatingsSummary(): Promise<string> {
+async function getPastRatingsSummary(userId: string): Promise<string> {
   const recentPlans = await prisma.weekendPlan.findMany({
     orderBy: { createdAt: "desc" },
     take: 5,
-    where: { ratings: { not: Prisma.JsonNull } },
+    where: { userId, ratings: { not: Prisma.JsonNull } },
   });
 
   const liked: string[] = [];
@@ -103,6 +108,8 @@ async function getPastRatingsSummary(): Promise<string> {
 export async function generateWeekendPlan(): Promise<
   { data: WeekendPlanData } | { error: string }
 > {
+  const userId = await requireAuth();
+
   const settings = await prisma.appSettings.findFirst({
     where: { id: "default" },
   });
@@ -138,7 +145,7 @@ export async function generateWeekendPlan(): Promise<
 
   // Season + feedback
   const season = getUaeSeason();
-  const feedbackSummary = await getPastRatingsSummary();
+  const feedbackSummary = await getPastRatingsSummary(userId);
 
   const systemPrompt = await getPrompt(AI_PROMPT_KEYS.weekendPlanner);
 
@@ -197,6 +204,7 @@ Please generate 3 weekend plan offers (Budget, Balanced, Premium).`;
 
     const saved = await prisma.weekendPlan.create({
       data: {
+        userId,
         weekLabel,
         plan: JSON.parse(JSON.stringify(parsed)),
         ratings: {},
@@ -224,7 +232,10 @@ Please generate 3 weekend plan offers (Budget, Balanced, Premium).`;
 }
 
 export async function getWeekendPlans(): Promise<WeekendPlanData[]> {
+  const userId = await requireAuth();
+
   const rows = await prisma.weekendPlan.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     take: 10,
   });
@@ -242,7 +253,9 @@ export async function getWeekendPlans(): Promise<WeekendPlanData[]> {
 }
 
 export async function deleteWeekendPlan(id: string) {
-  await prisma.weekendPlan.delete({ where: { id } });
+  const userId = await requireAuth();
+
+  await prisma.weekendPlan.delete({ where: { id, userId } });
   return { success: true };
 }
 
@@ -251,12 +264,14 @@ export async function deleteWeekendPlan(id: string) {
 export async function rateWeekendItem(
   data: Record<string, unknown>
 ): Promise<{ success: boolean; ratings: WeekendPlanRatings } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = rateItemSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid rating data" };
 
   const { planId, itemKey, rating } = parsed.data;
 
-  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId } });
+  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId, userId } });
   if (!plan) return { error: "Plan not found" };
 
   const currentRatings = (plan.ratings ?? {}) as WeekendPlanRatings;
@@ -269,7 +284,7 @@ export async function rateWeekendItem(
   }
 
   await prisma.weekendPlan.update({
-    where: { id: planId },
+    where: { id: planId, userId },
     data: { ratings: currentRatings },
   });
 
@@ -281,6 +296,8 @@ export async function rateWeekendItem(
 export async function swapWeekendItem(
   data: Record<string, unknown>
 ): Promise<{ success: boolean; offers: WeekendOffer[] } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = swapItemSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid swap data" };
 
@@ -294,7 +311,7 @@ export async function swapWeekendItem(
   const apiKey = settings.openaiApiKey || process.env.OPENAI_API_KEY;
   if (!apiKey) return { error: "OpenAI API key is not configured." };
 
-  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId } });
+  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId, userId } });
   if (!plan) return { error: "Plan not found" };
 
   const planData = plan.plan as unknown as { offers: WeekendOffer[] };
@@ -361,7 +378,7 @@ Generate a replacement ${itemType}.`;
       offer.food.reduce((s, f) => s + f.estimatedCost, 0);
 
     await prisma.weekendPlan.update({
-      where: { id: planId },
+      where: { id: planId, userId },
       data: { plan: JSON.parse(JSON.stringify(planData)) },
     });
 
@@ -380,12 +397,14 @@ Generate a replacement ${itemType}.`;
 export async function linkTransactionsToWeekendPlan(
   data: Record<string, unknown>
 ): Promise<{ success: boolean; linkedTransactionIds: string[] } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = linkTransactionsSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid data" };
 
   const { planId, transactionIds } = parsed.data;
 
-  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId } });
+  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId, userId } });
   if (!plan) return { error: "Plan not found" };
 
   const existing = new Set(plan.linkedTransactionIds ?? []);
@@ -394,7 +413,7 @@ export async function linkTransactionsToWeekendPlan(
   const merged = Array.from(existing);
 
   await prisma.weekendPlan.update({
-    where: { id: planId },
+    where: { id: planId, userId },
     data: { linkedTransactionIds: merged },
   });
 
@@ -405,13 +424,15 @@ export async function unlinkTransactionFromWeekendPlan(
   planId: string,
   txId: string
 ): Promise<{ success: boolean; linkedTransactionIds: string[] } | { error: string }> {
-  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId } });
+  const userId = await requireAuth();
+
+  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId, userId } });
   if (!plan) return { error: "Plan not found" };
 
   const updated = (plan.linkedTransactionIds ?? []).filter((id) => id !== txId);
 
   await prisma.weekendPlan.update({
-    where: { id: planId },
+    where: { id: planId, userId },
     data: { linkedTransactionIds: updated },
   });
 
@@ -424,7 +445,9 @@ export async function getWeekendSpendingComparison(
   planId: string,
   offerIndex: number
 ): Promise<WeekendSpendingComparison | { error: string }> {
-  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId } });
+  const userId = await requireAuth();
+
+  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId, userId } });
   if (!plan) return { error: "Plan not found" };
 
   const planData = plan.plan as unknown as { offers: WeekendOffer[] };
@@ -444,7 +467,7 @@ export async function getWeekendSpendingComparison(
   }
 
   const transactions = await prisma.transaction.findMany({
-    where: { id: { in: txIds } },
+    where: { id: { in: txIds }, userId },
     include: { category: true },
   });
 
@@ -472,7 +495,9 @@ export async function generateWeekendIcs(
   planId: string,
   offerIndex: number
 ): Promise<{ ics: string } | { error: string }> {
-  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId } });
+  const userId = await requireAuth();
+
+  const plan = await prisma.weekendPlan.findUnique({ where: { id: planId, userId } });
   if (!plan) return { error: "Plan not found" };
 
   const planData = plan.plan as unknown as { offers: WeekendOffer[] };

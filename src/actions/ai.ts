@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { storage } from "@/lib/storage";
 import OpenAI from "openai";
 import { getPrompt, AI_PROMPT_KEYS } from "@/lib/ai-prompts";
@@ -19,8 +20,9 @@ function isImage(path: string): boolean {
 export async function parseReceiptFromUpload(
   transactionId: string,
 ): Promise<{ items: ParsedItem[] } | { error: string }> {
+  const userId = await requireAuth();
   const tx = await prisma.transaction.findUnique({
-    where: { id: transactionId },
+    where: { id: transactionId, userId },
     select: { mediaFiles: true },
   });
   if (!tx) return { error: "Transaction not found" };
@@ -53,8 +55,9 @@ export async function parseReceiptFromUpload(
 export async function parseReceiptImage(
   imageUrl: string,
 ): Promise<{ items: ParsedItem[] } | { error: string }> {
-  const settings = await prisma.appSettings.findFirst({
-    where: { id: "default" },
+  const userId = await requireAuth();
+  const settings = await prisma.appSettings.findUnique({
+    where: { userId },
   });
 
   if (!settings?.aiEnabled) {

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import type {
   TransactionFilters,
   PaginatedResult,
@@ -47,7 +48,9 @@ export async function getTransactions(
     sortOrder = "desc",
   } = filters;
 
-  const where: Prisma.TransactionWhereInput = { mergedIntoId: null };
+  const userId = await requireAuth();
+
+  const where: Prisma.TransactionWhereInput = { mergedIntoId: null, userId };
 
   if (dateFrom || dateTo) {
     where.date = {};
@@ -143,6 +146,8 @@ export async function getTransactions(
 export async function createTransaction(
   data: Record<string, unknown>,
 ): Promise<{ success: true } | { error: Record<string, string[]> }> {
+  const userId = await requireAuth();
+
   const parsed = transactionCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -152,6 +157,7 @@ export async function createTransaction(
 
   const tx = await prisma.transaction.create({
     data: {
+      userId,
       date: values.date,
       time: values.time ?? null,
       amount: values.amount ?? null,
@@ -206,6 +212,8 @@ export async function updateTransaction(
   id: string,
   data: Record<string, unknown>,
 ) {
+  const userId = await requireAuth();
+
   const parsed = transactionUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -244,7 +252,7 @@ export async function updateTransaction(
   }
 
   await prisma.transaction.update({
-    where: { id },
+    where: { id, userId },
     data: updateData,
   });
 
@@ -265,11 +273,13 @@ export async function updateTransaction(
 export async function deleteTransactions(
   ids: string[],
 ): Promise<{ success: true; count: number } | { error: string }> {
+  const userId = await requireAuth();
+
   if (!ids.length) return { error: "No IDs provided" };
   if (ids.length > 100) return { error: "Too many IDs (max 100)" };
 
   const { count } = await prisma.transaction.deleteMany({
-    where: { id: { in: ids } },
+    where: { id: { in: ids }, userId },
   });
 
   revalidatePath("/transactions");
@@ -280,8 +290,11 @@ export async function deleteTransactions(
 export async function splitTransaction(
   transactionId: string,
   data: { splits: { categoryId: string | null; personId?: string | null; amount: number; description: string | null }[] },
+  overrideUserId?: string,
 ) {
-  const tx = await prisma.transaction.findUnique({ where: { id: transactionId } });
+  const userId = overrideUserId ?? await requireAuth();
+
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
   if (!tx) return { error: "Transaction not found" };
 
   const txAmount = Number(tx.amount ?? 0);
@@ -316,6 +329,12 @@ export async function splitTransaction(
 }
 
 export async function unsplitTransaction(transactionId: string) {
+  const userId = await requireAuth();
+
+  // Verify ownership before deleting splits
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
+  if (!tx) return { error: "Transaction not found" };
+
   await prisma.transactionSplit.deleteMany({ where: { transactionId } });
   revalidatePath("/transactions");
   revalidatePath("/");
@@ -323,16 +342,24 @@ export async function unsplitTransaction(transactionId: string) {
 }
 
 export async function getCategories() {
-  return prisma.category.findMany({ orderBy: { name: "asc" } });
+  const userId = await requireAuth();
+  return prisma.category.findMany({ where: { userId }, orderBy: { name: "asc" } });
 }
 
 export async function getAccountsList() {
-  return prisma.account.findMany({ orderBy: { name: "asc" } });
+  const userId = await requireAuth();
+  return prisma.account.findMany({ where: { userId }, orderBy: { name: "asc" } });
 }
 
 export async function getTransactionItems(
   transactionId: string,
 ): Promise<TransactionItemData[]> {
+  const userId = await requireAuth();
+
+  // Verify ownership
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
+  if (!tx) return [];
+
   const items = await prisma.transactionItem.findMany({
     where: { transactionId },
     orderBy: { sortOrder: "asc" },
@@ -351,12 +378,14 @@ export async function saveTransactionItems(
   transactionId: string,
   items: { name: string; quantity: number; unitPrice?: number | null; totalPrice: number }[],
 ) {
+  const userId = await requireAuth();
+
   const parsed = saveTransactionItemsSchema.safeParse({ transactionId, items });
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const tx = await prisma.transaction.findUnique({ where: { id: transactionId } });
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
   if (!tx) return { error: "Transaction not found" };
 
   // Delete existing items then bulk create (same pattern as splitTransaction)
@@ -384,14 +413,16 @@ export async function addTransactionMedia(
   transactionId: string,
   filePath: string,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
+
   const tx = await prisma.transaction.findUnique({
-    where: { id: transactionId },
+    where: { id: transactionId, userId },
     select: { mediaFiles: true },
   });
   if (!tx) return { error: "Transaction not found" };
 
   await prisma.transaction.update({
-    where: { id: transactionId },
+    where: { id: transactionId, userId },
     data: {
       mediaFiles: { push: filePath },
       hasReceipt: true,
@@ -406,8 +437,10 @@ export async function removeTransactionMedia(
   transactionId: string,
   filePath: string,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
+
   const tx = await prisma.transaction.findUnique({
-    where: { id: transactionId },
+    where: { id: transactionId, userId },
     select: { mediaFiles: true },
   });
   if (!tx) return { error: "Transaction not found" };
@@ -415,7 +448,7 @@ export async function removeTransactionMedia(
   const updated = tx.mediaFiles.filter((f) => f !== filePath);
 
   await prisma.transaction.update({
-    where: { id: transactionId },
+    where: { id: transactionId, userId },
     data: {
       mediaFiles: updated,
       hasReceipt: updated.length > 0,

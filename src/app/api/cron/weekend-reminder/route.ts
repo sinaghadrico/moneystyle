@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { getSettings } from "@/actions/settings";
 import type { WeekendOffer } from "@/lib/types";
 import {
   getNotificationTemplate,
@@ -24,99 +23,86 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, sent: false, reason: "Not Thursday" });
   }
 
-  const settings = await getSettings();
+  // Find all users with weekend plan notifications enabled
+  const allSettings = await prisma.appSettings.findMany({
+    where: {
+      notifyWeekendPlan: true,
+      telegramChatId: { not: null },
+    },
+  });
 
-  if (!settings.notifyWeekendPlan) {
-    return NextResponse.json({ ok: true, sent: false, reason: "Notification disabled" });
-  }
+  let sent = 0;
 
-  const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-  const botToken = settings.telegramBotToken || undefined;
+  for (const settings of allSettings) {
+    const userId = settings.userId;
+    const chatId = settings.telegramChatId!;
+    const botToken = settings.telegramBotToken || undefined;
 
-  if (!chatId) {
-    return NextResponse.json(
-      { error: "TELEGRAM_CHAT_ID not configured" },
-      { status: 500 }
-    );
-  }
+    try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  try {
-    // Find most recent plan created within the last 7 days
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const plan = await prisma.weekendPlan.findFirst({
+        where: { createdAt: { gte: oneWeekAgo }, userId },
+        orderBy: { createdAt: "desc" },
+      });
 
-    const plan = await prisma.weekendPlan.findFirst({
-      where: { createdAt: { gte: oneWeekAgo } },
-      orderBy: { createdAt: "desc" },
-    });
+      if (!plan) continue;
 
-    if (!plan) {
-      return NextResponse.json({ ok: true, sent: false, reason: "No recent plan" });
-    }
+      const planData = plan.plan as unknown as { offers: WeekendOffer[] };
+      const offer = planData.offers[1] ?? planData.offers[0];
+      if (!offer) continue;
 
-    const planData = plan.plan as unknown as { offers: WeekendOffer[] };
-    // Use balanced offer (index 1) or first available
-    const offer = planData.offers[1] ?? planData.offers[0];
-    if (!offer) {
-      return NextResponse.json({ ok: true, sent: false, reason: "No offers in plan" });
-    }
+      const [tplHeader, tplActivity, tplFood, tplFooter] = await Promise.all([
+        getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderHeader),
+        getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderActivity),
+        getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderFood),
+        getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderFooter),
+      ]);
 
-    const [tplHeader, tplActivity, tplFood, tplFooter] = await Promise.all([
-      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderHeader),
-      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderActivity),
-      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderFood),
-      getNotificationTemplate(NOTIFICATION_TEMPLATE_KEYS.weekendReminderFooter),
-    ]);
-
-    const lines: string[] = [];
-    lines.push(renderTemplate(tplHeader, { title: offer.title }));
-    lines.push("");
-
-    if (offer.activities.length > 0) {
-      lines.push("📍 Activities:");
-      for (const a of offer.activities) {
-        lines.push(
-          renderTemplate(tplActivity, {
-            time_slot: a.timeSlot,
-            name: a.name,
-            cost: a.estimatedCost,
-          })
-        );
-      }
+      const lines: string[] = [];
+      lines.push(renderTemplate(tplHeader, { title: offer.title }));
       lines.push("");
-    }
 
-    if (offer.food.length > 0) {
-      lines.push("🍽 Food:");
-      for (const f of offer.food) {
-        lines.push(
-          renderTemplate(tplFood, {
-            meal: f.meal,
-            name: f.name,
-            restaurant: f.restaurant ? ` @ ${f.restaurant}` : "",
-            cost: f.estimatedCost,
-          })
-        );
+      if (offer.activities.length > 0) {
+        lines.push("📍 Activities:");
+        for (const a of offer.activities) {
+          lines.push(
+            renderTemplate(tplActivity, {
+              time_slot: a.timeSlot, name: a.name, cost: a.estimatedCost,
+            })
+          );
+        }
+        lines.push("");
       }
-      lines.push("");
+
+      if (offer.food.length > 0) {
+        lines.push("🍽 Food:");
+        for (const f of offer.food) {
+          lines.push(
+            renderTemplate(tplFood, {
+              meal: f.meal, name: f.name,
+              restaurant: f.restaurant ? ` @ ${f.restaurant}` : "",
+              cost: f.estimatedCost,
+            })
+          );
+        }
+        lines.push("");
+      }
+
+      lines.push(
+        renderTemplate(tplFooter, {
+          total_cost: offer.totalCost,
+          tip: offer.tips.length > 0 ? offer.tips[0] : "",
+        })
+      );
+
+      await sendTelegramMessage(chatId, lines.join("\n"), undefined, botToken);
+      sent++;
+    } catch (err) {
+      console.error(`Weekend reminder error for user ${userId}:`, err);
     }
-
-    lines.push(
-      renderTemplate(tplFooter, {
-        total_cost: offer.totalCost,
-        tip: offer.tips.length > 0 ? offer.tips[0] : "",
-      })
-    );
-
-    const message = lines.join("\n");
-    await sendTelegramMessage(chatId, message, undefined, botToken);
-
-    return NextResponse.json({ ok: true, sent: true });
-  } catch (err) {
-    console.error("Weekend reminder cron error:", err);
-    return NextResponse.json(
-      { error: "Failed to send weekend reminder" },
-      { status: 500 }
-    );
   }
+
+  return NextResponse.json({ ok: true, sent });
 }

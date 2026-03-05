@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { revalidatePath } from "next/cache";
 
 export type MergeSuggestion = {
@@ -24,6 +25,8 @@ export type MergeSuggestion = {
 };
 
 export async function getMergeSuggestions(): Promise<MergeSuggestion[]> {
+  const userId = await requireAuth();
+
   // Find groups with same date + same amount + same merchant (strongest signal)
   const groups = await prisma.$queryRaw<
     { date: Date; amount: string | null; merchant: string | null; cnt: bigint }[]
@@ -33,6 +36,7 @@ export async function getMergeSuggestions(): Promise<MergeSuggestion[]> {
     WHERE "mergedIntoId" IS NULL
       AND amount IS NOT NULL
       AND merchant IS NOT NULL
+      AND "userId" = ${userId}
     GROUP BY date, amount, merchant
     HAVING COUNT(*) > 1
     ORDER BY date DESC
@@ -43,6 +47,7 @@ export async function getMergeSuggestions(): Promise<MergeSuggestion[]> {
   for (const g of groups) {
     const txs = await prisma.transaction.findMany({
       where: {
+        userId,
         date: g.date,
         amount: g.amount ? parseFloat(g.amount) : undefined,
         merchant: g.merchant,
@@ -86,19 +91,21 @@ export async function mergeTransactions(
     return { error: "No transactions to merge" };
   }
 
+  const userId = await requireAuth();
+
   if (mergeIds.includes(primaryId)) {
     return { error: "Primary cannot be in merge list" };
   }
 
   const primary = await prisma.transaction.findUnique({
-    where: { id: primaryId },
+    where: { id: primaryId, userId },
   });
   if (!primary) {
     return { error: "Primary transaction not found" };
   }
 
   const toMerge = await prisma.transaction.findMany({
-    where: { id: { in: mergeIds }, mergedIntoId: null },
+    where: { id: { in: mergeIds }, userId, mergedIntoId: null },
   });
 
   if (toMerge.length === 0) {
@@ -138,7 +145,7 @@ export async function mergeTransactions(
   // Merge: combine everything into primary, mark others as merged
   await prisma.$transaction([
     prisma.transaction.update({
-      where: { id: primaryId },
+      where: { id: primaryId, userId },
       data: {
         mediaFiles: Array.from(allMedia),
         description: mergedDescription,
@@ -148,7 +155,7 @@ export async function mergeTransactions(
     }),
     // Mark all others as merged into primary
     prisma.transaction.updateMany({
-      where: { id: { in: mergeIds } },
+      where: { id: { in: mergeIds }, userId },
       data: { mergedIntoId: primaryId },
     }),
   ]);
@@ -160,6 +167,7 @@ export async function mergeTransactions(
 }
 
 export async function skipSuggestion(ids: string[]) {
+  await requireAuth();
   // No-op for now — just used to advance the UI.
   // Could persist skipped groups in the future.
   return { success: true };

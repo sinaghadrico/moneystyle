@@ -40,6 +40,16 @@ async function main() {
 
   console.log(`Found ${transactions.length} transactions`);
 
+  // Ensure a seed user exists
+  const seedEmail = process.env.ADMIN_EMAIL || "admin@moneyloom.app";
+  const user = await prisma.user.upsert({
+    where: { email: seedEmail },
+    update: {},
+    create: { email: seedEmail, name: "Admin" },
+  });
+  const userId = user.id;
+  console.log(`Using user: ${user.email} (${userId})`);
+
   // Create default account
   await prisma.account.upsert({
     where: { id: DEFAULT_ACCOUNT_ID },
@@ -49,6 +59,7 @@ async function main() {
       name: "Farnoosh Mashreq",
       bank: "Mashreq",
       color: "#3b82f6",
+      userId,
     },
   });
   console.log("Created default account");
@@ -61,9 +72,9 @@ async function main() {
 
   for (const cat of categories) {
     await prisma.category.upsert({
-      where: { name: cat.name },
+      where: { userId_name: { userId, name: cat.name } },
       update: { color: cat.color },
-      create: { name: cat.name, color: cat.color },
+      create: { name: cat.name, color: cat.color, userId },
     });
   }
   console.log(`Created ${categories.length} categories`);
@@ -101,6 +112,7 @@ async function main() {
             mediaFiles: Array.isArray(t.mediaFiles)
               ? (t.mediaFiles as string[])
               : [],
+            userId,
           },
         })
       )

@@ -8,13 +8,16 @@ import { prisma } from "./db";
  */
 export async function resolveCategory(
   merchant: string | null | undefined,
+  userId?: string,
 ): Promise<string | null> {
   if (!merchant) return null;
 
   const lower = merchant.toLowerCase();
 
   // 1. Check merchant category rules
-  const rules = await prisma.merchantCategoryRule.findMany();
+  const rules = await prisma.merchantCategoryRule.findMany({
+    where: userId ? { userId } : undefined,
+  });
   for (const rule of rules) {
     if (lower.includes(rule.pattern) || rule.pattern.includes(lower)) {
       return rule.categoryId;
@@ -27,6 +30,7 @@ export async function resolveCategory(
       merchant: { equals: merchant, mode: "insensitive" },
       categoryId: { not: null },
       mergedIntoId: null,
+      ...(userId ? { userId } : {}),
     },
     select: { categoryId: true },
   });
@@ -51,13 +55,15 @@ export async function resolveCategory(
     }
 
     if (bestCatId) {
-      // Auto-create rule for next time
-      try {
-        await prisma.merchantCategoryRule.create({
-          data: { pattern: lower, categoryId: bestCatId },
-        });
-      } catch {
-        // Rule might already exist (race condition) — ignore
+      // Auto-create rule for next time (only if userId known)
+      if (userId) {
+        try {
+          await prisma.merchantCategoryRule.create({
+            data: { pattern: lower, categoryId: bestCatId, userId },
+          });
+        } catch {
+          // Rule might already exist (race condition) — ignore
+        }
       }
       return bestCatId;
     }

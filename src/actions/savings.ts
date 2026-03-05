@@ -1,20 +1,23 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { savingsGoalSchema } from "@/lib/validators";
 import type { SavingsProgress } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 export async function getSavingsGoals() {
+  const userId = await requireAuth();
   return prisma.savingsGoal.findMany({
-    where: { status: "active" },
+    where: { userId, status: "active" },
     orderBy: { createdAt: "desc" },
   });
 }
 
 export async function getSavingsProgress(): Promise<SavingsProgress[]> {
+  const userId = await requireAuth();
   const goals = await prisma.savingsGoal.findMany({
-    where: { status: "active" },
+    where: { userId, status: "active" },
     orderBy: { createdAt: "desc" },
   });
 
@@ -38,6 +41,7 @@ export async function upsertSavingsGoal(
   data: Record<string, unknown>,
   id?: string,
 ) {
+  const userId = await requireAuth();
   const parsed = savingsGoalSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -47,7 +51,7 @@ export async function upsertSavingsGoal(
 
   if (id) {
     await prisma.savingsGoal.update({
-      where: { id },
+      where: { id, userId },
       data: {
         name: values.name,
         targetAmount: values.targetAmount,
@@ -58,6 +62,7 @@ export async function upsertSavingsGoal(
   } else {
     await prisma.savingsGoal.create({
       data: {
+        userId,
         name: values.name,
         targetAmount: values.targetAmount,
         deadline: values.deadline ?? null,
@@ -71,9 +76,10 @@ export async function upsertSavingsGoal(
 }
 
 export async function addToSavings(id: string, amount: number) {
+  const userId = await requireAuth();
   if (amount <= 0) return { error: "Amount must be positive" };
 
-  const goal = await prisma.savingsGoal.findUnique({ where: { id } });
+  const goal = await prisma.savingsGoal.findUnique({ where: { id, userId } });
   if (!goal) return { error: "Goal not found" };
 
   const newAmount = Number(goal.currentAmount) + amount;
@@ -81,7 +87,7 @@ export async function addToSavings(id: string, amount: number) {
   const isCompleted = newAmount >= target;
 
   await prisma.savingsGoal.update({
-    where: { id },
+    where: { id, userId },
     data: {
       currentAmount: newAmount,
       status: isCompleted ? "completed" : "active",
@@ -93,7 +99,8 @@ export async function addToSavings(id: string, amount: number) {
 }
 
 export async function deleteSavingsGoal(id: string) {
-  await prisma.savingsGoal.delete({ where: { id } });
+  const userId = await requireAuth();
+  await prisma.savingsGoal.delete({ where: { id, userId } });
   revalidatePath("/");
   return { success: true };
 }

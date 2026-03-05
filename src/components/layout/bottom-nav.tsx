@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 const PRIMARY_NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
@@ -160,8 +160,8 @@ export function BottomNav() {
           {PRIMARY_NAV.map((item) => {
             const Icon = item.icon;
             const isActive =
-              item.href === "/"
-                ? pathname === "/"
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
                 : pathname.startsWith(item.href);
 
             return (

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { tagCreateSchema } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
 
@@ -10,25 +11,27 @@ const TAG_COLORS = [
 ];
 
 export async function getTags() {
-  return prisma.tag.findMany({ orderBy: { name: "asc" } });
+  const userId = await requireAuth();
+  return prisma.tag.findMany({ where: { userId }, orderBy: { name: "asc" } });
 }
 
 export async function createTag(data: { name: string; color?: string }) {
+  const userId = await requireAuth();
   const parsed = tagCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
   const existing = await prisma.tag.findUnique({
-    where: { name: parsed.data.name },
+    where: { userId_name: { userId, name: parsed.data.name } },
   });
   if (existing) return existing;
 
-  const count = await prisma.tag.count();
+  const count = await prisma.tag.count({ where: { userId } });
   const color = parsed.data.color || TAG_COLORS[count % TAG_COLORS.length];
 
   const tag = await prisma.tag.create({
-    data: { name: parsed.data.name, color },
+    data: { name: parsed.data.name, color, userId },
   });
 
   revalidatePath("/transactions");
@@ -36,8 +39,9 @@ export async function createTag(data: { name: string; color?: string }) {
 }
 
 export async function setTransactionTags(transactionId: string, tagIds: string[]) {
+  const userId = await requireAuth();
   await prisma.transactionTag.deleteMany({
-    where: { transactionId },
+    where: { transactionId, tag: { userId } },
   });
 
   if (tagIds.length > 0) {

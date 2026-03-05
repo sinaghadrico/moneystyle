@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import {
   incomeSourceSchema,
   incomeSourceUpdateSchema,
@@ -32,7 +33,9 @@ import type {
 // ── Income Sources ──
 
 export async function getIncomeSources(): Promise<IncomeSourceData[]> {
+  const userId = await requireAuth();
   const rows = await prisma.incomeSource.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
   });
   return rows.map((r) => ({
@@ -46,11 +49,12 @@ export async function getIncomeSources(): Promise<IncomeSourceData[]> {
 }
 
 export async function createIncomeSource(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = incomeSourceSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  await prisma.incomeSource.create({ data: parsed.data });
+  await prisma.incomeSource.create({ data: { ...parsed.data, userId } });
   revalidatePath("/profile");
   return { success: true };
 }
@@ -59,17 +63,19 @@ export async function updateIncomeSource(
   id: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = incomeSourceUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  await prisma.incomeSource.update({ where: { id }, data: parsed.data });
+  await prisma.incomeSource.update({ where: { id, userId }, data: parsed.data });
   revalidatePath("/profile");
   return { success: true };
 }
 
 export async function deleteIncomeSource(id: string) {
-  await prisma.incomeSource.delete({ where: { id } });
+  const userId = await requireAuth();
+  await prisma.incomeSource.delete({ where: { id, userId } });
   revalidatePath("/profile");
   return { success: true };
 }
@@ -77,7 +83,9 @@ export async function deleteIncomeSource(id: string) {
 // ── Reserves ──
 
 export async function getReserves(): Promise<ReserveData[]> {
+  const userId = await requireAuth();
   const rows = await prisma.reserve.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     include: {
       snapshots: {
@@ -100,11 +108,12 @@ export async function getReserves(): Promise<ReserveData[]> {
 }
 
 export async function createReserve(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = reserveSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  const reserve = await prisma.reserve.create({ data: parsed.data });
+  const reserve = await prisma.reserve.create({ data: { ...parsed.data, userId } });
   await prisma.reserveSnapshot.create({
     data: {
       reserveId: reserve.id,
@@ -120,13 +129,14 @@ export async function updateReserve(
   id: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = reserveUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  const existing = await prisma.reserve.findUnique({ where: { id } });
+  const existing = await prisma.reserve.findUnique({ where: { id, userId } });
   const updated = await prisma.reserve.update({
-    where: { id },
+    where: { id, userId },
     data: parsed.data,
   });
   if (
@@ -147,7 +157,8 @@ export async function updateReserve(
 }
 
 export async function deleteReserve(id: string) {
-  await prisma.reserve.delete({ where: { id } });
+  const userId = await requireAuth();
+  await prisma.reserve.delete({ where: { id, userId } });
   revalidatePath("/profile");
   return { success: true };
 }
@@ -156,6 +167,7 @@ export async function recordReserveValue(
   reserveId: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = recordReserveValueSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -169,7 +181,7 @@ export async function recordReserveValue(
       },
     }),
     prisma.reserve.update({
-      where: { id: reserveId },
+      where: { id: reserveId, userId },
       data: { amount: parsed.data.amount },
     }),
   ]);
@@ -180,6 +192,10 @@ export async function recordReserveValue(
 export async function getReserveHistory(
   reserveId: string
 ): Promise<ReserveSnapshotData[]> {
+  const userId = await requireAuth();
+  // Verify the reserve belongs to the user
+  const reserve = await prisma.reserve.findUnique({ where: { id: reserveId, userId } });
+  if (!reserve) return [];
   const rows = await prisma.reserveSnapshot.findMany({
     where: { reserveId },
     orderBy: { recordedAt: "desc" },
@@ -195,7 +211,9 @@ export async function getReserveHistory(
 // ── Installments ──
 
 export async function getInstallments(): Promise<InstallmentData[]> {
+  const userId = await requireAuth();
   const rows = await prisma.installment.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     include: {
       payments: {
@@ -220,11 +238,12 @@ export async function getInstallments(): Promise<InstallmentData[]> {
 }
 
 export async function createInstallment(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = installmentSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  await prisma.installment.create({ data: parsed.data });
+  await prisma.installment.create({ data: { ...parsed.data, userId } });
   revalidatePath("/profile");
   return { success: true };
 }
@@ -233,17 +252,19 @@ export async function updateInstallment(
   id: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = installmentUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  await prisma.installment.update({ where: { id }, data: parsed.data });
+  await prisma.installment.update({ where: { id, userId }, data: parsed.data });
   revalidatePath("/profile");
   return { success: true };
 }
 
 export async function deleteInstallment(id: string) {
-  await prisma.installment.delete({ where: { id } });
+  const userId = await requireAuth();
+  await prisma.installment.delete({ where: { id, userId } });
   revalidatePath("/profile");
   return { success: true };
 }
@@ -252,12 +273,13 @@ export async function incrementPaidCount(
   id: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = recordInstallmentPaymentSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const inst = await prisma.installment.findUnique({ where: { id } });
+  const inst = await prisma.installment.findUnique({ where: { id, userId } });
   if (!inst) return { error: "Not found" };
 
   const newPaidCount = inst.paidCount + 1;
@@ -273,7 +295,7 @@ export async function incrementPaidCount(
       },
     }),
     prisma.installment.update({
-      where: { id },
+      where: { id, userId },
       data: {
         paidCount: newPaidCount,
         isActive: shouldDeactivate ? false : inst.isActive,
@@ -288,6 +310,10 @@ export async function incrementPaidCount(
 export async function getInstallmentHistory(
   installmentId: string
 ): Promise<InstallmentPaymentData[]> {
+  const userId = await requireAuth();
+  // Verify the installment belongs to the user
+  const installment = await prisma.installment.findUnique({ where: { id: installmentId, userId } });
+  if (!installment) return [];
   const rows = await prisma.installmentPayment.findMany({
     where: { installmentId },
     orderBy: { paidAt: "desc" },
@@ -303,7 +329,9 @@ export async function getInstallmentHistory(
 // ── Bills ──
 
 export async function getBills(): Promise<BillData[]> {
+  const userId = await requireAuth();
   const rows = await prisma.bill.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     include: {
       payments: {
@@ -327,27 +355,30 @@ export async function getBills(): Promise<BillData[]> {
 }
 
 export async function createBill(data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = billSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  await prisma.bill.create({ data: parsed.data });
+  await prisma.bill.create({ data: { ...parsed.data, userId } });
   revalidatePath("/profile");
   return { success: true };
 }
 
 export async function updateBill(id: string, data: Record<string, unknown>) {
+  const userId = await requireAuth();
   const parsed = billUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
-  await prisma.bill.update({ where: { id }, data: parsed.data });
+  await prisma.bill.update({ where: { id, userId }, data: parsed.data });
   revalidatePath("/profile");
   return { success: true };
 }
 
 export async function deleteBill(id: string) {
-  await prisma.bill.delete({ where: { id } });
+  const userId = await requireAuth();
+  await prisma.bill.delete({ where: { id, userId } });
   revalidatePath("/profile");
   return { success: true };
 }
@@ -356,10 +387,14 @@ export async function recordBillPayment(
   billId: string,
   data: Record<string, unknown>
 ) {
+  const userId = await requireAuth();
   const parsed = recordBillPaymentSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
+  // Verify the bill belongs to the user
+  const bill = await prisma.bill.findUnique({ where: { id: billId, userId } });
+  if (!bill) return { error: "Bill not found" };
   await prisma.billPayment.create({
     data: {
       billId,
@@ -374,6 +409,10 @@ export async function recordBillPayment(
 export async function getBillHistory(
   billId: string
 ): Promise<BillPaymentData[]> {
+  const userId = await requireAuth();
+  // Verify the bill belongs to the user
+  const bill = await prisma.bill.findUnique({ where: { id: billId, userId } });
+  if (!bill) return [];
   const rows = await prisma.billPayment.findMany({
     where: { billId },
     orderBy: { paidAt: "desc" },
@@ -389,12 +428,13 @@ export async function getBillHistory(
 // ── Financial Overview ──
 
 export async function getFinancialOverview(): Promise<FinancialOverview> {
+  const userId = await requireAuth();
   const [incomeSources, installments, bills, reserves, settings, rates] = await Promise.all([
-    prisma.incomeSource.findMany({ where: { isActive: true } }),
-    prisma.installment.findMany({ where: { isActive: true } }),
-    prisma.bill.findMany({ where: { isActive: true } }),
-    prisma.reserve.findMany(),
-    prisma.appSettings.findFirst(),
+    prisma.incomeSource.findMany({ where: { userId, isActive: true } }),
+    prisma.installment.findMany({ where: { userId, isActive: true } }),
+    prisma.bill.findMany({ where: { userId, isActive: true } }),
+    prisma.reserve.findMany({ where: { userId } }),
+    prisma.appSettings.findUnique({ where: { userId } }),
     getCurrencyRates(),
   ]);
 
@@ -506,8 +546,9 @@ export type MoneyAdviceHistoryItem = MoneyAdviceResult & {
 export async function getMoneyAdvice(): Promise<
   { data: MoneyAdviceResult } | { error: string }
 > {
-  const settings = await prisma.appSettings.findFirst({
-    where: { id: "default" },
+  const userId = await requireAuth();
+  const settings = await prisma.appSettings.findUnique({
+    where: { userId },
   });
 
   if (!settings?.aiEnabled) {
@@ -524,14 +565,15 @@ export async function getMoneyAdvice(): Promise<
 
   // Gather all financial data
   const [incomeSources, reserves, installments, bills] = await Promise.all([
-    prisma.incomeSource.findMany({ where: { isActive: true } }),
+    prisma.incomeSource.findMany({ where: { userId, isActive: true } }),
     prisma.reserve.findMany({
+      where: { userId },
       include: {
         snapshots: { orderBy: { recordedAt: "desc" }, take: 3 },
       },
     }),
-    prisma.installment.findMany({ where: { isActive: true } }),
-    prisma.bill.findMany({ where: { isActive: true } }),
+    prisma.installment.findMany({ where: { userId, isActive: true } }),
+    prisma.bill.findMany({ where: { userId, isActive: true } }),
   ]);
 
   const totalMonthlyIncome = incomeSources.reduce(
@@ -637,6 +679,7 @@ Total reserves: ${Math.round(reserves.reduce((s, r) => s + convertAmount(Number(
     // Save to history
     await prisma.moneyAdvice.create({
       data: {
+        userId,
         summary: parsed.summary,
         emergencyFundNeeded: parsed.emergencyFundNeeded,
         emergencyFundCurrent: parsed.emergencyFundCurrent,
@@ -656,7 +699,9 @@ Total reserves: ${Math.round(reserves.reduce((s, r) => s + convertAmount(Number(
 }
 
 export async function getMoneyAdviceHistory(): Promise<MoneyAdviceHistoryItem[]> {
+  const userId = await requireAuth();
   const rows = await prisma.moneyAdvice.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     take: 20,
   });
@@ -672,6 +717,7 @@ export async function getMoneyAdviceHistory(): Promise<MoneyAdviceHistoryItem[]>
 }
 
 export async function deleteMoneyAdvice(id: string) {
-  await prisma.moneyAdvice.delete({ where: { id } });
+  const userId = await requireAuth();
+  await prisma.moneyAdvice.delete({ where: { id, userId } });
   return { success: true };
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import {
   settingsUpdateSchema,
   smsPatternCreateSchema,
@@ -12,7 +13,6 @@ import {
 import { revalidatePath } from "next/cache";
 
 const DEFAULTS = {
-  id: "default" as const,
   currency: "AED",
   defaultPageSize: 20,
   defaultAccountId: null,
@@ -34,21 +34,23 @@ const DEFAULTS = {
 };
 
 export async function getSettings() {
-  const row = await prisma.appSettings.findFirst({ where: { id: "default" } });
+  const userId = await requireAuth();
+  const row = await prisma.appSettings.findUnique({ where: { userId } });
   return row ?? DEFAULTS;
 }
 
 export async function updateSettings(
   data: SettingsUpdateInput,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
   const parsed = settingsUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(", ") };
   }
 
   await prisma.appSettings.upsert({
-    where: { id: "default" },
-    create: { ...parsed.data },
+    where: { userId },
+    create: { ...parsed.data, userId },
     update: { ...parsed.data },
   });
 
@@ -60,6 +62,7 @@ export async function testTelegramConnection(
   botToken: string,
   chatId: string,
 ): Promise<{ success: true } | { error: string }> {
+  await requireAuth();
   if (!botToken || !chatId) {
     return { error: "Bot token and chat ID are required" };
   }
@@ -95,8 +98,9 @@ export async function testTelegramConnection(
 export async function exportTransactions(
   format: "csv" | "json",
 ): Promise<string> {
+  const userId = await requireAuth();
   const transactions = await prisma.transaction.findMany({
-    where: { mergedIntoId: null },
+    where: { userId, mergedIntoId: null },
     include: {
       category: true,
       account: true,
@@ -206,16 +210,19 @@ const DEFAULT_SMS_PATTERNS: SmsPatternCreateInput[] = [
 ];
 
 export async function getSmsPatterns() {
+  const userId = await requireAuth();
   let patterns = await prisma.smsPattern.findMany({
+    where: { userId },
     orderBy: { priority: "asc" },
   });
 
   // Auto-seed if table is empty
   if (patterns.length === 0) {
     await prisma.$transaction(
-      DEFAULT_SMS_PATTERNS.map((p) => prisma.smsPattern.create({ data: p })),
+      DEFAULT_SMS_PATTERNS.map((p) => prisma.smsPattern.create({ data: { ...p, userId } })),
     );
     patterns = await prisma.smsPattern.findMany({
+      where: { userId },
       orderBy: { priority: "asc" },
     });
   }
@@ -226,6 +233,7 @@ export async function getSmsPatterns() {
 export async function createSmsPattern(
   data: SmsPatternCreateInput,
 ): Promise<{ success: true; id: string } | { error: string }> {
+  const userId = await requireAuth();
   const parsed = smsPatternCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(", ") };
@@ -241,7 +249,7 @@ export async function createSmsPattern(
   }
 
   try {
-    const pattern = await prisma.smsPattern.create({ data: parsed.data });
+    const pattern = await prisma.smsPattern.create({ data: { ...parsed.data, userId } });
     revalidatePath("/settings");
     return { success: true, id: pattern.id };
   } catch (e) {
@@ -256,6 +264,7 @@ export async function updateSmsPattern(
   id: string,
   data: SmsPatternUpdateInput,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
   const parsed = smsPatternUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(", ") };
@@ -272,7 +281,7 @@ export async function updateSmsPattern(
   }
 
   try {
-    await prisma.smsPattern.update({ where: { id }, data: parsed.data });
+    await prisma.smsPattern.update({ where: { id, userId }, data: parsed.data });
     revalidatePath("/settings");
     return { success: true };
   } catch (e) {
@@ -286,8 +295,9 @@ export async function updateSmsPattern(
 export async function deleteSmsPattern(
   id: string,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
   try {
-    await prisma.smsPattern.delete({ where: { id } });
+    await prisma.smsPattern.delete({ where: { id, userId } });
     revalidatePath("/settings");
     return { success: true };
   } catch {
@@ -303,6 +313,7 @@ export async function testSmsPattern(
 ): Promise<
   { success: true; amount: string; merchant: string | null } | { error: string }
 > {
+  await requireAuth();
   let re: RegExp;
   try {
     re = new RegExp(regex, "i");
@@ -343,8 +354,9 @@ export type AiPromptData = {
 };
 
 export async function getAiPrompts(): Promise<AiPromptData[]> {
+  const userId = await requireAuth();
   const { DEFAULT_PROMPTS } = await import("@/lib/ai-prompts");
-  const rows = await prisma.aiPrompt.findMany();
+  const rows = await prisma.aiPrompt.findMany({ where: { userId } });
   const customMap = new Map(rows.map((r) => [r.key, r.content]));
 
   return Object.entries(DEFAULT_PROMPTS).map(([key, def]) => ({
@@ -356,16 +368,18 @@ export async function getAiPrompts(): Promise<AiPromptData[]> {
 }
 
 export async function updateAiPrompt(key: string, content: string) {
+  const userId = await requireAuth();
   await prisma.aiPrompt.upsert({
-    where: { key },
-    create: { key, content },
+    where: { userId_key: { userId, key } },
+    create: { userId, key, content },
     update: { content },
   });
   return { success: true };
 }
 
 export async function resetAiPrompt(key: string) {
-  await prisma.aiPrompt.deleteMany({ where: { key } });
+  const userId = await requireAuth();
+  await prisma.aiPrompt.deleteMany({ where: { userId, key } });
   return { success: true };
 }
 
@@ -382,9 +396,10 @@ export type NotificationTemplateData = {
 export async function getNotificationTemplates(): Promise<
   NotificationTemplateData[]
 > {
+  const userId = await requireAuth();
   const { DEFAULT_NOTIFICATION_TEMPLATES } =
     await import("@/lib/notification-templates");
-  const rows = await prisma.notificationTemplate.findMany();
+  const rows = await prisma.notificationTemplate.findMany({ where: { userId } });
   const customMap = new Map(rows.map((r) => [r.key, r.content]));
 
   return Object.entries(DEFAULT_NOTIFICATION_TEMPLATES).map(([key, def]) => ({
@@ -397,15 +412,17 @@ export async function getNotificationTemplates(): Promise<
 }
 
 export async function updateNotificationTemplate(key: string, content: string) {
+  const userId = await requireAuth();
   await prisma.notificationTemplate.upsert({
-    where: { key },
-    create: { key, content },
+    where: { userId_key: { userId, key } },
+    create: { userId, key, content },
     update: { content },
   });
   return { success: true };
 }
 
 export async function resetNotificationTemplate(key: string) {
-  await prisma.notificationTemplate.deleteMany({ where: { key } });
+  const userId = await requireAuth();
+  await prisma.notificationTemplate.deleteMany({ where: { userId, key } });
   return { success: true };
 }

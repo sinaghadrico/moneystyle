@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-utils";
 import { basicNormalize, resolveItemName } from "@/lib/item-normalization";
 import { shoppingListSchema, shoppingListItemSchema } from "@/lib/validators";
 import type {
@@ -18,8 +19,8 @@ import { revalidatePath } from "next/cache";
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function buildGroupMap(): Promise<Map<string, string>> {
-  const groups = await prisma.itemGroup.findMany();
+async function buildGroupMap(userId: string): Promise<Map<string, string>> {
+  const groups = await prisma.itemGroup.findMany({ where: { userId } });
   const map = new Map<string, string>();
   for (const g of groups) {
     for (const raw of g.rawNames) {
@@ -43,7 +44,10 @@ function getEffectivePrice(
 // ---------------------------------------------------------------------------
 
 export async function getShoppingLists(): Promise<ShoppingListData[]> {
+  const userId = await requireAuth();
+
   const lists = await prisma.shoppingList.findMany({
+    where: { userId },
     include: { _count: { select: { items: true } } },
     orderBy: { updatedAt: "desc" },
   });
@@ -58,8 +62,10 @@ export async function getShoppingLists(): Promise<ShoppingListData[]> {
 export async function getShoppingListDetail(
   id: string,
 ): Promise<ShoppingListDetail | null> {
+  const userId = await requireAuth();
+
   const list = await prisma.shoppingList.findUnique({
-    where: { id },
+    where: { id, userId },
     include: { items: { orderBy: { sortOrder: "asc" } } },
   });
   if (!list) return null;
@@ -78,12 +84,14 @@ export async function getShoppingListDetail(
 export async function createShoppingList(
   name: string,
 ): Promise<{ id: string } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = shoppingListSchema.safeParse({ name });
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
   const list = await prisma.shoppingList.create({
-    data: { name: parsed.data.name },
+    data: { userId, name: parsed.data.name },
   });
   revalidatePath("/price-analysis");
   return { id: list.id };
@@ -92,7 +100,9 @@ export async function createShoppingList(
 export async function deleteShoppingList(
   id: string,
 ): Promise<{ success: true }> {
-  await prisma.shoppingList.delete({ where: { id } });
+  const userId = await requireAuth();
+
+  await prisma.shoppingList.delete({ where: { id, userId } });
   revalidatePath("/price-analysis");
   return { success: true };
 }
@@ -102,12 +112,18 @@ export async function addItemToList(
   itemName: string,
   quantity: number = 1,
 ): Promise<{ id: string } | { error: string }> {
+  const userId = await requireAuth();
+
   const parsed = shoppingListItemSchema.safeParse({ itemName, quantity });
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const groupMap = await buildGroupMap();
+  // Verify list ownership
+  const list = await prisma.shoppingList.findUnique({ where: { id: listId, userId } });
+  if (!list) return { error: "List not found" };
+
+  const groupMap = await buildGroupMap(userId);
   const normalizedName = resolveItemName(parsed.data.itemName, groupMap, false);
 
   const maxOrder = await prisma.shoppingListItem.findFirst({
@@ -128,7 +144,7 @@ export async function addItemToList(
 
   // Touch the list updatedAt
   await prisma.shoppingList.update({
-    where: { id: listId },
+    where: { id: listId, userId },
     data: { updatedAt: new Date() },
   });
 
@@ -139,6 +155,14 @@ export async function addItemToList(
 export async function removeItemFromList(
   itemId: string,
 ): Promise<{ success: true }> {
+  const userId = await requireAuth();
+
+  // Verify ownership through the parent list
+  const item = await prisma.shoppingListItem.findFirst({
+    where: { id: itemId, list: { userId } },
+  });
+  if (!item) throw new Error("Item not found");
+
   await prisma.shoppingListItem.delete({ where: { id: itemId } });
   revalidatePath("/price-analysis");
   return { success: true };
@@ -148,7 +172,16 @@ export async function updateItemQuantity(
   itemId: string,
   quantity: number,
 ): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
+
   if (quantity <= 0) return { error: "Quantity must be positive" };
+
+  // Verify ownership through the parent list
+  const item = await prisma.shoppingListItem.findFirst({
+    where: { id: itemId, list: { userId } },
+  });
+  if (!item) return { error: "Item not found" };
+
   await prisma.shoppingListItem.update({
     where: { id: itemId },
     data: { quantity },
@@ -164,11 +197,14 @@ export async function updateItemQuantity(
 export async function searchItemNames(
   query: string,
 ): Promise<{ name: string; count: number }[]> {
+  const userId = await requireAuth();
+
   const q = query.trim().toLowerCase();
   if (q.length < 2) return [];
 
   const items = await prisma.transactionItem.groupBy({
     by: ["name"],
+    where: { transaction: { userId } },
     _count: { name: true },
     orderBy: { _count: { name: "desc" } },
   });
@@ -188,8 +224,10 @@ export async function searchItemNames(
 export async function analyzeBasket(
   listId: string,
 ): Promise<BasketAnalysis | { error: string }> {
+  const userId = await requireAuth();
+
   const list = await prisma.shoppingList.findUnique({
-    where: { id: listId },
+    where: { id: listId, userId },
     include: { items: true },
   });
 
@@ -197,7 +235,7 @@ export async function analyzeBasket(
     return { error: "List is empty or not found" };
   }
 
-  const groupMap = await buildGroupMap();
+  const groupMap = await buildGroupMap(userId);
 
   // Build set of all normalized names for basket items (considering groups)
   const basketItems = list.items.map((item) => {
@@ -206,7 +244,7 @@ export async function analyzeBasket(
   });
 
   // Collect all group member names for each resolved name
-  const groups = await prisma.itemGroup.findMany();
+  const groups = await prisma.itemGroup.findMany({ where: { userId } });
   const groupMembersMap = new Map<string, string[]>();
   for (const g of groups) {
     groupMembersMap.set(
@@ -229,7 +267,7 @@ export async function analyzeBasket(
 
   // Fetch all matching TransactionItems
   const transactionItems = await prisma.transactionItem.findMany({
-    where: { normalizedName: { in: Array.from(allNormalizedNames) } },
+    where: { normalizedName: { in: Array.from(allNormalizedNames) }, transaction: { userId } },
     include: {
       transaction: { select: { merchant: true } },
     },

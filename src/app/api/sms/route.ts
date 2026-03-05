@@ -5,7 +5,6 @@ import { getDefaultAccount, sendTelegramMessage } from "@/lib/telegram";
 import { checkBudgetAlert } from "@/actions/budgets";
 import { checkTransactionAnomaly } from "@/lib/anomaly";
 import { resolveCategory } from "@/lib/auto-categorize";
-import { getSettings } from "@/actions/settings";
 import {
   getNotificationTemplate,
   renderTemplate,
@@ -13,17 +12,47 @@ import {
 } from "@/lib/notification-templates";
 
 export async function POST(request: NextRequest) {
-  const settings = await getSettings();
+  // Authenticate with API key and resolve user
+  const authHeader = request.headers.get("authorization");
+  const apiKey = authHeader?.replace("Bearer ", "");
 
-  // Authenticate with API key (DB settings first, env fallback)
-  const apiKey = settings.smsApiKey || process.env.SMS_API_KEY;
-  if (apiKey) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${apiKey}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!apiKey) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Look up user by smsApiKey in their settings
+  const settings = await prisma.appSettings.findFirst({
+    where: { smsApiKey: apiKey },
+    include: { user: { select: { id: true } } },
+  });
+
+  // Fallback: check env-level API key (for backwards compat, uses first user with settings)
+  if (!settings) {
+    if (apiKey !== process.env.SMS_API_KEY) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    // Find the first user's settings as fallback
+    const fallbackSettings = await prisma.appSettings.findFirst();
+    if (!fallbackSettings) {
+      return NextResponse.json({ error: "No settings configured" }, { status: 500 });
+    }
+    // Use fallback settings
+    return handleSms(request, fallbackSettings, fallbackSettings.userId);
+  }
+
+  return handleSms(request, settings, settings.userId);
+}
+
+async function handleSms(
+  request: NextRequest,
+  settings: {
+    currency: string;
+    telegramChatId: string | null;
+    telegramBotToken: string | null;
+    notifySmsTransaction: boolean;
+  },
+  userId: string,
+) {
   let body: { text?: string };
   try {
     body = await request.json();
@@ -37,7 +66,7 @@ export async function POST(request: NextRequest) {
   }
 
   const dbPatterns = await prisma.smsPattern.findMany({
-    where: { enabled: true },
+    where: { enabled: true, userId },
     orderBy: { priority: "asc" },
   });
   const parsed = parseSMSWithPatterns(smsText, dbPatterns);
@@ -45,14 +74,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Could not parse SMS", raw: smsText }, { status: 422 });
   }
 
-  // Get default account
-  const account = await getDefaultAccount();
+  // Get default account for this user
+  const account = await prisma.account.findFirst({ where: { userId } });
   if (!account) {
     return NextResponse.json({ error: "No account found" }, { status: 500 });
   }
 
-  // Auto-categorize by merchant
-  const categoryId = await resolveCategory(parsed.merchant);
+  // Auto-categorize by merchant (scoped to user)
+  const categoryId = await resolveCategory(parsed.merchant, userId);
 
   // Create transaction
   const transaction = await prisma.transaction.create({
@@ -66,10 +95,11 @@ export async function POST(request: NextRequest) {
       merchant: parsed.merchant ?? null,
       description: parsed.description ?? null,
       source: "sms",
+      userId,
     },
   });
 
-  // Send Telegram notification (DB settings first, env fallback)
+  // Send Telegram notification
   const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
   const botToken = settings.telegramBotToken || undefined;
   if (chatId && settings.notifySmsTransaction) {

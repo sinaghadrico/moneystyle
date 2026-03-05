@@ -123,6 +123,17 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Fix date/time inputs in dark mode (iOS/Safari) */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    color-scheme: light dark;
+  }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
+  }
 }
 
 @layer utilities {

@@ -73,6 +73,8 @@ export function TransactionFilters({
                 type="date"
                 value={filters.dateFrom}
                 onChange={(e) => onChange("dateFrom", e.target.value)}
+                placeholder="Start date"
+                className="min-h-10"
               />
             </div>
             <div className="grid gap-1">
@@ -81,6 +83,8 @@ export function TransactionFilters({
                 type="date"
                 value={filters.dateTo}
                 onChange={(e) => onChange("dateTo", e.target.value)}
+                placeholder="End date"
+                className="min-h-10"
               />
             </div>
           </div>

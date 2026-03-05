@@ -10,7 +10,7 @@ type Props = { data: WrappedData; isActive: boolean };
 
 function shortAmount(amount: number): string {
   const abs = Math.abs(amount);
-  if (abs >= 1000) return `${amount < 0 ? "-" : ""}AED ${(abs / 1000).toFixed(1)}K`;
+  if (abs >= 1000) return `${amount < 0 ? "-" : ""}${(abs / 1000).toFixed(1)}K`;
   return formatCurrency(amount);
 }
 

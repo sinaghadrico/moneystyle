@@ -20,8 +20,8 @@ import { getSpreadEntries, getSpreadFraction } from "@/lib/spread-utils";
 
 const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null };
 
-async function getPrimaryCurrency(): Promise<string> {
-  const settings = await prisma.appSettings.findFirst();
+async function getPrimaryCurrency(userId: string): Promise<string> {
+  const settings = await prisma.appSettings.findFirst({ where: { userId } });
   return settings?.currency ?? "AED";
 }
 
@@ -113,7 +113,7 @@ export async function getDashboardStats(
   const userId = await requireAuth();
   const where = getDateFilter(period, userId, accountId);
   const [primaryCurrency, rates] = await Promise.all([
-    getPrimaryCurrency(),
+    getPrimaryCurrency(userId),
     getCurrencyRates(),
   ]);
 
@@ -151,7 +151,7 @@ export async function getMonthlyData(
     extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
   }
   const [primaryCurrency, rates] = await Promise.all([
-    getPrimaryCurrency(),
+    getPrimaryCurrency(userId),
     getCurrencyRates(),
   ]);
 
@@ -231,7 +231,7 @@ export async function getCategoryBreakdown(
     extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
   }
   const [primaryCurrency, rates] = await Promise.all([
-    getPrimaryCurrency(),
+    getPrimaryCurrency(userId),
     getCurrencyRates(),
   ]);
 
@@ -312,7 +312,7 @@ export async function getTopMerchants(
   const userId = await requireAuth();
   const where = getDateFilter(period, userId, accountId);
   const [primaryCurrency, rates] = await Promise.all([
-    getPrimaryCurrency(),
+    getPrimaryCurrency(userId),
     getCurrencyRates(),
   ]);
 
@@ -356,7 +356,7 @@ export async function getMonthlyCategoryBreakdown(
     extendedWhere.date = extendForSpread(extendedWhere.date as { gte?: Date; lte?: Date });
   }
   const [primaryCurrency, rates] = await Promise.all([
-    getPrimaryCurrency(),
+    getPrimaryCurrency(userId),
     getCurrencyRates(),
   ]);
 
@@ -459,7 +459,7 @@ export async function getExpensePrediction(): Promise<ExpensePrediction> {
   };
 
   const [primaryCurrency, rates] = await Promise.all([
-    getPrimaryCurrency(),
+    getPrimaryCurrency(userId),
     getCurrencyRates(),
   ]);
   const spent = await getMyExpense(dateWhere, primaryCurrency, rates);
@@ -477,7 +477,7 @@ export async function getDailySpendData(): Promise<DailySpend[]> {
   const now = new Date();
   const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
   const [primaryCurrency, rates] = await Promise.all([
-    getPrimaryCurrency(),
+    getPrimaryCurrency(userId),
     getCurrencyRates(),
   ]);
 

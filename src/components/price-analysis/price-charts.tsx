@@ -13,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 import type { ItemPricePoint, ItemMerchantStats } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 
 const tooltipStyle = {
   backgroundColor: "var(--card)",
@@ -48,7 +48,7 @@ const MERCHANT_COLORS = [
 ];
 
 const currencyFormatter = (value: number | undefined) =>
-  `AED ${(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  formatCurrency(value ?? 0);
 
 export function ItemPriceHistoryChart({ data }: { data: ItemPricePoint[] }) {
   // Group by merchant for multi-line

@@ -27,10 +27,10 @@ import type {
   MonthlyCategoryData,
   CategoryMeta,
 } from "@/lib/types";
-import { formatMonth } from "@/lib/utils";
+import { formatMonth, formatCurrency } from "@/lib/utils";
 
 const currencyFormatter = (value: number | undefined) =>
-  `AED ${(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  formatCurrency(value ?? 0);
 
 const shortCurrencyFormatter = (value: number | undefined) => {
   const v = value ?? 0;

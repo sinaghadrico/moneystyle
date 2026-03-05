@@ -141,10 +141,20 @@ export function SplitDialog({
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="sm:max-w-lg">
-        <ResponsiveDialogHeader>
+        <ResponsiveDialogHeader className="flex flex-row items-center justify-between">
           <ResponsiveDialogTitle>
             Split Transaction — {formatCurrency(totalAmount)}
           </ResponsiveDialogTitle>
+          {hasSplits && (
+            <button
+              type="button"
+              className="mr-6 text-destructive hover:text-destructive/80 disabled:opacity-50"
+              onClick={handleUnsplit}
+              disabled={saving}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </ResponsiveDialogHeader>
         <div className="space-y-3 py-2">
           {rows.map((row, idx) => (
@@ -239,7 +249,7 @@ export function SplitDialog({
             </div>
           ))}
 
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center justify-between">
             <Button variant="outline" size="sm" className="shrink-0" onClick={addRow}>
               <Plus className="mr-1 h-3.5 w-3.5" />
               Add Split
@@ -263,17 +273,6 @@ export function SplitDialog({
               {saving ? "Saving..." : "Save Split"}
             </Button>
           </div>
-          {hasSplits && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleUnsplit}
-              disabled={saving}
-            >
-              Remove Split
-            </Button>
-          )}
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
 

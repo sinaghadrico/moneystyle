@@ -112,7 +112,7 @@ export function AiSetupDialog({
               className="flex-1"
               onClick={() => {
                 onOpenChange(false);
-                router.push("/settings?tab=integrations");
+                router.push("/settings/integrations");
               }}
             >
               <Settings className="mr-1 h-4 w-4" />

@@ -14,11 +14,9 @@ import {
   Bell,
   Brain,
   Calendar,
-  CalendarRange,
   CreditCard,
   Globe,
   LayoutDashboard,
-  LineChart,
   Link2,
   Lock,
   LogIn,
@@ -27,7 +25,6 @@ import {
   Receipt,
   Repeat,
   ScanLine,
-  Server,
   Shield,
   ShoppingBasket,
   ShoppingCart,
@@ -39,7 +36,6 @@ import {
   Users,
   UtensilsCrossed,
   Wallet,
-  Zap,
 } from "lucide-react";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -120,21 +116,21 @@ const PILLARS = [
 const STEPS = [
   {
     num: "1",
-    title: "Deploy in minutes",
-    description: "One command. Your own server. Your data never leaves.",
-    code: "docker compose up -d",
+    title: "Create your free account",
+    description:
+      "Sign up in 10 seconds. No credit card required. Start using MoneyLoom immediately.",
   },
   {
     num: "2",
-    title: "Start tracking",
+    title: "Log or scan your first expense",
     description:
-      "Log your first transaction or scan a receipt. Import bank CSV for instant history.",
+      "Add a transaction manually or snap a receipt — AI extracts everything. Import bank CSV for instant history.",
   },
   {
     num: "3",
-    title: "Get smarter over time",
+    title: "AI gets smarter with you",
     description:
-      "As data grows, AI kicks in — price comparisons, spending predictions, meal plans, and personalized advice.",
+      "As your data grows, AI unlocks price comparisons, spending predictions, meal plans, and personalized financial advice.",
   },
 ];
 
@@ -312,19 +308,19 @@ const FEATURES: {
 
 const TRUST_POINTS = [
   {
-    icon: Server,
-    title: "Self-Hosted",
-    description: "Your server, your rules. Deploy anywhere with Docker.",
-  },
-  {
     icon: Lock,
-    title: "Your Data Stays Yours",
-    description: "No cloud. No tracking. No selling your financial data.",
+    title: "Bank-Level Encryption",
+    description: "Your financial data is encrypted at rest and in transit. Always.",
   },
   {
     icon: Shield,
-    title: "No Subscription",
-    description: "Free forever. No ads. No premium tiers. No hidden costs.",
+    title: "We Never Sell Your Data",
+    description: "No ads. No data brokers. No third-party tracking. Period.",
+  },
+  {
+    icon: Sparkles,
+    title: "Free to Start",
+    description: "Generous free tier. No credit card. Upgrade only when you need more.",
   },
 ];
 
@@ -419,7 +415,7 @@ export function LandingContent() {
               >
                 <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm text-muted-foreground mb-6">
                   <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  Self-hosted &middot; AI-powered &middot; Free forever
+                  Free to start &middot; AI-powered &middot; No credit card
                 </div>
               </div>
               <h1
@@ -438,7 +434,7 @@ export function LandingContent() {
               >
                 MoneyLoom shows you exactly where every dollar goes — and helps
                 you keep more of it. AI-powered tracking, smart shopping, and
-                personalized advice, all on your own server.
+                personalized advice. Sign up and start in seconds.
               </p>
               <div
                 className={`mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition-all duration-700 delay-300 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
@@ -701,10 +697,10 @@ export function LandingContent() {
             className={`text-center mb-12 transition-all duration-700 ${howItWorks.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
           >
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Up and running in minutes
+              Up and running in seconds
             </h2>
             <p className="mt-3 text-muted-foreground text-lg">
-              No sign-ups. No cloud. Just your own finance app.
+              No setup. No complexity. Just sign up and go.
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-3">
@@ -721,11 +717,6 @@ export function LandingContent() {
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                   {step.description}
                 </p>
-                {step.code && (
-                  <code className="mt-3 block rounded-lg bg-muted px-3 py-2 text-xs font-mono">
-                    {step.code}
-                  </code>
-                )}
               </div>
             ))}
           </div>
@@ -856,10 +847,10 @@ export function LandingContent() {
             className={`text-center mb-12 transition-all duration-700 ${trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
           >
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Your data. Your server. Period.
+              Your finances deserve privacy.
             </h2>
             <p className="mt-3 text-muted-foreground text-lg">
-              MoneyLoom is fully self-hosted. No cloud dependency. No compromise.
+              We treat your financial data like our own — with maximum security and zero compromises.
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-3">
@@ -879,29 +870,6 @@ export function LandingContent() {
               </div>
             ))}
           </div>
-          <div
-            className={`mt-8 flex flex-wrap items-center justify-center gap-3 transition-all duration-700 delay-300 ${trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-          >
-            {[
-              "Next.js 16",
-              "React 19",
-              "TypeScript",
-              "Tailwind CSS",
-              "PostgreSQL",
-              "Prisma",
-              "OpenAI",
-              "PWA",
-              "shadcn/ui",
-              "Docker",
-            ].map((tech) => (
-              <span
-                key={tech}
-                className="rounded-full border bg-card px-4 py-1.5 text-sm font-medium"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -915,8 +883,8 @@ export function LandingContent() {
               Stop wondering where your money went.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
-              Deploy in 2 minutes. Start tracking today. Your future self will
-              thank you.
+              Sign up free. Start tracking today. Your future self will thank
+              you.
             </p>
             {isLoggedIn ? (
               <Button asChild size="lg" className="mt-8 text-base">
@@ -956,7 +924,7 @@ export function LandingContent() {
               <Wallet className="h-4 w-4" />
               <span>MoneyLoom</span>
             </div>
-            <p>Self-hosted personal finance tracker</p>
+            <p>AI-powered personal finance tracker</p>
           </div>
         </div>
       </footer>

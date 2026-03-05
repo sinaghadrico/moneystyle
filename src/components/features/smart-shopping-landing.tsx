@@ -586,8 +586,8 @@ export function SmartShoppingLanding() {
               Start Shopping Smarter
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
-              Every receipt you scan makes Smart Shopping more accurate. Your
-              data, your savings.
+              Every receipt you scan makes Smart Shopping more accurate. Sign
+              up free and start saving.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
               {isLoggedIn ? (

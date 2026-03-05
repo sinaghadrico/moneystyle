@@ -309,8 +309,8 @@ export function FeatureLanding({ feature }: { feature: FeatureConfig }) {
               Try {feature.badge} Today
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
-              Deploy MoneyLoom in minutes and start using {feature.badge}{" "}
-              with your own data.
+              Sign up free and start using {feature.badge} with your own
+              data.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
               {isLoggedIn ? (

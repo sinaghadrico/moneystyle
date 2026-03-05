@@ -17,6 +17,7 @@ import { RecordBillPaymentDialog } from "./record-bill-payment-dialog";
 import { deleteBill } from "@/actions/profile";
 import { formatCurrency } from "@/lib/utils";
 import type { BillData } from "@/lib/types";
+import { PaymentInstructionsDisplay } from "./payment-instructions-display";
 import { Plus, Pencil, Trash2, CheckCircle, Bell, Clock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -190,6 +191,10 @@ function BillCard({
             Last paid {bill.lastPaidAmount !== null && formatCurrency(bill.lastPaidAmount, bill.currency) + " on "}
             {new Date(bill.lastPaidAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
           </p>
+        )}
+
+        {bill.paymentInstructions && (
+          <PaymentInstructionsDisplay instructions={bill.paymentInstructions} />
         )}
 
         <div className="flex items-center justify-end gap-1 pt-1">

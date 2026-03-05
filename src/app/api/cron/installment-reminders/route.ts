@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
               name: inst.name, amount: amtStr, currency: inst.currency, progress,
             })
           );
+          if (inst.paymentInstructions) lines.push(`  📝 ${inst.paymentInstructions}`);
         } else if (daysUntilDue === inst.reminderDays) {
           lines.push(
             renderTemplate(tplDueSoon, {
@@ -82,6 +83,7 @@ export async function GET(request: NextRequest) {
               days: daysUntilDue, days_label: daysUntilDue !== 1 ? "days" : "day",
             })
           );
+          if (inst.paymentInstructions) lines.push(`  📝 ${inst.paymentInstructions}`);
         }
       }
 
@@ -96,6 +98,7 @@ export async function GET(request: NextRequest) {
               name: bill.name, amount: amtStr, currency: bill.currency, progress: "",
             })
           );
+          if (bill.paymentInstructions) lines.push(`  📝 ${bill.paymentInstructions}`);
         } else if (daysUntilDue === bill.reminderDays) {
           lines.push(
             renderTemplate(tplDueSoon, {
@@ -103,6 +106,7 @@ export async function GET(request: NextRequest) {
               days: daysUntilDue, days_label: daysUntilDue !== 1 ? "days" : "day",
             })
           );
+          if (bill.paymentInstructions) lines.push(`  📝 ${bill.paymentInstructions}`);
         }
       }
 

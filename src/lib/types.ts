@@ -425,6 +425,7 @@ export type InstallmentData = {
   paidCount: number;
   isActive: boolean;
   reminderDays: number;
+  paymentInstructions: string | null;
   lastPaidAt: string | null;
 };
 
@@ -443,6 +444,7 @@ export type BillData = {
   dueDay: number;
   isActive: boolean;
   reminderDays: number;
+  paymentInstructions: string | null;
   lastPaidAt: string | null;
   lastPaidAmount: number | null;
 };

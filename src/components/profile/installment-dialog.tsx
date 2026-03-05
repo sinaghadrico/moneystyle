@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { createInstallment, updateInstallment } from "@/actions/profile";
 import { toast } from "sonner";
@@ -45,6 +46,9 @@ export function InstallmentDialog({
   const [reminderDays, setReminderDays] = useState(
     installment?.reminderDays?.toString() ?? "2"
   );
+  const [paymentInstructions, setPaymentInstructions] = useState(
+    installment?.paymentInstructions ?? ""
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -61,6 +65,7 @@ export function InstallmentDialog({
       paidCount: parseInt(paidCount) || 0,
       isActive,
       reminderDays: parseInt(reminderDays) || 2,
+      paymentInstructions: paymentInstructions.trim() || null,
     };
 
     const result = isEdit
@@ -161,6 +166,15 @@ export function InstallmentDialog({
                 onChange={(e) => setPaidCount(e.target.value)}
               />
             </div>
+          </div>
+          <div className="grid gap-2">
+            <Label>Payment Instructions</Label>
+            <Textarea
+              value={paymentInstructions}
+              onChange={(e) => setPaymentInstructions(e.target.value)}
+              placeholder="How to pay: website, account number, steps..."
+              rows={3}
+            />
           </div>
           <div className="flex items-center gap-3">
             <Switch checked={isActive} onCheckedChange={setIsActive} />

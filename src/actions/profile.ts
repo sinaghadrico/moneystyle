@@ -233,6 +233,7 @@ export async function getInstallments(): Promise<InstallmentData[]> {
     paidCount: r.paidCount,
     isActive: r.isActive,
     reminderDays: r.reminderDays,
+    paymentInstructions: r.paymentInstructions,
     lastPaidAt: r.payments[0]?.paidAt?.toISOString() ?? null,
   }));
 }
@@ -349,6 +350,7 @@ export async function getBills(): Promise<BillData[]> {
     dueDay: r.dueDay,
     isActive: r.isActive,
     reminderDays: r.reminderDays,
+    paymentInstructions: r.paymentInstructions,
     lastPaidAt: r.payments[0]?.paidAt?.toISOString() ?? null,
     lastPaidAmount: r.payments[0] ? Number(r.payments[0].amount) : null,
   }));

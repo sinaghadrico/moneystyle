@@ -415,16 +415,17 @@ model ReserveSnapshot {
 }
 
 model Installment {
-  id           String               @id @default(cuid())
-  name         String
-  amount       Decimal              @db.Decimal(12, 2)
-  currency     String               @default("AED")
-  dueDay       Int                  @default(1)
-  totalCount   Int?
-  paidCount    Int                  @default(0)
-  isActive     Boolean              @default(true)
-  reminderDays Int                  @default(2)
-  userId       String
+  id                  String               @id @default(cuid())
+  name                String
+  amount              Decimal              @db.Decimal(12, 2)
+  currency            String               @default("AED")
+  dueDay              Int                  @default(1)
+  totalCount          Int?
+  paidCount           Int                  @default(0)
+  isActive            Boolean              @default(true)
+  reminderDays        Int                  @default(2)
+  paymentInstructions String?
+  userId              String
   user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments     InstallmentPayment[]
   createdAt    DateTime             @default(now())
@@ -447,14 +448,15 @@ model InstallmentPayment {
 }
 
 model Bill {
-  id           String        @id @default(cuid())
-  name         String
-  amount       Decimal       @db.Decimal(12, 2)
-  currency     String        @default("AED")
-  dueDay       Int           @default(1)
-  isActive     Boolean       @default(true)
-  reminderDays Int           @default(2)
-  userId       String
+  id                  String        @id @default(cuid())
+  name                String
+  amount              Decimal       @db.Decimal(12, 2)
+  currency            String        @default("AED")
+  dueDay              Int           @default(1)
+  isActive            Boolean       @default(true)
+  reminderDays        Int           @default(2)
+  paymentInstructions String?
+  userId              String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments     BillPayment[]
   createdAt    DateTime      @default(now())

@@ -202,6 +202,7 @@ export const installmentSchema = z.object({
   paidCount: z.coerce.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
   reminderDays: z.coerce.number().int().min(0).max(30).default(2),
+  paymentInstructions: z.string().max(2000).nullable().optional(),
 });
 
 export const installmentUpdateSchema = installmentSchema.partial();
@@ -217,6 +218,7 @@ export const billSchema = z.object({
   dueDay: z.coerce.number().int().min(1).max(31).default(1),
   isActive: z.boolean().default(true),
   reminderDays: z.coerce.number().int().min(0).max(30).default(2),
+  paymentInstructions: z.string().max(2000).nullable().optional(),
 });
 
 export const billUpdateSchema = billSchema.partial();

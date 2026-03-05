@@ -17,6 +17,7 @@ import { RecordPaymentDialog } from "./record-payment-dialog";
 import { deleteInstallment } from "@/actions/profile";
 import { formatCurrency } from "@/lib/utils";
 import type { InstallmentData } from "@/lib/types";
+import { PaymentInstructionsDisplay } from "./payment-instructions-display";
 import { Plus, Pencil, Trash2, CheckCircle, Bell, Clock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -209,6 +210,10 @@ function InstallmentCard({
           <p className="text-xs text-muted-foreground">
             Last paid {new Date(installment.lastPaidAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
           </p>
+        )}
+
+        {installment.paymentInstructions && (
+          <PaymentInstructionsDisplay instructions={installment.paymentInstructions} />
         )}
 
         <div className="flex items-center justify-end gap-1 pt-1">

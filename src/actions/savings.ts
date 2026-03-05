@@ -14,10 +14,10 @@ export async function getSavingsGoals() {
   });
 }
 
-export async function getSavingsProgress(): Promise<SavingsProgress[]> {
+export async function getSavingsProgress(includeAll = false): Promise<SavingsProgress[]> {
   const userId = await requireAuth();
   const goals = await prisma.savingsGoal.findMany({
-    where: { userId, status: "active" },
+    where: includeAll ? { userId } : { userId, status: "active" },
     orderBy: { createdAt: "desc" },
   });
 

@@ -10,6 +10,7 @@ import { IncomeSourcesSection } from "./income-sources-section";
 import { ReservesSection } from "./reserves-section";
 import { InstallmentsSection } from "./installments-section";
 import { BillsSection } from "./bills-section";
+import { SavingsGoalsSection } from "./savings-goals-section";
 import { PreferencesSection } from "./preferences-section";
 import { AccountSection } from "./account-section";
 import {
@@ -19,6 +20,7 @@ import {
   getBills,
   getFinancialOverview,
 } from "@/actions/profile";
+import { getSavingsProgress } from "@/actions/savings";
 import { getUserProfile } from "@/actions/auth";
 import { getUserPreferences } from "@/actions/weekend-planner";
 import {
@@ -27,6 +29,7 @@ import {
   BarChart3,
   TrendingUp,
   CreditCard,
+  Target,
   LogOut,
 } from "lucide-react";
 import type {
@@ -36,6 +39,7 @@ import type {
   BillData,
   FinancialOverview,
   UserPreferenceData,
+  SavingsProgress,
 } from "@/lib/types";
 
 const TABS = [
@@ -47,8 +51,9 @@ type Tab = (typeof TABS)[number]["key"];
 
 const FINANCE_SECTIONS = [
   { key: "overview", label: "Overview", icon: BarChart3 },
-  { key: "income", label: "Income & Savings", icon: TrendingUp },
+  { key: "income", label: "Income & Saving", icon: TrendingUp },
   { key: "payments", label: "Payments", icon: CreditCard },
+  { key: "savings", label: "Goals", icon: Target },
 ] as const;
 
 type FinanceSection = (typeof FINANCE_SECTIONS)[number]["key"];
@@ -63,6 +68,7 @@ export function ProfileContent() {
   const [reserves, setReserves] = useState<ReserveData[]>([]);
   const [installments, setInstallments] = useState<InstallmentData[]>([]);
   const [bills, setBills] = useState<BillData[]>([]);
+  const [savingsGoals, setSavingsGoals] = useState<SavingsProgress[]>([]);
   const [overview, setOverview] = useState<FinancialOverview | null>(null);
   const [preferences, setPreferences] = useState<UserPreferenceData>({
     entertainment: [],
@@ -80,11 +86,12 @@ export function ProfileContent() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [sources, res, inst, bl, ov, prefs, prof] = await Promise.all([
+    const [sources, res, inst, bl, sg, ov, prefs, prof] = await Promise.all([
       getIncomeSources(),
       getReserves(),
       getInstallments(),
       getBills(),
+      getSavingsProgress(true),
       getFinancialOverview(),
       getUserPreferences(),
       getUserProfile(),
@@ -93,6 +100,7 @@ export function ProfileContent() {
     setReserves(res);
     setInstallments(inst);
     setBills(bl);
+    setSavingsGoals(sg);
     setOverview(ov);
     setPreferences(prefs);
     if (prof) setProfile(prof);
@@ -225,6 +233,11 @@ export function ProfileContent() {
               />
               <BillsSection bills={bills} onRefresh={loadData} />
             </div>
+          )}
+
+          {/* Savings */}
+          {financeSection === "savings" && (
+            <SavingsGoalsSection goals={savingsGoals} onRefresh={loadData} />
           )}
         </div>
       )}

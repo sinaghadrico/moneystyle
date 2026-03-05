@@ -67,6 +67,8 @@ const axisStyle = {
 };
 
 export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
+  if (data.length === 0) return null;
+
   const chartData = data.map((d) => ({
     ...d,
     label: formatMonth(d.month),
@@ -145,6 +147,8 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
 export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const total = data.reduce((s, d) => s + d.total, 0);
+
+  if (data.length === 0) return null;
 
   return (
     <Card className="overflow-hidden">
@@ -243,6 +247,8 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
 }
 
 export function TopMerchantsChart({ data }: { data: MerchantTotal[] }) {
+  if (data.length === 0) return null;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -310,6 +316,8 @@ export function MonthlyCategoryChart({
   const [visible, setVisible] = useState<Set<string>>(
     () => new Set(categories.map((c) => c.name)),
   );
+
+  if (data.length === 0 || categories.length === 0) return null;
 
   const toggle = (name: string) => {
     setVisible((prev) => {
@@ -427,6 +435,8 @@ export function MonthlyCategoryChart({
 }
 
 export function MonthlyTrendChart({ data }: { data: MonthlyData[] }) {
+  if (data.length === 0) return null;
+
   const chartData = data.map((d) => ({
     ...d,
     label: formatMonth(d.month),

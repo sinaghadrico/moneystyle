@@ -105,6 +105,9 @@ export async function getTransactions(
         account: true,
         tags: { include: { tag: true } },
         splits: { include: { category: true, person: true } },
+        installmentPayment: { include: { installment: { select: { id: true, name: true } } } },
+        billPayment: { include: { bill: { select: { id: true, name: true } } } },
+        incomeDeposit: { include: { incomeSource: { select: { id: true, name: true } } } },
         _count: { select: { lineItems: true } },
       },
       orderBy,
@@ -115,27 +118,53 @@ export async function getTransactions(
   ]);
 
   return {
-    data: data.map((tx) => ({
-      ...tx,
-      amount: tx.amount != null ? Number(tx.amount) : null,
-      tags: tx.tags.map((tt) => ({
-        id: tt.tag.id,
-        name: tt.tag.name,
-        color: tt.tag.color,
-      })),
-      splits: tx.splits.map((s) => ({
-        id: s.id,
-        categoryId: s.categoryId,
-        categoryName: s.category?.name ?? null,
-        categoryColor: s.category?.color ?? null,
-        personId: s.personId,
-        personName: s.person?.name ?? null,
-        personColor: s.person?.color ?? null,
-        amount: Number(s.amount),
-        description: s.description,
-      })),
-      lineItemCount: tx._count.lineItems,
-    })),
+    data: data.map((tx) => {
+      let paymentLink = null;
+      if (tx.installmentPayment) {
+        paymentLink = {
+          type: "installment" as const,
+          paymentId: tx.installmentPayment.id,
+          parentId: tx.installmentPayment.installment.id,
+          parentName: tx.installmentPayment.installment.name,
+        };
+      } else if (tx.billPayment) {
+        paymentLink = {
+          type: "bill" as const,
+          paymentId: tx.billPayment.id,
+          parentId: tx.billPayment.bill.id,
+          parentName: tx.billPayment.bill.name,
+        };
+      } else if (tx.incomeDeposit) {
+        paymentLink = {
+          type: "income" as const,
+          paymentId: tx.incomeDeposit.id,
+          parentId: tx.incomeDeposit.incomeSource.id,
+          parentName: tx.incomeDeposit.incomeSource.name,
+        };
+      }
+      return {
+        ...tx,
+        amount: tx.amount != null ? Number(tx.amount) : null,
+        tags: tx.tags.map((tt) => ({
+          id: tt.tag.id,
+          name: tt.tag.name,
+          color: tt.tag.color,
+        })),
+        splits: tx.splits.map((s) => ({
+          id: s.id,
+          categoryId: s.categoryId,
+          categoryName: s.category?.name ?? null,
+          categoryColor: s.category?.color ?? null,
+          personId: s.personId,
+          personName: s.person?.name ?? null,
+          personColor: s.person?.color ?? null,
+          amount: Number(s.amount),
+          description: s.description,
+        })),
+        lineItemCount: tx._count.lineItems,
+        paymentLink,
+      };
+    }),
     total,
     page,
     pageSize,

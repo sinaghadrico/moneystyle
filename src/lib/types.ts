@@ -18,6 +18,13 @@ export type TransactionSplitData = {
   description: string | null;
 };
 
+export type TransactionPaymentLink = {
+  type: "installment" | "bill" | "income";
+  paymentId: string;
+  parentId: string;
+  parentName: string;
+};
+
 export type TransactionWithCategory = Omit<Transaction, "amount"> & {
   amount: number | null;
   category: Category | null;
@@ -25,6 +32,7 @@ export type TransactionWithCategory = Omit<Transaction, "amount"> & {
   tags: TagData[];
   splits?: TransactionSplitData[];
   lineItemCount?: number;
+  paymentLink?: TransactionPaymentLink | null;
 };
 
 export type AccountWithStats = {
@@ -395,6 +403,17 @@ export type IncomeSourceData = {
   depositDay: number;
   currency: string;
   isActive: boolean;
+  lastReceivedAt: string | null;
+};
+
+export type IncomeDepositData = {
+  id: string;
+  amount: number;
+  note: string | null;
+  receivedAt: string;
+  transactionId: string | null;
+  transactionMerchant: string | null;
+  transactionDate: string | null;
 };
 
 export type ReserveData = {
@@ -434,6 +453,9 @@ export type InstallmentPaymentData = {
   amount: number;
   note: string | null;
   paidAt: string;
+  transactionId: string | null;
+  transactionMerchant: string | null;
+  transactionDate: string | null;
 };
 
 export type BillData = {
@@ -454,6 +476,9 @@ export type BillPaymentData = {
   amount: number;
   note: string | null;
   paidAt: string;
+  transactionId: string | null;
+  transactionMerchant: string | null;
+  transactionDate: string | null;
 };
 
 export type FinancialOverview = {

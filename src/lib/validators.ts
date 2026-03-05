@@ -170,6 +170,12 @@ export const incomeSourceUpdateSchema = incomeSourceSchema.partial();
 
 export type IncomeSourceInput = z.infer<typeof incomeSourceSchema>;
 
+export const recordIncomeDepositSchema = z.object({
+  amount: z.coerce.number().positive("Amount must be positive"),
+  note: z.string().max(500).nullable().optional(),
+  transactionId: z.string().nullable().optional(),
+});
+
 export const reserveSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   amount: z.coerce.number().positive("Amount must be positive"),
@@ -191,6 +197,7 @@ export const recordReserveValueSchema = z.object({
 export const recordInstallmentPaymentSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
   note: z.string().max(500).nullable().optional(),
+  transactionId: z.string().nullable().optional(),
 });
 
 export const installmentSchema = z.object({
@@ -228,6 +235,7 @@ export type BillInput = z.infer<typeof billSchema>;
 export const recordBillPaymentSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
   note: z.string().max(500).nullable().optional(),
+  transactionId: z.string().nullable().optional(),
 });
 
 // Weekend planner validators

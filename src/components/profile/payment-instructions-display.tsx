@@ -31,7 +31,7 @@ function CopyableNumber({ value }: { value: string }) {
   );
 }
 
-function renderInstructions(text: string) {
+export function renderInstructions(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const numberRegex = /(\b\d{4,}\b)/g;
   const combinedRegex = /(https?:\/\/[^\s]+|\b\d{4,}\b)/g;
@@ -70,7 +70,7 @@ export function PaymentInstructionsDisplay({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="mt-2">
+    <div className="rounded-lg bg-muted/40 px-3 py-2">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -85,7 +85,7 @@ export function PaymentInstructionsDisplay({
         )}
       </button>
       {open && (
-        <div className="mt-2 rounded-lg border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed whitespace-pre-wrap">
+        <div className="mt-2 rounded-md border bg-background px-3 py-2.5 text-xs leading-relaxed whitespace-pre-wrap">
           {renderInstructions(instructions)}
         </div>
       )}

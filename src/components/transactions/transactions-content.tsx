@@ -290,6 +290,19 @@ export function TransactionsContent({
     }
   }, [loadLookups, initialCategories.length, initialAccounts.length]);
 
+  // Deep-link: ?tx=<id> opens the edit dialog for that transaction
+  const txParam = searchParams.get("tx");
+  const txParamHandled = useRef(false);
+  useEffect(() => {
+    if (txParam && result?.data && !txParamHandled.current) {
+      const found = result.data.find((t) => t.id === txParam);
+      if (found) {
+        setEditTx(found);
+        txParamHandled.current = true;
+      }
+    }
+  }, [txParam, result]);
+
   const handleSort = (field: string) => {
     if (sortBy === field) {
       setSortOrder((o) => (o === "asc" ? "desc" : "asc"));

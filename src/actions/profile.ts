@@ -14,6 +14,7 @@ import {
   billSchema,
   billUpdateSchema,
   recordBillPaymentSchema,
+  recordIncomeDepositSchema,
 } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
 import { getCurrencyRates } from "@/actions/currencies";
@@ -27,6 +28,7 @@ import type {
   InstallmentPaymentData,
   BillData,
   BillPaymentData,
+  IncomeDepositData,
   FinancialOverview,
 } from "@/lib/types";
 
@@ -37,6 +39,13 @@ export async function getIncomeSources(): Promise<IncomeSourceData[]> {
   const rows = await prisma.incomeSource.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
+    include: {
+      deposits: {
+        orderBy: { receivedAt: "desc" },
+        take: 1,
+        select: { receivedAt: true },
+      },
+    },
   });
   return rows.map((r) => ({
     id: r.id,
@@ -45,6 +54,7 @@ export async function getIncomeSources(): Promise<IncomeSourceData[]> {
     depositDay: r.depositDay,
     currency: r.currency,
     isActive: r.isActive,
+    lastReceivedAt: r.deposits[0]?.receivedAt?.toISOString() ?? null,
   }));
 }
 
@@ -78,6 +88,106 @@ export async function deleteIncomeSource(id: string) {
   await prisma.incomeSource.delete({ where: { id, userId } });
   revalidatePath("/profile");
   return { success: true };
+}
+
+// ── Income Deposits ──
+
+export async function recordIncomeDeposit(
+  incomeSourceId: string,
+  data: Record<string, unknown>
+) {
+  const userId = await requireAuth();
+  const parsed = recordIncomeDepositSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+  const source = await prisma.incomeSource.findUnique({ where: { id: incomeSourceId, userId } });
+  if (!source) return { error: "Income source not found" };
+
+  await prisma.incomeDeposit.create({
+    data: {
+      incomeSourceId,
+      amount: parsed.data.amount,
+      note: parsed.data.note ?? null,
+      transactionId: parsed.data.transactionId ?? null,
+    },
+  });
+
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function getIncomeDepositHistory(
+  incomeSourceId: string
+): Promise<IncomeDepositData[]> {
+  const userId = await requireAuth();
+  const source = await prisma.incomeSource.findUnique({ where: { id: incomeSourceId, userId } });
+  if (!source) return [];
+  const rows = await prisma.incomeDeposit.findMany({
+    where: { incomeSourceId },
+    orderBy: { receivedAt: "desc" },
+    include: { transaction: { select: { id: true, merchant: true, date: true } } },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    amount: Number(r.amount),
+    note: r.note,
+    receivedAt: r.receivedAt.toISOString(),
+    transactionId: r.transactionId,
+    transactionMerchant: r.transaction?.merchant ?? null,
+    transactionDate: r.transaction?.date?.toISOString() ?? null,
+  }));
+}
+
+export async function getSuggestedIncomeTransactions(
+  incomeSourceId: string
+): Promise<SuggestedTransaction[]> {
+  const userId = await requireAuth();
+  const source = await prisma.incomeSource.findUnique({ where: { id: incomeSourceId, userId } });
+  if (!source) return [];
+
+  const amount = Number(source.amount);
+  const currency = source.currency;
+  const depositDay = source.depositDay;
+
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: "income",
+      currency,
+      date: { gte: threeMonthsAgo },
+      mergedIntoId: null,
+      installmentPayment: null,
+      billPayment: null,
+      incomeDeposit: null,
+    },
+    orderBy: { date: "desc" },
+    take: 50,
+    select: { id: true, date: true, amount: true, currency: true, merchant: true, description: true },
+  });
+
+  const lowerBound = amount * 0.9;
+  const upperBound = amount * 1.1;
+
+  return transactions.map((tx) => {
+    const txAmount = Number(tx.amount ?? 0);
+    const amountMatch = txAmount >= lowerBound && txAmount <= upperBound;
+    const txDay = tx.date.getDate();
+    const dateMatch = Math.abs(txDay - depositDay) <= 5 || Math.abs(txDay - depositDay) >= 26;
+
+    return {
+      id: tx.id,
+      date: tx.date.toISOString(),
+      amount: txAmount,
+      currency: tx.currency,
+      merchant: tx.merchant,
+      description: tx.description,
+      isSuggested: amountMatch && dateMatch,
+    };
+  });
 }
 
 // ── Reserves ──
@@ -293,6 +403,7 @@ export async function incrementPaidCount(
         installmentId: id,
         amount: parsed.data.amount,
         note: parsed.data.note ?? null,
+        transactionId: parsed.data.transactionId ?? null,
       },
     }),
     prisma.installment.update({
@@ -318,12 +429,16 @@ export async function getInstallmentHistory(
   const rows = await prisma.installmentPayment.findMany({
     where: { installmentId },
     orderBy: { paidAt: "desc" },
+    include: { transaction: { select: { id: true, merchant: true, date: true } } },
   });
   return rows.map((r) => ({
     id: r.id,
     amount: Number(r.amount),
     note: r.note,
     paidAt: r.paidAt.toISOString(),
+    transactionId: r.transactionId,
+    transactionMerchant: r.transaction?.merchant ?? null,
+    transactionDate: r.transaction?.date?.toISOString() ?? null,
   }));
 }
 
@@ -402,6 +517,7 @@ export async function recordBillPayment(
       billId,
       amount: parsed.data.amount,
       note: parsed.data.note ?? null,
+      transactionId: parsed.data.transactionId ?? null,
     },
   });
   revalidatePath("/profile");
@@ -418,13 +534,288 @@ export async function getBillHistory(
   const rows = await prisma.billPayment.findMany({
     where: { billId },
     orderBy: { paidAt: "desc" },
+    include: { transaction: { select: { id: true, merchant: true, date: true } } },
   });
   return rows.map((r) => ({
     id: r.id,
     amount: Number(r.amount),
     note: r.note,
     paidAt: r.paidAt.toISOString(),
+    transactionId: r.transactionId,
+    transactionMerchant: r.transaction?.merchant ?? null,
+    transactionDate: r.transaction?.date?.toISOString() ?? null,
   }));
+}
+
+// ── Link/Unlink Transactions to Payments ──
+
+export async function linkTransactionToPayment(
+  paymentId: string,
+  paymentType: "installment" | "bill" | "income",
+  transactionId: string
+) {
+  const userId = await requireAuth();
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
+  if (!tx) return { error: "Transaction not found" };
+
+  if (paymentType === "installment") {
+    const payment = await prisma.installmentPayment.findUnique({
+      where: { id: paymentId },
+      include: { installment: { select: { userId: true } } },
+    });
+    if (!payment || payment.installment.userId !== userId) return { error: "Payment not found" };
+    await prisma.installmentPayment.update({
+      where: { id: paymentId },
+      data: { transactionId },
+    });
+  } else if (paymentType === "bill") {
+    const payment = await prisma.billPayment.findUnique({
+      where: { id: paymentId },
+      include: { bill: { select: { userId: true } } },
+    });
+    if (!payment || payment.bill.userId !== userId) return { error: "Payment not found" };
+    await prisma.billPayment.update({
+      where: { id: paymentId },
+      data: { transactionId },
+    });
+  } else {
+    const deposit = await prisma.incomeDeposit.findUnique({
+      where: { id: paymentId },
+      include: { incomeSource: { select: { userId: true } } },
+    });
+    if (!deposit || deposit.incomeSource.userId !== userId) return { error: "Deposit not found" };
+    await prisma.incomeDeposit.update({
+      where: { id: paymentId },
+      data: { transactionId },
+    });
+  }
+
+  revalidatePath("/profile");
+  revalidatePath("/transactions");
+  return { success: true };
+}
+
+export async function unlinkTransactionFromPayment(
+  paymentId: string,
+  paymentType: "installment" | "bill" | "income"
+) {
+  const userId = await requireAuth();
+
+  if (paymentType === "installment") {
+    const payment = await prisma.installmentPayment.findUnique({
+      where: { id: paymentId },
+      include: { installment: { select: { userId: true } } },
+    });
+    if (!payment || payment.installment.userId !== userId) return { error: "Payment not found" };
+    await prisma.installmentPayment.update({
+      where: { id: paymentId },
+      data: { transactionId: null },
+    });
+  } else if (paymentType === "bill") {
+    const payment = await prisma.billPayment.findUnique({
+      where: { id: paymentId },
+      include: { bill: { select: { userId: true } } },
+    });
+    if (!payment || payment.bill.userId !== userId) return { error: "Payment not found" };
+    await prisma.billPayment.update({
+      where: { id: paymentId },
+      data: { transactionId: null },
+    });
+  } else {
+    const deposit = await prisma.incomeDeposit.findUnique({
+      where: { id: paymentId },
+      include: { incomeSource: { select: { userId: true } } },
+    });
+    if (!deposit || deposit.incomeSource.userId !== userId) return { error: "Deposit not found" };
+    await prisma.incomeDeposit.update({
+      where: { id: paymentId },
+      data: { transactionId: null },
+    });
+  }
+
+  revalidatePath("/profile");
+  revalidatePath("/transactions");
+  return { success: true };
+}
+
+export type SuggestedTransaction = {
+  id: string;
+  date: string;
+  amount: number;
+  currency: string;
+  merchant: string | null;
+  description: string | null;
+  isSuggested: boolean;
+};
+
+export async function getSuggestedTransactions(
+  parentId: string,
+  parentType: "installment" | "bill"
+): Promise<SuggestedTransaction[]> {
+  const userId = await requireAuth();
+
+  let amount: number;
+  let currency: string;
+  let dueDay: number;
+
+  if (parentType === "installment") {
+    const inst = await prisma.installment.findUnique({ where: { id: parentId, userId } });
+    if (!inst) return [];
+    amount = Number(inst.amount);
+    currency = inst.currency;
+    dueDay = inst.dueDay;
+  } else {
+    const bill = await prisma.bill.findUnique({ where: { id: parentId, userId } });
+    if (!bill) return [];
+    amount = Number(bill.amount);
+    currency = bill.currency;
+    dueDay = bill.dueDay;
+  }
+
+  // Fetch recent expense transactions not already linked to any payment
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: "expense",
+      currency,
+      date: { gte: threeMonthsAgo },
+      mergedIntoId: null,
+      installmentPayment: null,
+      billPayment: null,
+      incomeDeposit: null,
+    },
+    orderBy: { date: "desc" },
+    take: 50,
+    select: { id: true, date: true, amount: true, currency: true, merchant: true, description: true },
+  });
+
+  const lowerBound = amount * 0.9;
+  const upperBound = amount * 1.1;
+
+  return transactions.map((tx) => {
+    const txAmount = Number(tx.amount ?? 0);
+    const amountMatch = txAmount >= lowerBound && txAmount <= upperBound;
+    const txDay = tx.date.getDate();
+    const dateMatch = Math.abs(txDay - dueDay) <= 5 || Math.abs(txDay - dueDay) >= 26; // wrap around month end
+
+    return {
+      id: tx.id,
+      date: tx.date.toISOString(),
+      amount: txAmount,
+      currency: tx.currency,
+      merchant: tx.merchant,
+      description: tx.description,
+      isSuggested: amountMatch && dateMatch,
+    };
+  });
+}
+
+export type ActivePaymentTarget = {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  type: "installment" | "bill" | "income";
+};
+
+export async function getActiveInstallmentsAndBills(): Promise<ActivePaymentTarget[]> {
+  const userId = await requireAuth();
+  const [installments, bills, incomeSources] = await Promise.all([
+    prisma.installment.findMany({ where: { userId, isActive: true }, orderBy: { name: "asc" } }),
+    prisma.bill.findMany({ where: { userId, isActive: true }, orderBy: { name: "asc" } }),
+    prisma.incomeSource.findMany({ where: { userId, isActive: true }, orderBy: { name: "asc" } }),
+  ]);
+  return [
+    ...incomeSources.map((s) => ({
+      id: s.id,
+      name: s.name,
+      amount: Number(s.amount),
+      currency: s.currency,
+      type: "income" as const,
+    })),
+    ...installments.map((i) => ({
+      id: i.id,
+      name: i.name,
+      amount: Number(i.amount),
+      currency: i.currency,
+      type: "installment" as const,
+    })),
+    ...bills.map((b) => ({
+      id: b.id,
+      name: b.name,
+      amount: Number(b.amount),
+      currency: b.currency,
+      type: "bill" as const,
+    })),
+  ];
+}
+
+export async function linkTransactionToNewPayment(
+  transactionId: string,
+  parentId: string,
+  parentType: "installment" | "bill" | "income"
+) {
+  const userId = await requireAuth();
+  const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
+  if (!tx) return { error: "Transaction not found" };
+  const txAmount = Number(tx.amount ?? 0);
+
+  if (parentType === "installment") {
+    const inst = await prisma.installment.findUnique({ where: { id: parentId, userId } });
+    if (!inst) return { error: "Installment not found" };
+
+    const newPaidCount = inst.paidCount + 1;
+    const shouldDeactivate = inst.totalCount !== null && newPaidCount >= inst.totalCount;
+
+    await prisma.$transaction([
+      prisma.installmentPayment.create({
+        data: {
+          installmentId: parentId,
+          amount: txAmount,
+          transactionId,
+          note: `Linked from transaction`,
+        },
+      }),
+      prisma.installment.update({
+        where: { id: parentId, userId },
+        data: {
+          paidCount: newPaidCount,
+          isActive: shouldDeactivate ? false : inst.isActive,
+        },
+      }),
+    ]);
+  } else if (parentType === "bill") {
+    const bill = await prisma.bill.findUnique({ where: { id: parentId, userId } });
+    if (!bill) return { error: "Bill not found" };
+
+    await prisma.billPayment.create({
+      data: {
+        billId: parentId,
+        amount: txAmount,
+        transactionId,
+        note: `Linked from transaction`,
+      },
+    });
+  } else {
+    const source = await prisma.incomeSource.findUnique({ where: { id: parentId, userId } });
+    if (!source) return { error: "Income source not found" };
+
+    await prisma.incomeDeposit.create({
+      data: {
+        incomeSourceId: parentId,
+        amount: txAmount,
+        transactionId,
+        note: `Linked from transaction`,
+      },
+    });
+  }
+
+  revalidatePath("/profile");
+  revalidatePath("/transactions");
+  return { success: true };
 }
 
 // ── Financial Overview ──

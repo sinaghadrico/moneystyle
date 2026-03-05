@@ -11,25 +11,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { recordBillPayment, getSuggestedTransactions } from "@/actions/profile";
+import { recordIncomeDeposit, getSuggestedIncomeTransactions } from "@/actions/profile";
 import type { SuggestedTransaction } from "@/actions/profile";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
-import type { BillData } from "@/lib/types";
+import type { IncomeSourceData } from "@/lib/types";
 import { ChevronDown, ChevronUp, Link, Loader2, Star } from "lucide-react";
 
-export function RecordBillPaymentDialog({
-  bill,
+export function RecordIncomeDepositDialog({
+  source,
   open,
   onOpenChange,
   onSuccess,
 }: {
-  bill: BillData;
+  source: IncomeSourceData;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }) {
-  const [amount, setAmount] = useState(bill.amount.toString());
+  const [amount, setAmount] = useState(source.amount.toString());
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -43,18 +43,18 @@ export function RecordBillPaymentDialog({
   useEffect(() => {
     if (linkOpen && transactions.length === 0) {
       setLoadingTx(true);
-      getSuggestedTransactions(bill.id, "bill").then((data) => {
+      getSuggestedIncomeTransactions(source.id).then((data) => {
         setTransactions(data);
         setLoadingTx(false);
       });
     }
-  }, [linkOpen, bill.id, transactions.length]);
+  }, [linkOpen, source.id, transactions.length]);
 
   const handleSave = async () => {
     setError("");
     setSaving(true);
 
-    const result = await recordBillPayment(bill.id, {
+    const result = await recordIncomeDeposit(source.id, {
       amount: parseFloat(amount),
       note: note.trim() || null,
       transactionId: selectedTxId,
@@ -72,7 +72,7 @@ export function RecordBillPaymentDialog({
         );
       }
     } else {
-      toast.success("Payment recorded");
+      toast.success("Deposit recorded");
       onOpenChange(false);
       onSuccess();
     }
@@ -87,12 +87,12 @@ export function RecordBillPaymentDialog({
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
-            Record Payment — {bill.name}
+            Record Deposit — {source.name}
           </ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label>Amount ({bill.currency})</Label>
+            <Label>Amount ({source.currency})</Label>
             <Input
               type="number"
               step="0.01"
@@ -106,7 +106,7 @@ export function RecordBillPaymentDialog({
             <Input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. March electricity"
+              placeholder="e.g. March salary"
             />
           </div>
 
@@ -134,7 +134,7 @@ export function RecordBillPaymentDialog({
                   </div>
                 ) : transactions.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-2">
-                    No unlinked transactions found.
+                    No unlinked income transactions found.
                   </p>
                 ) : (
                   <div className="max-h-48 overflow-y-auto space-y-1">
@@ -157,7 +157,7 @@ export function RecordBillPaymentDialog({
                         key={tx.id}
                         tx={tx}
                         selected={selectedTxId === tx.id}
-                        currency={bill.currency}
+                        currency={source.currency}
                         onSelect={() => setSelectedTxId(selectedTxId === tx.id ? null : tx.id)}
                       />
                     ))}
@@ -171,7 +171,7 @@ export function RecordBillPaymentDialog({
                         key={tx.id}
                         tx={tx}
                         selected={selectedTxId === tx.id}
-                        currency={bill.currency}
+                        currency={source.currency}
                         onSelect={() => setSelectedTxId(selectedTxId === tx.id ? null : tx.id)}
                       />
                     ))}

@@ -25,9 +25,17 @@ import type { Category, Account } from "@prisma/client";
 import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { Upload, X, Loader2, FileIcon, ImageIcon } from "lucide-react";
+import { Upload, X, Loader2, FileIcon, ImageIcon, Link, Unlink } from "lucide-react";
 import { FeatureInfo } from "@/components/ui/feature-info";
 import { SPREAD_MONTHS_INFO } from "@/lib/feature-info-content";
+import { Badge } from "@/components/ui/badge";
+import {
+  getActiveInstallmentsAndBills,
+  linkTransactionToNewPayment,
+  unlinkTransactionFromPayment,
+} from "@/actions/profile";
+import type { ActivePaymentTarget } from "@/actions/profile";
+import type { TransactionPaymentLink } from "@/lib/types";
 
 function isImage(path: string): boolean {
   return /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(path);
@@ -63,6 +71,56 @@ export function EditTransactionDialog({
     tagIds: transaction.tags?.map((t) => t.id) ?? [],
     spreadMonths: transaction.spreadMonths?.toString() ?? "",
   });
+
+  // Payment link state
+  const [paymentLink, setPaymentLink] = useState<TransactionPaymentLink | null>(
+    transaction.paymentLink ?? null
+  );
+  const [showLinkPicker, setShowLinkPicker] = useState(false);
+  const [targets, setTargets] = useState<ActivePaymentTarget[]>([]);
+  const [loadingTargets, setLoadingTargets] = useState(false);
+  const [linkingSaving, setLinkingSaving] = useState(false);
+
+  const handleShowLinkPicker = async () => {
+    setShowLinkPicker(true);
+    if (targets.length === 0) {
+      setLoadingTargets(true);
+      const data = await getActiveInstallmentsAndBills();
+      setTargets(data);
+      setLoadingTargets(false);
+    }
+  };
+
+  const handleLinkToTarget = async (target: ActivePaymentTarget) => {
+    setLinkingSaving(true);
+    const result = await linkTransactionToNewPayment(transaction.id, target.id, target.type);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success(`Linked to ${target.name}`);
+      setPaymentLink({
+        type: target.type,
+        paymentId: "", // will be refreshed on next load
+        parentId: target.id,
+        parentName: target.name,
+      });
+      setShowLinkPicker(false);
+    }
+    setLinkingSaving(false);
+  };
+
+  const handleUnlinkPayment = async () => {
+    if (!paymentLink) return;
+    setLinkingSaving(true);
+    const result = await unlinkTransactionFromPayment(paymentLink.paymentId, paymentLink.type);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Payment unlinked");
+      setPaymentLink(null);
+    }
+    setLinkingSaving(false);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -265,6 +323,82 @@ export function EditTransactionDialog({
               value={form.tagIds}
               onChange={(tagIds) => setForm({ ...form, tagIds })}
             />
+          </div>
+
+          {/* Linked Payment section */}
+          <div className="grid gap-2">
+            <Label>Linked Payment</Label>
+            {paymentLink ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Link className="h-3 w-3" />
+                  {paymentLink.parentName}
+                  <span className="text-muted-foreground capitalize">
+                    ({paymentLink.type})
+                  </span>
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs px-2"
+                  onClick={handleUnlinkPayment}
+                  disabled={linkingSaving}
+                >
+                  <Unlink className="h-3 w-3 mr-1" />
+                  Unlink
+                </Button>
+              </div>
+            ) : showLinkPicker ? (
+              <div className="border rounded-lg p-2 space-y-1">
+                {loadingTargets ? (
+                  <div className="flex justify-center py-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : targets.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2">
+                    No active income sources, installments, or bills.
+                  </p>
+                ) : (
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {targets.map((target) => (
+                      <button
+                        key={`${target.type}-${target.id}`}
+                        type="button"
+                        className="w-full flex items-center justify-between rounded-md border p-2 text-left text-xs hover:bg-muted/50 transition-colors"
+                        onClick={() => handleLinkToTarget(target)}
+                        disabled={linkingSaving}
+                      >
+                        <div>
+                          <p className="font-medium">{target.name}</p>
+                          <p className="text-muted-foreground capitalize">{target.type}</p>
+                        </div>
+                        <p className="font-medium shrink-0 ml-2">
+                          {target.amount} {target.currency}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs w-full"
+                  onClick={() => setShowLinkPicker(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShowLinkPicker}
+                className="w-fit"
+              >
+                <Link className="mr-1 h-3.5 w-3.5" />
+                Link to Income/Installment/Bill
+              </Button>
+            )}
           </div>
 
           {/* Files section */}

@@ -9,40 +9,40 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getInstallmentHistory, unlinkTransactionFromPayment } from "@/actions/profile";
+import { getIncomeDepositHistory, unlinkTransactionFromPayment } from "@/actions/profile";
 import { formatCurrency } from "@/lib/utils";
-import type { InstallmentData, InstallmentPaymentData } from "@/lib/types";
+import type { IncomeSourceData, IncomeDepositData } from "@/lib/types";
 import { LinkPaymentTransactionDialog } from "./link-payment-transaction-dialog";
 import { Loader2, Link, Unlink } from "lucide-react";
 import { toast } from "sonner";
 
-export function InstallmentHistoryDialog({
-  installment,
+export function IncomeDepositHistoryDialog({
+  source,
   open,
   onOpenChange,
 }: {
-  installment: InstallmentData;
+  source: IncomeSourceData;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [payments, setPayments] = useState<InstallmentPaymentData[]>([]);
+  const [deposits, setDeposits] = useState<IncomeDepositData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [linkPaymentId, setLinkPaymentId] = useState<string | null>(null);
+  const [linkDepositId, setLinkDepositId] = useState<string | null>(null);
 
   const loadHistory = () => {
     setLoading(true);
-    getInstallmentHistory(installment.id).then((data) => {
-      setPayments(data);
+    getIncomeDepositHistory(source.id).then((data) => {
+      setDeposits(data);
       setLoading(false);
     });
   };
 
   useEffect(() => {
     if (open) loadHistory();
-  }, [open, installment.id]);
+  }, [open, source.id]);
 
-  const handleUnlink = async (paymentId: string) => {
-    const result = await unlinkTransactionFromPayment(paymentId, "installment");
+  const handleUnlink = async (depositId: string) => {
+    const result = await unlinkTransactionFromPayment(depositId, "income");
     if (result.error) {
       toast.error(result.error);
     } else {
@@ -57,7 +57,7 @@ export function InstallmentHistoryDialog({
         <ResponsiveDialogContent>
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>
-              Payment History — {installment.name}
+              Deposit History — {source.name}
             </ResponsiveDialogTitle>
           </ResponsiveDialogHeader>
           <div className="py-4">
@@ -65,52 +65,52 @@ export function InstallmentHistoryDialog({
               <div className="flex justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
-            ) : payments.length === 0 ? (
+            ) : deposits.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-8">
-                No payments recorded yet.
+                No deposits recorded yet.
               </p>
             ) : (
               <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                {payments.map((payment, idx) => (
+                {deposits.map((deposit, idx) => (
                   <div
-                    key={payment.id}
+                    key={deposit.id}
                     className="rounded-lg border p-3 space-y-2"
                   >
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <p className="text-sm font-medium">
-                          {formatCurrency(payment.amount, installment.currency)}
+                          {formatCurrency(deposit.amount, source.currency)}
                         </p>
-                        {payment.note && (
+                        {deposit.note && (
                           <p className="text-xs text-muted-foreground">
-                            {payment.note}
+                            {deposit.note}
                           </p>
                         )}
                       </div>
                       <div className="text-right space-y-0.5">
                         <p className="text-xs text-muted-foreground">
-                          {new Date(payment.paidAt).toLocaleDateString("en-US", {
+                          {new Date(deposit.receivedAt).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
                           })}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          #{payments.length - idx}
+                          #{deposits.length - idx}
                         </p>
                       </div>
                     </div>
                     {/* Transaction link section */}
                     <div className="flex items-center gap-2">
-                      {payment.transactionId ? (
+                      {deposit.transactionId ? (
                         <>
                           <Badge variant="secondary" className="text-xs gap-1">
                             <Link className="h-3 w-3" />
-                            {payment.transactionMerchant || "Transaction"}
-                            {payment.transactionDate && (
+                            {deposit.transactionMerchant || "Transaction"}
+                            {deposit.transactionDate && (
                               <span className="text-muted-foreground">
                                 {" "}
-                                {new Date(payment.transactionDate).toLocaleDateString("en-US", {
+                                {new Date(deposit.transactionDate).toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
                                 })}
@@ -121,7 +121,7 @@ export function InstallmentHistoryDialog({
                             variant="ghost"
                             size="sm"
                             className="h-6 text-xs px-2"
-                            onClick={() => handleUnlink(payment.id)}
+                            onClick={() => handleUnlink(deposit.id)}
                           >
                             <Unlink className="h-3 w-3 mr-1" />
                             Unlink
@@ -132,7 +132,7 @@ export function InstallmentHistoryDialog({
                           variant="ghost"
                           size="sm"
                           className="h-6 text-xs px-2"
-                          onClick={() => setLinkPaymentId(payment.id)}
+                          onClick={() => setLinkDepositId(deposit.id)}
                         >
                           <Link className="h-3 w-3 mr-1" />
                           Link transaction
@@ -147,14 +147,14 @@ export function InstallmentHistoryDialog({
         </ResponsiveDialogContent>
       </ResponsiveDialog>
 
-      {linkPaymentId && (
+      {linkDepositId && (
         <LinkPaymentTransactionDialog
-          paymentId={linkPaymentId}
-          parentId={installment.id}
-          parentType="installment"
-          currency={installment.currency}
-          open={!!linkPaymentId}
-          onOpenChange={(o) => !o && setLinkPaymentId(null)}
+          paymentId={linkDepositId}
+          parentId={source.id}
+          parentType="income"
+          currency={source.currency}
+          open={!!linkDepositId}
+          onOpenChange={(o) => !o && setLinkDepositId(null)}
           onSuccess={loadHistory}
         />
       )}

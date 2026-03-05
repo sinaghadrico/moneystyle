@@ -38,7 +38,14 @@ import {
   Zap,
 } from "lucide-react";
 
-const FEATURES = [
+const FEATURES: {
+  icon: typeof LayoutDashboard;
+  title: string;
+  description: string;
+  color: string;
+  bg: string;
+  href?: string;
+}[] = [
   {
     icon: LayoutDashboard,
     title: "Smart Dashboard",
@@ -126,6 +133,7 @@ const FEATURES = [
       "Build shopping lists and AI tells you which store has the best price for each item — or the best store for the whole basket.",
     color: "text-lime-500",
     bg: "bg-lime-500/10",
+    href: "/features/smart-shopping",
   },
   {
     icon: Users,
@@ -377,20 +385,34 @@ export function LandingContent() {
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => (
-              <div
-                key={feature.title}
-                className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-md hover:border-primary/20"
-              >
-                <div className={`inline-flex rounded-xl p-2.5 ${feature.bg}`}>
-                  <feature.icon className={`h-5 w-5 ${feature.color}`} />
+            {FEATURES.map((feature) => {
+              const card = (
+                <div
+                  key={feature.title}
+                  className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-md hover:border-primary/20"
+                >
+                  <div className={`inline-flex rounded-xl p-2.5 ${feature.bg}`}>
+                    <feature.icon className={`h-5 w-5 ${feature.color}`} />
+                  </div>
+                  <h3 className="mt-4 font-semibold">
+                    {feature.title}
+                    {feature.href && (
+                      <ArrowRight className="inline ml-1.5 h-4 w-4 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                    )}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="mt-4 font-semibold">{feature.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+              );
+              return feature.href ? (
+                <Link key={feature.title} href={feature.href} className="block">
+                  {card}
+                </Link>
+              ) : (
+                card
+              );
+            })}
           </div>
         </div>
       </section>

@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { signInAsDemo } from "@/actions/auth";
 import {
   ArrowRight,
   BarChart3,
@@ -232,6 +235,17 @@ export function LandingContent() {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  const handleDemo = async () => {
+    setDemoLoading(true);
+    const result = await signInAsDemo();
+    if (result.success) {
+      router.push("/dashboard");
+    }
+    setDemoLoading(false);
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
@@ -311,16 +325,24 @@ export function LandingContent() {
                 </Link>
               </Button>
             ) : (
-              <Button asChild size="lg" className="text-base">
-                <Link href="/auth/register">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
+              <>
+                <Button asChild size="lg" className="text-base">
+                  <Link href="/auth/register">
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-base"
+                  onClick={handleDemo}
+                  disabled={demoLoading}
+                >
+                  {demoLoading ? "Loading..." : "Try Live Demo"}
+                </Button>
+              </>
             )}
-            <Button asChild variant="outline" size="lg" className="text-base">
-              <a href="#features">Explore Features</a>
-            </Button>
           </div>
         </div>
       </section>
@@ -524,6 +546,15 @@ export function LandingContent() {
               </Button>
               <Button asChild variant="outline" size="lg" className="text-base">
                 <Link href="/auth/login">Sign in</Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                className="text-base"
+                onClick={handleDemo}
+                disabled={demoLoading}
+              >
+                {demoLoading ? "Loading..." : "Try Demo"}
               </Button>
             </div>
           )}

@@ -90,3 +90,36 @@ export async function signInWithCredentials(data: {
     return { error: "Invalid email or password" };
   }
 }
+
+const DEMO_EMAIL = "demo@moneyloom.app";
+const DEMO_PASSWORD = "demo-moneyloom-2026";
+
+export async function signInAsDemo() {
+  // Create demo user if it doesn't exist
+  const existing = await prisma.user.findUnique({
+    where: { email: DEMO_EMAIL },
+  });
+
+  if (!existing) {
+    const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 12);
+    const user = await prisma.user.create({
+      data: {
+        name: "Demo User",
+        email: DEMO_EMAIL,
+        hashedPassword,
+      },
+    });
+    await seedNewUser(user.id);
+  }
+
+  try {
+    await signIn("credentials", {
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+      redirect: false,
+    });
+    return { success: true };
+  } catch {
+    return { error: "Demo login failed" };
+  }
+}

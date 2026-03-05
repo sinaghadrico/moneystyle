@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,9 @@ import { SocialButtons } from "./social-buttons";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const isRedirected = searchParams.has("callbackUrl");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,27 +31,44 @@ export function LoginForm() {
         email,
         password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
         setError("Invalid email or password");
+        setLoading(false);
+      } else if (result?.url) {
+        window.location.href = result.url;
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = callbackUrl;
       }
     } catch {
       setError("Something went wrong");
-    } finally {
       setLoading(false);
     }
   }
 
   return (
     <div className="space-y-6">
+      {isRedirected && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 p-4 text-center space-y-1">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            You need to sign in first
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Sign in or create an account to access your dashboard
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold">Welcome back</h1>
+        <h1 className="text-2xl font-bold">
+          {isRedirected ? "Sign in to continue" : "Welcome back"}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Sign in to your MoneyLoom account
+          {isRedirected
+            ? "Log in or register to access MoneyLoom"
+            : "Sign in to your MoneyLoom account"}
         </p>
       </div>
 
@@ -98,7 +118,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/auth/register" className="underline hover:text-primary">
+        <Link href={isRedirected ? `/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/auth/register"} className="underline hover:text-primary">
           Sign up
         </Link>
       </p>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { registerUser } from "@/actions/auth";
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,18 +50,19 @@ export function RegisterForm() {
           email,
           password,
           redirect: false,
+          callbackUrl,
         });
 
         if (signInResult?.error) {
-          router.push("/auth/login");
+          window.location.href = "/auth/login";
+        } else if (signInResult?.url) {
+          window.location.href = signInResult.url;
         } else {
-          router.push("/dashboard");
-          router.refresh();
+          window.location.href = callbackUrl;
         }
       }
     } catch {
       setError("Something went wrong");
-    } finally {
       setLoading(false);
     }
   }

@@ -11,6 +11,7 @@ import { ReservesSection } from "./reserves-section";
 import { InstallmentsSection } from "./installments-section";
 import { BillsSection } from "./bills-section";
 import { PreferencesSection } from "./preferences-section";
+import { AccountSection } from "./account-section";
 import {
   getIncomeSources,
   getReserves,
@@ -18,6 +19,7 @@ import {
   getBills,
   getFinancialOverview,
 } from "@/actions/profile";
+import { getUserProfile } from "@/actions/auth";
 import { getUserPreferences } from "@/actions/weekend-planner";
 import {
   Wallet,
@@ -69,16 +71,23 @@ export function ProfileContent() {
     city: "Dubai",
     companionType: "solo",
   });
+  const [profile, setProfile] = useState<{
+    name: string | null;
+    username: string | null;
+    email: string;
+    image: string | null;
+  } | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [sources, res, inst, bl, ov, prefs] = await Promise.all([
+    const [sources, res, inst, bl, ov, prefs, prof] = await Promise.all([
       getIncomeSources(),
       getReserves(),
       getInstallments(),
       getBills(),
       getFinancialOverview(),
       getUserPreferences(),
+      getUserProfile(),
     ]);
     setIncomeSources(sources);
     setReserves(res);
@@ -86,6 +95,7 @@ export function ProfileContent() {
     setBills(bl);
     setOverview(ov);
     setPreferences(prefs);
+    if (prof) setProfile(prof);
     setLoading(false);
   }, []);
 
@@ -117,27 +127,27 @@ export function ProfileContent() {
   return (
     <div className="space-y-6">
       {/* User info */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <Avatar className="h-12 w-12 shrink-0">
             <AvatarImage src={session?.user?.image ?? undefined} />
             <AvatarFallback className="text-lg">
               {session?.user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase() ?? "U"}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">{session?.user?.name ?? "Profile"}</h2>
-            <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold tracking-tight truncate">{session?.user?.name ?? "Profile"}</h2>
+            <p className="text-sm text-muted-foreground truncate">{session?.user?.email}</p>
           </div>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="text-destructive hover:text-destructive"
+          className="text-destructive hover:text-destructive shrink-0 self-start"
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
+          <LogOut className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Sign out</span>
         </Button>
       </div>
 
@@ -222,6 +232,7 @@ export function ProfileContent() {
       {/* Personal tab */}
       {activeTab === "personal" && (
         <div className="space-y-6">
+          {profile && <AccountSection profile={profile} onRefresh={loadData} />}
           <PreferencesSection preferences={preferences} onRefresh={loadData} />
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import {
   TrendingUp,
   Users,
   UtensilsCrossed,
+  LogIn,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -209,6 +211,8 @@ const HIGHLIGHTS = [
 ];
 
 export function LandingContent() {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const { theme, setTheme } = useTheme();
 
   return (
@@ -230,12 +234,29 @@ export function LandingContent() {
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
             </Button>
-            <Button asChild size="sm">
-              <Link href="/dashboard">
-                Open App
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
+            {isLoggedIn ? (
+              <Button asChild size="sm">
+                <Link href="/dashboard">
+                  Open App
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/auth/login">
+                    <LogIn className="mr-1 h-4 w-4" />
+                    Sign in
+                  </Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href="/auth/register">
+                    Get Started
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -263,13 +284,22 @@ export function LandingContent() {
             installments, and get AI-powered advice to grow your wealth — all in
             one beautiful app.
           </p>
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <Button asChild size="lg" className="text-base">
-              <Link href="/dashboard">
-                Go to Dashboard
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+          <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
+            {isLoggedIn ? (
+              <Button asChild size="lg" className="text-base">
+                <Link href="/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="text-base">
+                <Link href="/auth/register">
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            )}
             <Button asChild variant="outline" size="lg" className="text-base">
               <a href="#features">Explore Features</a>
             </Button>
@@ -438,15 +468,28 @@ export function LandingContent() {
             Ready to Take Control?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
-            Start tracking your finances today. No sign-up required — it&apos;s
-            your data, on your server.
+            Start tracking your finances today — your data, your control.
           </p>
-          <Button asChild size="lg" className="mt-8 text-base">
-            <Link href="/dashboard">
-              Open Dashboard
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button asChild size="lg" className="mt-8 text-base">
+              <Link href="/dashboard">
+                Open Dashboard
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          ) : (
+            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
+              <Button asChild size="lg" className="text-base">
+                <Link href="/auth/register">
+                  Create Free Account
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-base">
+                <Link href="/auth/login">Sign in</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

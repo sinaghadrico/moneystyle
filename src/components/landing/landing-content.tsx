@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { signInAsDemo } from "@/actions/auth";
+import { useInView } from "@/hooks/use-in-view";
 import {
   ArrowRight,
   BarChart3,
@@ -19,10 +20,14 @@ import {
   LayoutDashboard,
   LineChart,
   Link2,
+  Lock,
+  LogIn,
   Moon,
   PiggyBank,
   Receipt,
   Repeat,
+  ScanLine,
+  Server,
   Shield,
   ShoppingBasket,
   ShoppingCart,
@@ -33,10 +38,105 @@ import {
   TrendingUp,
   Users,
   UtensilsCrossed,
-  LogIn,
   Wallet,
   Zap,
 } from "lucide-react";
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const PAIN_POINTS = [
+  {
+    emoji: "😰",
+    title: "Where did $500 go?",
+    description:
+      "You check your bank, see the balance, and have no idea what happened this month.",
+  },
+  {
+    emoji: "🧾",
+    title: "Receipts in a drawer",
+    description:
+      "Paper receipts pile up. You promise yourself you'll review them. You never do.",
+  },
+  {
+    emoji: "🛒",
+    title: "Same item, different prices",
+    description:
+      "You buy the same groceries every week but never know which store is actually cheaper.",
+  },
+];
+
+const PILLARS = [
+  {
+    icon: LayoutDashboard,
+    label: "See Everything",
+    title: "Know exactly where every dollar goes",
+    description:
+      "Log transactions, scan receipts with AI, and get real-time dashboards with spending heatmaps, category breakdowns, and trend predictions.",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    mockItems: [
+      { label: "Groceries", value: "$342", pct: 35 },
+      { label: "Dining Out", value: "$185", pct: 19 },
+      { label: "Transport", value: "$128", pct: 13 },
+      { label: "Entertainment", value: "$95", pct: 10 },
+      { label: "Bills & Utils", value: "$230", pct: 23 },
+    ],
+  },
+  {
+    icon: ScanLine,
+    label: "Automate Everything",
+    title: "Snap a receipt. AI does the rest.",
+    description:
+      "Take a photo of any receipt — AI extracts every line item, categorizes it, and logs the transaction. Works with English, Arabic, and Farsi.",
+    color: "text-purple-500",
+    bg: "bg-purple-500/10",
+    mockItems: [
+      { label: "Whole Milk 1L", value: "$3.49", pct: 0 },
+      { label: "Sourdough Bread", value: "$4.99", pct: 0 },
+      { label: "Free-Range Eggs", value: "$6.29", pct: 0 },
+      { label: "Olive Oil 500ml", value: "$8.99", pct: 0 },
+      { label: "Total: $23.76", value: "Auto-saved", pct: 0 },
+    ],
+  },
+  {
+    icon: ShoppingBasket,
+    label: "Save Money",
+    title: "AI finds the cheapest store for your basket",
+    description:
+      "Build a shopping list and AI compares prices across every store you've ever shopped at — from your own data. Split across stores for max savings.",
+    color: "text-lime-500",
+    bg: "bg-lime-500/10",
+    href: "/features/smart-shopping",
+    mockItems: [
+      { label: "GreenGrocer", value: "$28.75", pct: 100 },
+      { label: "FreshMart", value: "$34.50", pct: 70 },
+      { label: "MegaStore", value: "$31.20", pct: 85 },
+      { label: "Split Strategy", value: "$22.75", pct: 0 },
+      { label: "You save", value: "$23.50", pct: 0 },
+    ],
+  },
+];
+
+const STEPS = [
+  {
+    num: "1",
+    title: "Deploy in minutes",
+    description: "One command. Your own server. Your data never leaves.",
+    code: "docker compose up -d",
+  },
+  {
+    num: "2",
+    title: "Start tracking",
+    description:
+      "Log your first transaction or scan a receipt. Import bank CSV for instant history.",
+  },
+  {
+    num: "3",
+    title: "Get smarter over time",
+    description:
+      "As data grows, AI kicks in — price comparisons, spending predictions, meal plans, and personalized advice.",
+  },
+];
 
 const FEATURES: {
   icon: typeof LayoutDashboard;
@@ -50,87 +150,97 @@ const FEATURES: {
     icon: LayoutDashboard,
     title: "Smart Dashboard",
     description:
-      "Real-time overview with spending heatmaps, category breakdowns, trend charts, and expense predictions — all at a glance.",
+      "Real-time overview with spending heatmaps, category breakdowns, trend charts, and expense predictions.",
     color: "text-blue-500",
     bg: "bg-blue-500/10",
+    href: "/features/smart-dashboard",
   },
   {
     icon: CreditCard,
     title: "Transaction Tracking",
     description:
-      "Log every transaction with categories, tags, line items, merchants, and multiple accounts. Split expenses and spread costs across months.",
+      "Log every transaction with categories, tags, line items, merchants, and multiple accounts.",
     color: "text-green-500",
     bg: "bg-green-500/10",
+    href: "/features/transaction-tracking",
   },
   {
     icon: Receipt,
     title: "AI Receipt Scanner",
     description:
-      "Snap a photo of any receipt and AI extracts all line items automatically. Supports English, Arabic, and Farsi.",
+      "Snap a photo of any receipt and AI extracts all line items automatically.",
     color: "text-purple-500",
     bg: "bg-purple-500/10",
+    href: "/features/receipt-scanner",
   },
   {
     icon: BarChart3,
     title: "Budget Management",
     description:
-      "Set monthly limits per category with alert thresholds. Get Telegram alerts before you overspend.",
+      "Set monthly limits per category with alert thresholds. Get alerts before you overspend.",
     color: "text-indigo-500",
     bg: "bg-indigo-500/10",
+    href: "/features/budget-management",
   },
   {
     icon: Target,
     title: "Savings Goals",
     description:
-      "Set savings targets with deadlines, track progress visually, add funds, and stay motivated to hit your financial goals.",
+      "Set savings targets with deadlines, track progress visually, and stay motivated.",
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
+    href: "/features/savings-goals",
   },
   {
     icon: PiggyBank,
     title: "Reserves & Net Worth",
     description:
-      "Track cash, gold, crypto, and other reserves with historical snapshots. Know your net worth at any time.",
+      "Track cash, gold, crypto, and other reserves. Know your net worth at any time.",
     color: "text-amber-500",
     bg: "bg-amber-500/10",
+    href: "/features/reserves",
   },
   {
     icon: Repeat,
     title: "Installments & Bills",
     description:
-      "Manage loan payments and recurring bills with progress tracking, payment history, and due-date reminders.",
+      "Manage loan payments and recurring bills with progress tracking and due-date reminders.",
     color: "text-red-500",
     bg: "bg-red-500/10",
+    href: "/features/installments-bills",
   },
   {
     icon: TrendingUp,
     title: "Income Tracking",
     description:
-      "Define income sources with deposit schedules, record deposits, and link them to actual bank transactions.",
+      "Define income sources with deposit schedules, record deposits, and link to transactions.",
     color: "text-cyan-500",
     bg: "bg-cyan-500/10",
+    href: "/features/income-tracking",
   },
   {
     icon: Link2,
     title: "Transaction Linking",
     description:
-      "Connect bank transactions to installment payments, bill payments, and income deposits. Auto-suggest matching transactions.",
+      "Connect bank transactions to installment, bill, and income records automatically.",
     color: "text-violet-500",
     bg: "bg-violet-500/10",
+    href: "/features/transaction-linking",
   },
   {
     icon: ShoppingCart,
     title: "Price Analysis",
     description:
-      "Compare prices across merchants, track your personal inflation rate, and find the cheapest store for every item.",
+      "Compare prices across merchants and track your personal inflation rate.",
     color: "text-orange-500",
     bg: "bg-orange-500/10",
+    href: "/features/price-analysis",
   },
   {
     icon: ShoppingBasket,
     title: "Smart Shopping",
     description:
-      "Build shopping lists and AI tells you which store has the best price for each item — or the best store for the whole basket.",
+      "Build shopping lists and find the best store for each item — or the whole basket.",
     color: "text-lime-500",
     bg: "bg-lime-500/10",
     href: "/features/smart-shopping",
@@ -139,105 +249,86 @@ const FEATURES: {
     icon: Users,
     title: "Shared Expenses",
     description:
-      "Split expenses with friends and family, track who owes whom, and settle debts with a clear balance sheet.",
+      "Split expenses with friends and family, track who owes whom, and settle debts.",
     color: "text-pink-500",
     bg: "bg-pink-500/10",
+    href: "/features/shared-expenses",
   },
   {
     icon: Sparkles,
     title: "AI Money Advice",
     description:
-      "Get personalized investment suggestions based on your actual income, expenses, and idle reserves — with real numbers.",
+      "Personalized investment suggestions based on your actual income, expenses, and reserves.",
     color: "text-yellow-500",
     bg: "bg-yellow-500/10",
+    href: "/features/money-advice",
   },
   {
     icon: Calendar,
     title: "Weekend Planner",
     description:
-      "AI-generated weekend plans based on your preferences, city, budget, and companion type. Rate activities and AI learns.",
+      "AI-generated weekend plans based on your preferences, city, budget, and companion type.",
     color: "text-rose-500",
     bg: "bg-rose-500/10",
+    href: "/features/weekend-planner",
   },
   {
     icon: UtensilsCrossed,
     title: "Meal Planner",
     description:
-      "Weekly meal plans based on what you actually buy. AI generates recipes and shopping lists from your purchase history.",
+      "Weekly meal plans based on what you actually buy. AI generates recipes and shopping lists.",
     color: "text-teal-500",
     bg: "bg-teal-500/10",
+    href: "/features/meal-planner",
   },
   {
     icon: Globe,
     title: "Multi-Currency",
     description:
-      "Full support for multiple currencies with automatic conversion. Dashboard, budgets, and goals all work in any currency.",
+      "Full support for multiple currencies with automatic conversion across everything.",
     color: "text-sky-500",
     bg: "bg-sky-500/10",
+    href: "/features/multi-currency",
   },
   {
     icon: Bell,
     title: "Telegram Bot",
     description:
-      "Payment reminders, budget alerts, transaction notifications, monthly reports, and weekend plans — all delivered via Telegram.",
+      "Payment reminders, budget alerts, and monthly reports — all delivered via Telegram.",
     color: "text-blue-400",
     bg: "bg-blue-400/10",
+    href: "/features/telegram-bot",
   },
   {
     icon: Smartphone,
     title: "SMS Import",
     description:
-      "Parse bank SMS messages with custom regex patterns to auto-create transactions. Works with any bank worldwide.",
+      "Parse bank SMS messages with custom regex patterns to auto-create transactions.",
     color: "text-fuchsia-500",
     bg: "bg-fuchsia-500/10",
+    href: "/features/sms-import",
   },
 ];
 
-const STATS = [
-  { value: "20+", label: "Feature Modules" },
-  { value: "6", label: "AI Features" },
-  { value: "PWA", label: "Works Offline" },
-  { value: "100%", label: "Self-Hosted" },
-];
-
-const HIGHLIGHTS = [
+const TRUST_POINTS = [
   {
-    icon: Zap,
-    title: "Spending Wrapped",
-    description:
-      "Monthly and yearly spending summaries — top categories, biggest expenses, favorite merchants, and spending heatmaps.",
+    icon: Server,
+    title: "Self-Hosted",
+    description: "Your server, your rules. Deploy anywhere with Docker.",
   },
   {
-    icon: LineChart,
-    title: "Expense Prediction",
-    description:
-      "See where your monthly spending is headed based on your daily average. Know early if you'll go over budget.",
+    icon: Lock,
+    title: "Your Data Stays Yours",
+    description: "No cloud. No tracking. No selling your financial data.",
   },
   {
     icon: Shield,
-    title: "Merge Duplicates",
-    description:
-      "Intelligent duplicate detection finds similar transactions and lets you merge them — combining media, items, and notes.",
-  },
-  {
-    icon: CalendarRange,
-    title: "Spread Across Months",
-    description:
-      "Pay 900 for 3 months of water? Spread it so each month shows 300 — budgets and charts stay accurate.",
-  },
-  {
-    icon: Brain,
-    title: "Customizable AI Prompts",
-    description:
-      "Fine-tune every AI prompt in settings. Adjust receipt parsing, money advice, meal planning, and item normalization.",
-  },
-  {
-    icon: Bell,
-    title: "Custom Notifications",
-    description:
-      "Customize every alert template — budget warnings, payment reminders, and transaction notifications with your own wording.",
+    title: "No Subscription",
+    description: "Free forever. No ads. No premium tiers. No hidden costs.",
   },
 ];
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export function LandingContent() {
   const { data: session } = useSession();
@@ -245,6 +336,14 @@ export function LandingContent() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [demoLoading, setDemoLoading] = useState(false);
+
+  const hero = useInView(0.1);
+  const pain = useInView(0.15);
+  const pillars = [useInView(0.15), useInView(0.15), useInView(0.15)];
+  const howItWorks = useInView(0.15);
+  const features = useInView(0.1);
+  const trust = useInView(0.15);
+  const ctaSection = useInView(0.15);
 
   const handleDemo = async () => {
     setDemoLoading(true);
@@ -255,9 +354,13 @@ export function LandingContent() {
     setDemoLoading(false);
   };
 
+  const anim = (visible: boolean, delay = 0) =>
+    `transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}` +
+    (delay ? ` delay-[${delay}ms]` : "");
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
-      {/* Nav */}
+      {/* ── Nav ── */}
       <nav className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
@@ -301,39 +404,529 @@ export function LandingContent() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
+      {/* ── Hero ── */}
+      <section ref={hero.ref} className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/3 h-[600px] w-[600px] rounded-full bg-primary/5 blur-3xl" />
           <div className="absolute right-0 top-1/3 h-[400px] w-[400px] rounded-full bg-purple-500/5 blur-3xl" />
         </div>
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-32 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm text-muted-foreground mb-6">
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            AI-Powered Personal Finance
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-28">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Text */}
+            <div>
+              <div
+                className={`transition-all duration-700 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+              >
+                <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm text-muted-foreground mb-6">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  Self-hosted &middot; AI-powered &middot; Free forever
+                </div>
+              </div>
+              <h1
+                className={`text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl transition-all duration-700 delay-100 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+              >
+                End of month.
+                <br />
+                Money gone.
+                <br />
+                <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                  Sound familiar?
+                </span>
+              </h1>
+              <p
+                className={`mt-6 text-lg text-muted-foreground sm:text-xl max-w-lg transition-all duration-700 delay-200 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+              >
+                MoneyLoom shows you exactly where every dollar goes — and helps
+                you keep more of it. AI-powered tracking, smart shopping, and
+                personalized advice, all on your own server.
+              </p>
+              <div
+                className={`mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition-all duration-700 delay-300 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+              >
+                {isLoggedIn ? (
+                  <Button asChild size="lg" className="text-base">
+                    <Link href="/dashboard">
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button asChild size="lg" className="text-base">
+                      <Link href="/auth/register">
+                        Get Started Free
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="text-base"
+                      onClick={handleDemo}
+                      disabled={demoLoading}
+                    >
+                      {demoLoading ? "Loading..." : "Try Live Demo"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Phone mockup */}
+            <div
+              className={`hidden lg:flex justify-center transition-all duration-1000 delay-500 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`}
+            >
+              <div className="relative w-[280px]">
+                <div className="rounded-[2.5rem] border-2 border-border/50 bg-card p-3 shadow-2xl">
+                  {/* Notch */}
+                  <div className="flex justify-center mb-3">
+                    <div className="h-1.5 w-16 rounded-full bg-muted" />
+                  </div>
+                  {/* Screen */}
+                  <div className="space-y-3 px-2 pb-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">
+                          This month
+                        </p>
+                        <p className="text-lg font-bold">$2,847</p>
+                      </div>
+                      <div className="rounded-lg bg-emerald-500/10 px-2 py-1">
+                        <p className="text-[10px] font-semibold text-emerald-500">
+                          -12%
+                        </p>
+                      </div>
+                    </div>
+                    {/* Chart bars */}
+                    <div className="flex items-end gap-1 h-16">
+                      {[40, 65, 35, 80, 55, 70, 45, 60, 75, 50, 85, 30].map(
+                        (h, i) => (
+                          <div
+                            key={i}
+                            className={`flex-1 rounded-sm transition-all duration-1000 ${hero.inView ? "" : "!h-0"} ${i === 10 ? "bg-primary" : "bg-muted"}`}
+                            style={{
+                              height: hero.inView ? `${h}%` : "0%",
+                              transitionDelay: `${800 + i * 60}ms`,
+                            }}
+                          />
+                        )
+                      )}
+                    </div>
+                    {/* Categories */}
+                    {[
+                      {
+                        label: "Groceries",
+                        value: "$342",
+                        pct: 35,
+                        color: "bg-blue-500",
+                      },
+                      {
+                        label: "Dining",
+                        value: "$185",
+                        pct: 19,
+                        color: "bg-purple-500",
+                      },
+                      {
+                        label: "Transport",
+                        value: "$128",
+                        pct: 13,
+                        color: "bg-emerald-500",
+                      },
+                    ].map((cat, i) => (
+                      <div
+                        key={cat.label}
+                        className={`transition-all duration-500 ${hero.inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}`}
+                        style={{ transitionDelay: `${1200 + i * 100}ms` }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] text-muted-foreground">
+                            {cat.label}
+                          </span>
+                          <span className="text-[10px] font-medium">
+                            {cat.value}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${cat.color} transition-all duration-1000`}
+                            style={{
+                              width: hero.inView ? `${cat.pct}%` : "0%",
+                              transitionDelay: `${1300 + i * 100}ms`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Floating notification */}
+                <div
+                  className={`absolute -right-6 top-24 rounded-xl border bg-card px-3 py-2 shadow-lg transition-all duration-500 ${hero.inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-6"}`}
+                  style={{ transitionDelay: "1600ms" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-purple-500" />
+                    <div>
+                      <p className="text-[10px] font-medium">
+                        Receipt scanned
+                      </p>
+                      <p className="text-[9px] text-muted-foreground">
+                        5 items &middot; $23.76
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
-            Take Control of
-            <br />
-            <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              Your Money
-            </span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-            Track transactions, manage budgets and savings goals, analyze prices,
-            plan your meals and weekends, and get AI-powered financial advice —
-            all in one self-hosted app.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
+        </div>
+      </section>
+
+      {/* ── Pain Points ── */}
+      <section ref={pain.ref} className="border-y bg-muted/30">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <div
+            className={`text-center mb-10 transition-all duration-700 ${pain.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          >
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Sound familiar?
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {PAIN_POINTS.map((p, i) => (
+              <div
+                key={p.title}
+                className={`rounded-2xl border bg-card p-6 transition-all duration-500 ${pain.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                style={{ transitionDelay: `${i * 150}ms` }}
+              >
+                <span className="text-3xl">{p.emoji}</span>
+                <h3 className="mt-3 font-semibold">{p.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  {p.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Solution Pillars ── */}
+      {PILLARS.map((pillar, pi) => {
+        const p = pillars[pi];
+        const isEven = pi % 2 === 0;
+        return (
+          <section
+            key={pillar.label}
+            ref={p.ref}
+            className={pi % 2 !== 0 ? "bg-muted/30 border-y" : ""}
+          >
+            <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+              <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+                {/* Text */}
+                <div
+                  className={`${!isEven ? "lg:order-2" : ""} transition-all duration-700 ${p.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                >
+                  <div
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium mb-4 ${pillar.bg} ${pillar.color}`}
+                  >
+                    <pillar.icon className="h-4 w-4" />
+                    {pillar.label}
+                  </div>
+                  <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                    {pillar.title}
+                  </h2>
+                  <p className="mt-4 text-muted-foreground text-lg leading-relaxed">
+                    {pillar.description}
+                  </p>
+                  {pillar.href && (
+                    <Link
+                      href={pillar.href}
+                      className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-primary hover:underline"
+                    >
+                      See how it works
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  )}
+                </div>
+
+                {/* Mock UI */}
+                <div
+                  className={`${!isEven ? "lg:order-1" : ""} transition-all duration-700 delay-200 ${p.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                >
+                  <div className="rounded-2xl border bg-card p-5 shadow-lg">
+                    <div className="space-y-2.5">
+                      {pillar.mockItems.map((item, i) => (
+                        <div
+                          key={item.label}
+                          className={`transition-all duration-500 ${p.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                          style={{ transitionDelay: `${400 + i * 120}ms` }}
+                        >
+                          <div className="flex items-center justify-between rounded-xl border px-4 py-3">
+                            <span className="text-sm font-medium">
+                              {item.label}
+                            </span>
+                            <span
+                              className={`text-sm font-bold ${i === pillar.mockItems.length - 1 ? pillar.color : ""}`}
+                            >
+                              {item.value}
+                            </span>
+                          </div>
+                          {item.pct > 0 && pi === 0 && (
+                            <div className="mt-1 mx-1 h-1 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-blue-500 transition-all duration-1000"
+                                style={{
+                                  width: p.inView ? `${item.pct}%` : "0%",
+                                  transitionDelay: `${500 + i * 120}ms`,
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* ── How It Works ── */}
+      <section ref={howItWorks.ref} className="border-y bg-muted/30">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <div
+            className={`text-center mb-12 transition-all duration-700 ${howItWorks.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Up and running in minutes
+            </h2>
+            <p className="mt-3 text-muted-foreground text-lg">
+              No sign-ups. No cloud. Just your own finance app.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <div
+                key={step.num}
+                className={`relative rounded-2xl border bg-card p-6 transition-all duration-500 ${howItWorks.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                style={{ transitionDelay: `${i * 150}ms` }}
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground text-lg font-bold mb-4">
+                  {step.num}
+                </div>
+                <h3 className="font-semibold text-lg">{step.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
+                {step.code && (
+                  <code className="mt-3 block rounded-lg bg-muted px-3 py-2 text-xs font-mono">
+                    {step.code}
+                  </code>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── All Features ── */}
+      <section id="features" ref={features.ref} className="scroll-mt-16">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <div
+            className={`text-center mb-12 transition-all duration-700 ${features.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              20+ features. One app.
+            </h2>
+            <p className="mt-3 text-muted-foreground text-lg">
+              Everything you need to manage your money — and then some.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((feature, i) => {
+              const card = (
+                <div
+                  key={feature.title}
+                  className={`group rounded-2xl border bg-card p-6 transition-all hover:shadow-md hover:border-primary/20 duration-500 ${features.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+                  style={{ transitionDelay: `${Math.min(i * 50, 400)}ms` }}
+                >
+                  <div
+                    className={`inline-flex rounded-xl p-2.5 ${feature.bg}`}
+                  >
+                    <feature.icon className={`h-5 w-5 ${feature.color}`} />
+                  </div>
+                  <h3 className="mt-4 font-semibold">
+                    {feature.title}
+                    {feature.href && (
+                      <ArrowRight className="inline ml-1.5 h-4 w-4 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                    )}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              );
+              return feature.href ? (
+                <Link
+                  key={feature.title}
+                  href={feature.href}
+                  className="block"
+                >
+                  {card}
+                </Link>
+              ) : (
+                card
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── AI Section ── */}
+      <section className="border-y bg-muted/30">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <div className="rounded-2xl border bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 sm:p-12 text-center">
+            <Brain className="h-12 w-12 mx-auto text-primary mb-4" />
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              AI that knows your finances
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground text-lg">
+              Not generic tips — real insights based on your actual spending,
+              income, and habits.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-6 text-left max-w-4xl mx-auto">
+              {[
+                {
+                  icon: Receipt,
+                  color: "text-purple-500",
+                  label: "Receipt Scanner",
+                  desc: "Photo to line items",
+                },
+                {
+                  icon: TrendingUp,
+                  color: "text-green-500",
+                  label: "Money Advice",
+                  desc: "Investment tips from data",
+                },
+                {
+                  icon: ShoppingCart,
+                  color: "text-orange-500",
+                  label: "Item Grouping",
+                  desc: "Auto-normalize names",
+                },
+                {
+                  icon: Calendar,
+                  color: "text-rose-500",
+                  label: "Weekend Plans",
+                  desc: "Based on your taste",
+                },
+                {
+                  icon: UtensilsCrossed,
+                  color: "text-teal-500",
+                  label: "Meal Plans",
+                  desc: "Recipes from purchases",
+                },
+                {
+                  icon: ShoppingBasket,
+                  color: "text-lime-500",
+                  label: "Shop Optimizer",
+                  desc: "Best store for basket",
+                },
+              ].map((ai) => (
+                <div key={ai.label} className="rounded-xl border bg-card p-4">
+                  <ai.icon className={`h-5 w-5 ${ai.color} mb-2`} />
+                  <p className="text-sm font-medium">{ai.label}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {ai.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Trust / Self-hosted ── */}
+      <section ref={trust.ref}>
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <div
+            className={`text-center mb-12 transition-all duration-700 ${trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Your data. Your server. Period.
+            </h2>
+            <p className="mt-3 text-muted-foreground text-lg">
+              MoneyLoom is fully self-hosted. No cloud dependency. No compromise.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {TRUST_POINTS.map((t, i) => (
+              <div
+                key={t.title}
+                className={`rounded-2xl border bg-card p-6 text-center transition-all duration-500 ${trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                style={{ transitionDelay: `${i * 150}ms` }}
+              >
+                <div className="inline-flex rounded-xl bg-primary/10 p-3 mb-4">
+                  <t.icon className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">{t.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t.description}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div
+            className={`mt-8 flex flex-wrap items-center justify-center gap-3 transition-all duration-700 delay-300 ${trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+          >
+            {[
+              "Next.js 16",
+              "React 19",
+              "TypeScript",
+              "Tailwind CSS",
+              "PostgreSQL",
+              "Prisma",
+              "OpenAI",
+              "PWA",
+              "shadcn/ui",
+              "Docker",
+            ].map((tech) => (
+              <span
+                key={tech}
+                className="rounded-full border bg-card px-4 py-1.5 text-sm font-medium"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section ref={ctaSection.ref} className="border-t">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 text-center">
+          <div
+            className={`transition-all duration-700 ${ctaSection.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Stop wondering where your money went.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
+              Deploy in 2 minutes. Start tracking today. Your future self will
+              thank you.
+            </p>
             {isLoggedIn ? (
-              <Button asChild size="lg" className="text-base">
+              <Button asChild size="lg" className="mt-8 text-base">
                 <Link href="/dashboard">
-                  Go to Dashboard
+                  Open Dashboard
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
             ) : (
-              <>
+              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
                 <Button asChild size="lg" className="text-base">
                   <Link href="/auth/register">
                     Get Started Free
@@ -349,241 +942,13 @@ export function LandingContent() {
                 >
                   {demoLoading ? "Loading..." : "Try Live Demo"}
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="border-y bg-muted/30">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="scroll-mt-16">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Everything You Need
-            </h2>
-            <p className="mt-3 text-muted-foreground text-lg">
-              A complete toolkit for managing your personal finances.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => {
-              const card = (
-                <div
-                  key={feature.title}
-                  className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-md hover:border-primary/20"
-                >
-                  <div className={`inline-flex rounded-xl p-2.5 ${feature.bg}`}>
-                    <feature.icon className={`h-5 w-5 ${feature.color}`} />
-                  </div>
-                  <h3 className="mt-4 font-semibold">
-                    {feature.title}
-                    {feature.href && (
-                      <ArrowRight className="inline ml-1.5 h-4 w-4 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
-                    )}
-                  </h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-              return feature.href ? (
-                <Link key={feature.title} href={feature.href} className="block">
-                  {card}
-                </Link>
-              ) : (
-                card
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Highlights */}
-      <section className="border-y bg-muted/30">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              More Than a Tracker
-            </h2>
-            <p className="mt-3 text-muted-foreground text-lg">
-              Smart features that go beyond simple bookkeeping.
-            </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {HIGHLIGHTS.map((item) => (
-              <div
-                key={item.title}
-                className="flex gap-4 rounded-xl border bg-card p-5"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <item.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{item.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* AI Section */}
-      <section>
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="rounded-2xl border bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 sm:p-12 text-center">
-            <Brain className="h-12 w-12 mx-auto text-primary mb-4" />
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              AI That Knows Your Finances
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground text-lg">
-              From scanning receipts to planning your weekend — AI is woven into
-              every part of MoneyLoom, always based on your real data.
-            </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-6 text-left max-w-4xl mx-auto">
-              <div className="rounded-xl border bg-card p-4">
-                <Receipt className="h-5 w-5 text-purple-500 mb-2" />
-                <p className="text-sm font-medium">Receipt Scanner</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Photo to line items in seconds
-                </p>
-              </div>
-              <div className="rounded-xl border bg-card p-4">
-                <TrendingUp className="h-5 w-5 text-green-500 mb-2" />
-                <p className="text-sm font-medium">Money Advice</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Investment tips from your data
-                </p>
-              </div>
-              <div className="rounded-xl border bg-card p-4">
-                <ShoppingCart className="h-5 w-5 text-orange-500 mb-2" />
-                <p className="text-sm font-medium">Item Grouping</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Auto-normalize product names
-                </p>
-              </div>
-              <div className="rounded-xl border bg-card p-4">
-                <Calendar className="h-5 w-5 text-rose-500 mb-2" />
-                <p className="text-sm font-medium">Weekend Plans</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Activities based on your taste
-                </p>
-              </div>
-              <div className="rounded-xl border bg-card p-4">
-                <UtensilsCrossed className="h-5 w-5 text-teal-500 mb-2" />
-                <p className="text-sm font-medium">Meal Plans</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Recipes from what you buy
-                </p>
-              </div>
-              <div className="rounded-xl border bg-card p-4">
-                <ShoppingBasket className="h-5 w-5 text-lime-500 mb-2" />
-                <p className="text-sm font-medium">Shop Optimizer</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Best store for your basket
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Tech Stack */}
-      <section className="border-t bg-muted/30">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Built With Modern Tech
-          </h2>
-          <p className="mt-3 text-muted-foreground text-lg">
-            Fast, reliable, and works offline.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {[
-              "Next.js 16",
-              "React 19",
-              "TypeScript",
-              "Tailwind CSS",
-              "PostgreSQL",
-              "Prisma",
-              "OpenAI",
-              "PWA",
-              "shadcn/ui",
-              "Recharts",
-            ].map((tech) => (
-              <span
-                key={tech}
-                className="rounded-full border bg-card px-4 py-1.5 text-sm font-medium"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="border-t">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready to Take Control?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
-            Start tracking your finances today — your data, your server, your control.
-          </p>
-          {isLoggedIn ? (
-            <Button asChild size="lg" className="mt-8 text-base">
-              <Link href="/dashboard">
-                Open Dashboard
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          ) : (
-            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
-              <Button asChild size="lg" className="text-base">
-                <Link href="/auth/register">
-                  Create Free Account
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-base">
-                <Link href="/auth/login">Sign in</Link>
-              </Button>
-              <Button
-                variant="ghost"
-                size="lg"
-                className="text-base"
-                onClick={handleDemo}
-                disabled={demoLoading}
-              >
-                {demoLoading ? "Loading..." : "Try Demo"}
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Footer */}
+      {/* ── Footer ── */}
       <footer className="border-t">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
           <div className="flex items-center justify-between text-sm text-muted-foreground">

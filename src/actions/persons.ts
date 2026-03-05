@@ -9,6 +9,13 @@ import {
   settlementCreateSchema,
 } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
+import { getCurrencyRates } from "@/actions/currencies";
+import { convertAmount } from "@/lib/currency";
+
+async function getPrimaryCurrency(userId: string): Promise<string> {
+  const settings = await prisma.appSettings.findFirst({ where: { userId } });
+  return settings?.currency ?? "AED";
+}
 
 export async function getPersons() {
   const userId = await requireAuth();
@@ -17,17 +24,26 @@ export async function getPersons() {
 
 export async function getPersonsWithDebt() {
   const userId = await requireAuth();
-  const persons = await prisma.person.findMany({
-    where: { userId },
-    include: {
-      splits: { select: { amount: true } },
-      settlements: { select: { amount: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const [persons, primaryCurrency, rates] = await Promise.all([
+    prisma.person.findMany({
+      where: { userId },
+      include: {
+        splits: {
+          select: { amount: true, transaction: { select: { currency: true } } },
+        },
+        settlements: { select: { amount: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
+    getPrimaryCurrency(userId),
+    getCurrencyRates(),
+  ]);
 
   return persons.map((p) => {
-    const totalSplits = p.splits.reduce((s, sp) => s + Number(sp.amount), 0);
+    const totalSplits = p.splits.reduce(
+      (s, sp) => s + convertAmount(Number(sp.amount), sp.transaction.currency, primaryCurrency, rates),
+      0,
+    );
     const totalSettled = p.settlements.reduce(
       (s, st) => s + Number(st.amount),
       0,

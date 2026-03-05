@@ -457,14 +457,16 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
     0
   );
 
-  // Group reserves by type
-  const typeMap = new Map<string, number>();
+  // Group reserves by type+currency
+  const typeMap = new Map<string, { type: string; currency: string; total: number }>();
   for (const r of reserves) {
-    const current = typeMap.get(r.type) ?? 0;
-    typeMap.set(r.type, current + convertAmount(Number(r.amount), r.currency, primaryCurrency, rates));
+    const key = `${r.type}:${r.currency}`;
+    const entry = typeMap.get(key) ?? { type: r.type, currency: r.currency, total: 0 };
+    entry.total += Number(r.amount);
+    typeMap.set(key, entry);
   }
-  const reservesByType = [...typeMap.entries()]
-    .map(([type, total]) => ({ type, total: Math.round(total * 100) / 100 }))
+  const reservesByType = [...typeMap.values()]
+    .map((e) => ({ type: e.type, currency: e.currency, total: Math.round(e.total * 100) / 100 }))
     .sort((a, b) => b.total - a.total);
 
   // Upcoming payments (due within 7 days) — both installments and bills
@@ -487,7 +489,8 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
   const upcomingFromInstallments = installments.map((inst) => ({
     id: inst.id,
     name: inst.name,
-    amount: Math.round(convertAmount(Number(inst.amount), inst.currency, primaryCurrency, rates) * 100) / 100,
+    amount: Number(inst.amount),
+    currency: inst.currency,
     dueDay: inst.dueDay,
     daysUntilDue: calcDaysUntilDue(inst.dueDay),
     kind: "installment" as const,
@@ -496,7 +499,8 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
   const upcomingFromBills = bills.map((bill) => ({
     id: bill.id,
     name: bill.name,
-    amount: Math.round(convertAmount(Number(bill.amount), bill.currency, primaryCurrency, rates) * 100) / 100,
+    amount: Number(bill.amount),
+    currency: bill.currency,
     dueDay: bill.dueDay,
     daysUntilDue: calcDaysUntilDue(bill.dueDay),
     kind: "bill" as const,

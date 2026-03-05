@@ -172,8 +172,10 @@ export type TransactionItemData = {
 export type SavingsProgress = {
   id: string;
   name: string;
+  description: string | null;
   targetAmount: number;
   currentAmount: number;
+  currency: string;
   deadline: Date | null;
   color: string;
   status: string;
@@ -458,11 +460,12 @@ export type FinancialOverview = {
   totalMonthlyBills: number;
   netMonthlyCashflow: number;
   totalReserves: number;
-  reservesByType: { type: string; total: number }[];
+  reservesByType: { type: string; currency: string; total: number }[];
   upcomingPayments: {
     id: string;
     name: string;
     amount: number;
+    currency: string;
     dueDay: number;
     daysUntilDue: number;
     kind: "installment" | "bill";

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
 import { accountCreateSchema, accountUpdateSchema } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
+import { getCurrencyRates } from "@/actions/currencies";
+import { convertAmount } from "@/lib/currency";
 
 export async function getAccounts() {
   const userId = await requireAuth();
@@ -12,25 +14,32 @@ export async function getAccounts() {
 
 export async function getAccountsWithStats() {
   const userId = await requireAuth();
-  const accounts = await prisma.account.findMany({
-    where: { userId },
-    include: {
-      _count: {
-        select: { transactions: { where: { mergedIntoId: null } } },
+  const [accounts, settings, rates] = await Promise.all([
+    prisma.account.findMany({
+      where: { userId },
+      include: {
+        _count: {
+          select: { transactions: { where: { mergedIntoId: null } } },
+        },
       },
-    },
-    orderBy: { name: "asc" },
-  });
+      orderBy: { name: "asc" },
+    }),
+    prisma.appSettings.findFirst({ where: { userId } }),
+    getCurrencyRates(),
+  ]);
 
-  const totals = await prisma.transaction.groupBy({
-    by: ["accountId"],
-    _sum: { amount: true },
+  const primaryCurrency = settings?.currency ?? "AED";
+
+  const transactions = await prisma.transaction.findMany({
     where: { userId, amount: { not: null }, mergedIntoId: null },
+    select: { accountId: true, amount: true, currency: true },
   });
 
-  const totalMap = new Map(
-    totals.map((t) => [t.accountId, Number(t._sum.amount ?? 0)])
-  );
+  const totalMap = new Map<string, number>();
+  for (const t of transactions) {
+    const converted = convertAmount(Number(t.amount), t.currency, primaryCurrency, rates);
+    totalMap.set(t.accountId, (totalMap.get(t.accountId) ?? 0) + converted);
+  }
 
   return accounts.map((acc) => ({
     ...acc,

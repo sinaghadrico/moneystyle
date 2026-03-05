@@ -69,7 +69,9 @@ export type BudgetUpsertInput = z.infer<typeof budgetUpsertSchema>;
 
 export const savingsGoalSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
+  description: z.string().max(500).nullable().optional(),
   targetAmount: z.coerce.number().positive("Target must be positive"),
+  currency: z.string().min(1).max(10).default("AED"),
   deadline: z.coerce.date().nullable().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color").default("#10b981"),
 });

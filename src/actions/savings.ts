@@ -27,8 +27,10 @@ export async function getSavingsProgress(): Promise<SavingsProgress[]> {
     return {
       id: g.id,
       name: g.name,
+      description: g.description,
       targetAmount: target,
       currentAmount: current,
+      currency: g.currency,
       deadline: g.deadline,
       color: g.color,
       status: g.status,
@@ -54,7 +56,9 @@ export async function upsertSavingsGoal(
       where: { id, userId },
       data: {
         name: values.name,
+        description: values.description ?? null,
         targetAmount: values.targetAmount,
+        currency: values.currency,
         deadline: values.deadline ?? null,
         color: values.color,
       },
@@ -64,7 +68,9 @@ export async function upsertSavingsGoal(
       data: {
         userId,
         name: values.name,
+        description: values.description ?? null,
         targetAmount: values.targetAmount,
+        currency: values.currency,
         deadline: values.deadline ?? null,
         color: values.color,
       },

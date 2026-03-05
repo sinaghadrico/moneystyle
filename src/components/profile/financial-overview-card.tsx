@@ -89,7 +89,7 @@ export function FinancialOverviewCard({
                 <span>
                   {item.daysUntilDue === 0 ? (
                     <span className="font-semibold text-red-600">
-                      TODAY: {item.name} — {formatCurrency(item.amount)}
+                      TODAY: {item.name} — {formatCurrency(item.amount, item.currency)}
                     </span>
                   ) : (
                     <span>
@@ -98,7 +98,7 @@ export function FinancialOverviewCard({
                         {item.daysUntilDue} day
                         {item.daysUntilDue !== 1 ? "s" : ""}
                       </span>{" "}
-                      ({formatCurrency(item.amount)})
+                      ({formatCurrency(item.amount, item.currency)})
                     </span>
                   )}
                 </span>
@@ -109,7 +109,7 @@ export function FinancialOverviewCard({
                 {overview.reservesByType
                   .map(
                     (r) =>
-                      `${TYPE_LABELS[r.type] || r.type}: ${formatCurrency(r.total)}`
+                      `${TYPE_LABELS[r.type] || r.type}: ${formatCurrency(r.total, r.currency)}`
                   )
                   .join(" · ")}
               </p>

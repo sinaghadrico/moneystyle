@@ -15,6 +15,8 @@ import { upsertSavingsGoal, deleteSavingsGoal } from "@/actions/savings";
 import { Trash2 } from "lucide-react";
 import type { SavingsProgress } from "@/lib/types";
 import { toast } from "sonner";
+import { useAppSettings } from "@/components/settings/settings-provider";
+import { CurrencySelect } from "@/components/ui/currency-select";
 
 export function SavingsFormDialog({
   goal,
@@ -27,11 +29,14 @@ export function SavingsFormDialog({
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }) {
+  const { settings } = useAppSettings();
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     name: goal?.name ?? "",
+    description: goal?.description ?? "",
     targetAmount: goal?.targetAmount?.toString() ?? "",
+    currency: goal?.currency ?? settings.currency ?? "AED",
     deadline: goal?.deadline
       ? new Date(goal.deadline).toISOString().slice(0, 10)
       : "",
@@ -43,7 +48,9 @@ export function SavingsFormDialog({
     const result = await upsertSavingsGoal(
       {
         name: form.name,
+        description: form.description || null,
         targetAmount: form.targetAmount,
+        currency: form.currency,
         deadline: form.deadline || null,
         color: form.color,
       },
@@ -98,16 +105,33 @@ export function SavingsFormDialog({
             />
           </div>
           <div className="grid gap-2">
-            <Label>Target Amount (AED)</Label>
+            <Label>Description (optional)</Label>
             <Input
-              type="number"
-              step="0.01"
-              value={form.targetAmount}
-              onChange={(e) =>
-                setForm({ ...form, targetAmount: e.target.value })
-              }
-              placeholder="10000"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="e.g. What I want to buy"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-2">
+              <Label>Target Amount</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={form.targetAmount}
+                onChange={(e) =>
+                  setForm({ ...form, targetAmount: e.target.value })
+                }
+                placeholder="10000"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Currency</Label>
+              <CurrencySelect
+                value={form.currency}
+                onValueChange={(v) => setForm({ ...form, currency: v })}
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label>Deadline (optional)</Label>

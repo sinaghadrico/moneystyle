@@ -518,7 +518,7 @@ export async function normalizeItemNamesWithAI(): Promise<
 > {
   const userId = await requireAuth();
 
-  const settings = await prisma.appSettings.findFirst({ where: { id: "default" } });
+  const settings = await prisma.appSettings.findFirst({ where: { userId } });
   if (!settings?.aiEnabled) {
     return { error: "AI is not enabled. Enable it in Settings." };
   }

@@ -38,7 +38,7 @@ export async function generateMealPlan(): Promise<
   const userId = await requireAuth();
 
   const settings = await prisma.appSettings.findFirst({
-    where: { id: "default" },
+    where: { userId },
   });
 
   if (!settings?.aiEnabled) {

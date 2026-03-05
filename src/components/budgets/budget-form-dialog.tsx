@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { upsertBudget, deleteBudget } from "@/actions/budgets";
 import { toast } from "sonner";
+import { useAppSettings } from "@/components/settings/settings-provider";
 
 type BudgetFormProps = {
   categoryId: string;
@@ -33,6 +34,7 @@ export function BudgetFormDialog({
   onOpenChange,
   onSuccess,
 }: BudgetFormProps) {
+  const { settings } = useAppSettings();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     monthlyLimit: existingLimit?.toString() ?? "",
@@ -76,7 +78,7 @@ export function BudgetFormDialog({
         <div className="grid gap-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1">
-              <Label>Monthly Limit (AED)</Label>
+              <Label>Monthly Limit ({settings.currency})</Label>
               <Input
                 type="number"
                 step="0.01"

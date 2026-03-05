@@ -111,7 +111,7 @@ export async function generateWeekendPlan(): Promise<
   const userId = await requireAuth();
 
   const settings = await prisma.appSettings.findFirst({
-    where: { id: "default" },
+    where: { userId },
   });
 
   if (!settings?.aiEnabled) {
@@ -304,7 +304,7 @@ export async function swapWeekendItem(
   const { planId, offerIndex, itemType, itemIndex, reason } = parsed.data;
 
   const settings = await prisma.appSettings.findFirst({
-    where: { id: "default" },
+    where: { userId },
   });
   if (!settings?.aiEnabled) return { error: "AI is not enabled." };
 

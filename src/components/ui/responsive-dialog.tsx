@@ -27,7 +27,7 @@ function ResponsiveDialog(props: React.ComponentProps<typeof Dialog>) {
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   if (isDesktop) return <Dialog {...props} />
-  return <Drawer {...props} />
+  return <Drawer repositionInputs={false} {...props} />
 }
 
 function ResponsiveDialogContent({

@@ -20,6 +20,7 @@ import type { TransactionWithCategory } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Trash2, Loader2, Upload, Sparkles, X, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useAiCheck, AiSetupDialog } from "@/components/ai-setup-dialog";
 
 type ItemRow = {
   name: string;
@@ -55,6 +56,7 @@ export function ItemsDialog({
   const [extracting, setExtracting] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<string[]>(transaction.mediaFiles ?? []);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { checkAi, showSetup, setShowSetup } = useAiCheck();
 
   useEffect(() => {
     if (!open) return;
@@ -130,6 +132,7 @@ export function ItemsDialog({
   };
 
   const handleExtract = async () => {
+    if (!checkAi()) return;
     const images = mediaFiles.filter(isImage);
     if (images.length === 0) {
       toast.error("❌ No image files to extract from");
@@ -207,6 +210,8 @@ export function ItemsDialog({
   };
 
   return (
+    <>
+    <AiSetupDialog open={showSetup} onOpenChange={setShowSetup} />
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="sm:max-w-xl sm:max-h-[85vh] sm:flex sm:flex-col">
         <ResponsiveDialogHeader className="shrink-0">
@@ -388,5 +393,6 @@ export function ItemsDialog({
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
+    </>
   );
 }

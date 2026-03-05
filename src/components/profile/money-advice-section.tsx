@@ -26,6 +26,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAiCheck, AiSetupDialog } from "@/components/ai-setup-dialog";
 
 function shortAmount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -58,7 +59,10 @@ export function MoneyAdviceSection() {
     loadHistory();
   }, []);
 
+  const { checkAi, showSetup, setShowSetup } = useAiCheck();
+
   const handleAnalyze = async () => {
+    if (!checkAi()) return;
     setLoading(true);
     setError(null);
     const res = await getMoneyAdvice();
@@ -80,6 +84,8 @@ export function MoneyAdviceSection() {
   const hasHistory = history.length > 0;
 
   return (
+    <>
+    <AiSetupDialog open={showSetup} onOpenChange={setShowSetup} />
     <section className="space-y-3">
       <div className="space-y-1">
         <div className="flex items-center justify-between">
@@ -242,6 +248,7 @@ export function MoneyAdviceSection() {
         </div>
       )}
     </section>
+    </>
   );
 }
 

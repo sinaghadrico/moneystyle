@@ -11,6 +11,7 @@ import {
   type MealPlanData,
   type MealData,
 } from "@/actions/meal-planner";
+import { useAiCheck, AiSetupDialog } from "@/components/ai-setup-dialog";
 import {
   ChefHat,
   Loader2,
@@ -62,7 +63,10 @@ export function MealPlannerContent() {
     loadHistory();
   }, []);
 
+  const { checkAi, showSetup, setShowSetup } = useAiCheck();
+
   const handleGenerate = async () => {
+    if (!checkAi()) return;
     setLoading(true);
     setError(null);
     const res = await generateMealPlan();
@@ -87,6 +91,8 @@ export function MealPlannerContent() {
   };
 
   return (
+    <>
+    <AiSetupDialog open={showSetup} onOpenChange={setShowSetup} />
     <div className="space-y-6">
       <div className="space-y-1">
         <div className="flex items-center justify-between">
@@ -255,6 +261,7 @@ export function MealPlannerContent() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

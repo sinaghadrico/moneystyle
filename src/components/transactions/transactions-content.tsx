@@ -246,7 +246,7 @@ export function TransactionsContent({
       setResult(data);
     } catch (err) {
       console.error("Failed to load transactions:", err);
-      setResult({ data: [], total: 0, page: 1, totalPages: 0 });
+      setResult({ data: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
     } finally {
       setLoading(false);
     }

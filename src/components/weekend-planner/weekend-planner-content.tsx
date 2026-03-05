@@ -12,6 +12,7 @@ import {
   swapWeekendItem,
   generateWeekendIcs,
 } from "@/actions/weekend-planner";
+import { useAiCheck, AiSetupDialog } from "@/components/ai-setup-dialog";
 import {
   CalendarHeart,
   Loader2,
@@ -91,7 +92,10 @@ export function WeekendPlannerContent() {
     loadHistory();
   }, []);
 
+  const { checkAi, showSetup, setShowSetup } = useAiCheck();
+
   const handleGenerate = async () => {
+    if (!checkAi()) return;
     setLoading(true);
     setError(null);
     const res = await generateWeekendPlan();
@@ -253,6 +257,8 @@ export function WeekendPlannerContent() {
   };
 
   return (
+    <>
+    <AiSetupDialog open={showSetup} onOpenChange={setShowSetup} />
     <div className="space-y-6">
       <div className="space-y-1">
         <div className="flex items-center justify-between">
@@ -630,5 +636,6 @@ export function WeekendPlannerContent() {
         </div>
       )}
     </div>
+    </>
   );
 }

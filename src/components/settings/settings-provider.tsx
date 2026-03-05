@@ -11,6 +11,8 @@ type AppSettings = {
   defaultTransactionType: string;
   defaultDashboardPeriod: string;
   autoCategorize: boolean;
+  aiEnabled: boolean;
+  hasOpenaiKey: boolean;
 };
 
 const DEFAULTS: AppSettings = {
@@ -20,6 +22,8 @@ const DEFAULTS: AppSettings = {
   defaultTransactionType: "expense",
   defaultDashboardPeriod: "3m",
   autoCategorize: true,
+  aiEnabled: false,
+  hasOpenaiKey: false,
 };
 
 const SettingsContext = createContext<{
@@ -44,6 +48,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       defaultTransactionType: s.defaultTransactionType,
       defaultDashboardPeriod: s.defaultDashboardPeriod,
       autoCategorize: s.autoCategorize,
+      aiEnabled: s.aiEnabled,
+      hasOpenaiKey: !!s.openaiApiKey,
     });
   }, []);
 

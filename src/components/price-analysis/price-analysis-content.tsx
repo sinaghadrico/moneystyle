@@ -49,6 +49,7 @@ import {
   Package,
   Layers,
 } from "lucide-react";
+import { useAiCheck, AiSetupDialog } from "@/components/ai-setup-dialog";
 
 export function PriceAnalysisContent() {
   const [groups, setGroups] = useState<ItemPriceSummary[]>([]);
@@ -108,7 +109,10 @@ export function PriceAnalysisContent() {
     setDetailOpen(true);
   }
 
+  const { checkAi, showSetup, setShowSetup } = useAiCheck();
+
   function handleAiNormalize() {
+    if (!checkAi()) return;
     startAiTransition(async () => {
       const result = await normalizeItemNamesWithAI();
       if ("error" in result) {
@@ -124,6 +128,8 @@ export function PriceAnalysisContent() {
   const [tab, setTab] = useState<"groups" | "items">("groups");
 
   return (
+    <>
+    <AiSetupDialog open={showSetup} onOpenChange={setShowSetup} />
     <div className="space-y-4">
       {/* Header */}
       <h1 className="text-2xl font-bold tracking-tight">Price Analysis</h1>
@@ -430,6 +436,7 @@ export function PriceAnalysisContent() {
         onSuccess={loadData}
       />
     </div>
+    </>
   );
 }
 

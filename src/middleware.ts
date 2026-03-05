@@ -6,6 +6,7 @@ const publicPaths = [
   "/auth/register",
   "/auth/error",
   "/offline",
+  "/pricing",
   "/api/auth",
   "/api/cron",
   "/api/sms",
@@ -49,5 +50,7 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|icons/).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|icons/).*)",
+  ],
 };

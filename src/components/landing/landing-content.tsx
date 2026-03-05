@@ -894,23 +894,34 @@ export function LandingContent() {
                 </Link>
               </Button>
             ) : (
-              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
-                <Button asChild size="lg" className="text-base">
-                  <Link href="/auth/register">
-                    Get Started Free
-                    <ArrowRight className="ml-2 h-5 w-5" />
+              <>
+                <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
+                  <Button asChild size="lg" className="text-base">
+                    <Link href="/auth/register">
+                      Get Started Free
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="text-base"
+                    onClick={handleDemo}
+                    disabled={demoLoading}
+                  >
+                    {demoLoading ? "Loading..." : "Try Live Demo"}
+                  </Button>
+                </div>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Free forever for basics.{" "}
+                  <Link
+                    href="/pricing"
+                    className="underline underline-offset-4 hover:text-foreground transition-colors"
+                  >
+                    See plans
                   </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-base"
-                  onClick={handleDemo}
-                  disabled={demoLoading}
-                >
-                  {demoLoading ? "Loading..." : "Try Live Demo"}
-                </Button>
-              </div>
+                </p>
+              </>
             )}
           </div>
         </div>

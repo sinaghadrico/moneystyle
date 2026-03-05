@@ -129,7 +129,7 @@ export function TransactionsContent({
 } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { settings } = useAppSettings();
+  const { settings, ready: settingsReady } = useAppSettings();
 
   // Read initial state from URL
   const urlPage = Number(searchParams.get("page")) || 1;
@@ -225,6 +225,7 @@ export function TransactionsContent({
   ]);
 
   const loadData = useCallback(async () => {
+    if (!settingsReady) return;
     setLoading(true);
     try {
       const data = await getTransactions({
@@ -265,10 +266,10 @@ export function TransactionsContent({
     page,
     sortBy,
     sortOrder,
+    settingsReady,
   ]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 

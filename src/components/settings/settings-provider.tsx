@@ -28,8 +28,9 @@ const DEFAULTS: AppSettings = {
 
 const SettingsContext = createContext<{
   settings: AppSettings;
+  ready: boolean;
   refresh: () => Promise<void>;
-}>({ settings: DEFAULTS, refresh: async () => {} });
+}>({ settings: DEFAULTS, ready: false, refresh: async () => {} });
 
 export function useAppSettings() {
   return useContext(SettingsContext);
@@ -37,6 +38,7 @@ export function useAppSettings() {
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULTS);
+  const [ready, setReady] = useState(false);
 
   const refresh = useCallback(async () => {
     const s = await getSettings();
@@ -51,6 +53,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       aiEnabled: s.aiEnabled,
       hasOpenaiKey: !!s.openaiApiKey,
     });
+    setReady(true);
   }, []);
 
   useEffect(() => {
@@ -58,7 +61,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   return (
-    <SettingsContext.Provider value={{ settings, refresh }}>
+    <SettingsContext.Provider value={{ settings, ready, refresh }}>
       {children}
     </SettingsContext.Provider>
   );

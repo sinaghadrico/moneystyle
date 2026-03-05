@@ -1,8 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { DebtSummary } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export function DebtsCard({ data }: { data: DebtSummary[] }) {
@@ -13,7 +15,15 @@ export function DebtsCard({ data }: { data: DebtSummary[] }) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">🤝 Shared Expenses</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold">🤝 Shared Expenses</CardTitle>
+          <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" asChild>
+            <Link href="/transactions/manage/persons">
+              See all
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {data.map((d) => (

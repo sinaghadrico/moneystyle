@@ -80,10 +80,13 @@ export function TagInput({
             style={{ backgroundColor: tag.color + "20", color: tag.color, borderColor: tag.color }}
           >
             {tag.name}
-            <X
-              className="h-3 w-3 cursor-pointer"
-              onClick={() => removeTag(tag.id)}
-            />
+            <button
+              type="button"
+              className="ml-0.5 -mr-1 flex h-4 w-4 items-center justify-center rounded-full hover:bg-black/10"
+              onClick={(e) => { e.stopPropagation(); removeTag(tag.id); }}
+            >
+              <X className="h-3 w-3" />
+            </button>
           </Badge>
         ))}
       </div>

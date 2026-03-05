@@ -1,8 +1,12 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { BudgetProgress } from "@/actions/budgets";
 import { formatCurrency } from "@/lib/utils";
+
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 function getBarColor(percentage: number, threshold: number): string {
   if (percentage >= 100) return "bg-red-500";
@@ -24,7 +28,15 @@ export function BudgetProgressCard({ data }: { data: BudgetProgress[] }) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold">📊 Budget Progress</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold">📊 Budget Progress</CardTitle>
+          <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" asChild>
+            <Link href="/transactions/manage/categories">
+              See all
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         {data.map((b) => {

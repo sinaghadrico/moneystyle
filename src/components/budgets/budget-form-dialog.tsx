@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { upsertBudget, deleteBudget } from "@/actions/budgets";
 import { toast } from "sonner";
 import { useAppSettings } from "@/components/settings/settings-provider";
+import { Trash2 } from "lucide-react";
 
 type BudgetFormProps = {
   categoryId: string;
@@ -73,7 +74,20 @@ export function BudgetFormDialog({
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>Budget for {categoryName}</ResponsiveDialogTitle>
+          <div className="flex items-center justify-between">
+            <ResponsiveDialogTitle>Budget for {categoryName}</ResponsiveDialogTitle>
+            {existingLimit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={handleDelete}
+                disabled={saving}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </ResponsiveDialogHeader>
         <div className="grid gap-3 py-2">
           <div className="grid grid-cols-2 gap-3">
@@ -114,17 +128,6 @@ export function BudgetFormDialog({
               {saving ? "Saving..." : "Save"}
             </Button>
           </div>
-          {existingLimit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleDelete}
-              disabled={saving}
-            >
-              Remove Budget
-            </Button>
-          )}
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

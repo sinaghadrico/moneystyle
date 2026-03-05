@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { SavingsProgress } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import { PiggyBank, Plus, Pencil, PlusCircle } from "lucide-react";
+import { PiggyBank, Plus, Pencil, PlusCircle, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { SavingsFormDialog } from "@/components/savings/savings-form-dialog";
 import { AddSavingsDialog } from "@/components/savings/add-savings-dialog";
 
@@ -29,15 +30,22 @@ export function SavingsCard({
               <PiggyBank className="h-4 w-4" />
               Savings Goals
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 px-2 text-xs"
-              onClick={() => setShowCreate(true)}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New Goal
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setShowCreate(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" asChild>
+                <Link href="/profile/goals">
+                  See all
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

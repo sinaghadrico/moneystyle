@@ -26,6 +26,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL || "https://moneyloom.app"),
   title: "MoneyLoom - Finance Tracker",
   description: "Personal finance dashboard for tracking transactions",
   manifest: "/manifest.json",

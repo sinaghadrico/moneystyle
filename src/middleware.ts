@@ -7,6 +7,8 @@ const publicPaths = [
   "/auth/error",
   "/offline",
   "/pricing",
+  "/opengraph-image",
+  "/twitter-image",
   "/api/auth",
   "/api/cron",
   "/api/sms",

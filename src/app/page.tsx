@@ -1,9 +1,24 @@
 import { LandingContent } from "@/components/landing/landing-content";
 
-export const metadata = {
-  title: "MoneyLoom - Smart Personal Finance Tracker",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "MoneyLoom — Know Where Every Dollar Goes",
   description:
-    "Track expenses, manage budgets, analyze prices, and get AI-powered financial advice — all in one place.",
+    "AI-powered personal finance tracker. Scan receipts, compare prices, manage budgets, and get personalized money advice. Free to start.",
+  openGraph: {
+    title: "MoneyLoom — Know Where Every Dollar Goes",
+    description:
+      "AI-powered finance tracking. Scan receipts, compare prices, manage budgets. Free to start.",
+    type: "website",
+    siteName: "MoneyLoom",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MoneyLoom — Know Where Every Dollar Goes",
+    description:
+      "AI-powered finance tracking. Scan receipts, compare prices, manage budgets. Free to start.",
+  },
 };
 
 export default function LandingPage() {

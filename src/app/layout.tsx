@@ -34,9 +34,6 @@ export const metadata: Metadata = {
     capable: true,
     title: "MoneyLoom",
   },
-  icons: {
-    apple: "/icons/apple-touch-icon.svg",
-  },
 };
 
 export default function RootLayout({

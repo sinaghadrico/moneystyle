@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useInView } from "@/hooks/use-in-view";
+import { LogoMark } from "@/components/ui/logo";
 import {
   ArrowLeft,
   ArrowRight,
@@ -104,7 +105,7 @@ export function PricingContent() {
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              <Wallet className="h-6 w-6 text-primary" />
+              <LogoMark className="h-7 w-7" />
               <span className="text-lg font-bold tracking-tight text-foreground">
                 MoneyLoom
               </span>
@@ -328,7 +329,7 @@ export function PricingContent() {
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
+              <LogoMark className="h-4 w-4" />
               <span>MoneyLoom</span>
             </div>
             <Link

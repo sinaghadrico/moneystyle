@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { signInAsDemo } from "@/actions/auth";
 import { useInView } from "@/hooks/use-in-view";
+import { LogoMark } from "@/components/ui/logo";
 import {
   ArrowRight,
   BarChart3,
@@ -360,7 +361,7 @@ export function LandingContent() {
       <nav className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <Wallet className="h-6 w-6 text-primary" />
+            <LogoMark className="h-7 w-7" />
             <span className="text-lg font-bold tracking-tight">MoneyLoom</span>
           </div>
           <div className="flex items-center gap-2">
@@ -403,8 +404,8 @@ export function LandingContent() {
       {/* ── Hero ── */}
       <section ref={hero.ref} className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/3 h-[600px] w-[600px] rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute right-0 top-1/3 h-[400px] w-[400px] rounded-full bg-purple-500/5 blur-3xl" />
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/3 h-[600px] w-[600px] rounded-full bg-emerald-500/8 blur-3xl" />
+          <div className="absolute right-0 top-1/3 h-[400px] w-[400px] rounded-full bg-teal-500/8 blur-3xl" />
         </div>
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-28">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -425,7 +426,7 @@ export function LandingContent() {
                 <br />
                 Money gone.
                 <br />
-                <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
                   Sound familiar?
                 </span>
               </h1>
@@ -500,7 +501,7 @@ export function LandingContent() {
                         (h, i) => (
                           <div
                             key={i}
-                            className={`flex-1 rounded-sm transition-all duration-1000 ${hero.inView ? "" : "!h-0"} ${i === 10 ? "bg-primary" : "bg-muted"}`}
+                            className={`flex-1 rounded-sm transition-all duration-1000 ${hero.inView ? "" : "!h-0"} ${i === 10 ? "bg-emerald-500" : "bg-muted"}`}
                             style={{
                               height: hero.inView ? `${h}%` : "0%",
                               transitionDelay: `${800 + i * 60}ms`,
@@ -779,8 +780,8 @@ export function LandingContent() {
       {/* ── AI Section ── */}
       <section className="border-y bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="rounded-2xl border bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 sm:p-12 text-center">
-            <Brain className="h-12 w-12 mx-auto text-primary mb-4" />
+          <div className="rounded-2xl border bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 p-8 sm:p-12 text-center">
+            <Brain className="h-12 w-12 mx-auto text-emerald-500 mb-4" />
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               AI that knows your finances
             </h2>
@@ -860,8 +861,8 @@ export function LandingContent() {
                 className={`rounded-2xl border bg-card p-6 text-center transition-all duration-500 ${trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
                 style={{ transitionDelay: `${i * 150}ms` }}
               >
-                <div className="inline-flex rounded-xl bg-primary/10 p-3 mb-4">
-                  <t.icon className="h-6 w-6 text-primary" />
+                <div className="inline-flex rounded-xl bg-emerald-500/10 p-3 mb-4">
+                  <t.icon className="h-6 w-6 text-emerald-500" />
                 </div>
                 <h3 className="font-semibold text-lg">{t.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -932,7 +933,7 @@ export function LandingContent() {
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
+              <LogoMark className="h-4 w-4" />
               <span>MoneyLoom</span>
             </div>
             <p>AI-powered personal finance tracker</p>

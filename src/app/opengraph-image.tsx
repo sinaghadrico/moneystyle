@@ -33,7 +33,7 @@ export default function OGImage() {
             height: "500px",
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)",
           }}
         />
         <div
@@ -45,7 +45,7 @@ export default function OGImage() {
             height: "400px",
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(236,72,153,0.1) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(20,184,166,0.1) 0%, transparent 70%)",
           }}
         />
 
@@ -120,7 +120,7 @@ export default function OGImage() {
             <span
               style={{
                 background:
-                  "linear-gradient(90deg, #8b5cf6, #ec4899, #f43f5e)",
+                  "linear-gradient(90deg, #10b981, #14b8a6, #06b6d4)",
                 backgroundClip: "text",
                 color: "transparent",
               }}
@@ -271,7 +271,7 @@ export default function OGImage() {
                       borderRadius: "3px",
                       background:
                         i === 10
-                          ? "rgba(139,92,246,0.8)"
+                          ? "rgba(16,185,129,0.8)"
                           : "rgba(255,255,255,0.08)",
                     }}
                   />
@@ -339,10 +339,10 @@ export default function OGImage() {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "rgba(139,92,246,0.12)",
+                background: "rgba(16,185,129,0.12)",
                 borderRadius: "12px",
                 padding: "10px 12px",
-                border: "1px solid rgba(139,92,246,0.2)",
+                border: "1px solid rgba(16,185,129,0.2)",
                 marginTop: "auto",
               }}
             >

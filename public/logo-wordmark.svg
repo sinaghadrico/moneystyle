@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="168" height="168" rx="38" fill="url(#bg)"/>
+  <path
+    d="M56 148 L56 68 L86 108 L100 82 L114 108 L148 56 L148 148"
+    stroke="white"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+  <circle cx="148" cy="56" r="8" fill="white"/>
+  <text x="216" y="132" font-family="system-ui, -apple-system, sans-serif" font-size="96" font-weight="800" letter-spacing="-3">
+    <tspan fill="#1a1a2e">Money</tspan><tspan fill="#10b981">Loom</tspan>
+  </text>
+</svg>

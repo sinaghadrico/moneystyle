@@ -121,12 +121,9 @@ export function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">📊 Dashboard</h2>
-          <p className="text-muted-foreground">Financial overview</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold tracking-tight truncate">📊 Dashboard</h2>
+        <div className="flex items-center gap-2 shrink-0">
           {accounts.length > 1 && (
             <Select
               value={accountId || "all"}

@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { signIn } from "@/lib/auth";
+import { signIn, seedNewUser } from "@/lib/auth";
 import { requireAuth } from "@/lib/auth-utils";
 import bcrypt from "bcryptjs";
 
@@ -20,13 +20,15 @@ export async function registerUser(data: {
 
   const hashedPassword = await bcrypt.hash(data.password, 12);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name: data.name,
       email: data.email,
       hashedPassword,
     },
   });
+
+  await seedNewUser(user.id);
 
   return { success: true };
 }

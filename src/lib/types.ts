@@ -30,6 +30,7 @@ export type TransactionWithCategory = Omit<Transaction, "amount"> & {
 export type AccountWithStats = {
   id: string;
   name: string;
+  type: string;
   bank: string | null;
   color: string;
   icon: string | null;

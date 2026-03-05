@@ -42,6 +42,7 @@ export type CategoryUpdateInput = z.infer<typeof categoryUpdateSchema>;
 
 export const accountCreateSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
+  type: z.enum(["bank", "wallet", "crypto", "exchange", "cash", "other"]).default("bank"),
   bank: z.string().max(100).nullable().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color"),
 });

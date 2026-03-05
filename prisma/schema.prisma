@@ -153,6 +153,7 @@ model TransactionTag {
 model Account {
   id           String        @id @default(cuid())
   name         String
+  type         String        @default("bank")
   bank         String?
   color        String        @default("#3b82f6")
   icon         String?

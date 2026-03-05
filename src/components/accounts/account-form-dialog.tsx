@@ -11,8 +11,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createAccount, updateAccount } from "@/actions/accounts";
 import { toast } from "sonner";
+
+const ACCOUNT_TYPES = [
+  { value: "bank", label: "Bank Account" },
+  { value: "wallet", label: "Wallet" },
+  { value: "crypto", label: "Crypto Wallet" },
+  { value: "exchange", label: "Exchange" },
+  { value: "cash", label: "Cash" },
+  { value: "other", label: "Other" },
+] as const;
 
 const PRESET_COLORS = [
   "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
@@ -23,6 +39,7 @@ const PRESET_COLORS = [
 type AccountData = {
   id?: string;
   name: string;
+  type?: string;
   bank?: string | null;
   color: string;
 };
@@ -40,6 +57,7 @@ export function AccountFormDialog({
 }) {
   const isEdit = !!account?.id;
   const [name, setName] = useState(account?.name ?? "");
+  const [type, setType] = useState(account?.type ?? "bank");
   const [bank, setBank] = useState(account?.bank ?? "");
   const [color, setColor] = useState(account?.color ?? "#3b82f6");
   const [saving, setSaving] = useState(false);
@@ -49,7 +67,7 @@ export function AccountFormDialog({
     setError("");
     setSaving(true);
 
-    const data = { name: name.trim(), bank: bank.trim() || null, color };
+    const data = { name: name.trim(), type, bank: bank.trim() || null, color };
     const result = isEdit
       ? await updateAccount(account!.id!, data)
       : await createAccount(data);
@@ -92,13 +110,28 @@ export function AccountFormDialog({
               />
             </div>
             <div className="grid gap-1">
-              <Label>Bank (optional)</Label>
-              <Input
-                value={bank}
-                onChange={(e) => setBank(e.target.value)}
-                placeholder="Bank name"
-              />
+              <Label>Type</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACCOUNT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+          <div className="grid gap-1">
+            <Label>Institution (optional)</Label>
+            <Input
+              value={bank}
+              onChange={(e) => setBank(e.target.value)}
+              placeholder="Bank, exchange, or provider name"
+            />
           </div>
           <div className="grid gap-2">
             <Label>Color</Label>

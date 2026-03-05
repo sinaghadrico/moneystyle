@@ -9,7 +9,16 @@ import { DeleteAccountDialog } from "./delete-account-dialog";
 import { getAccountsWithStats } from "@/actions/accounts";
 import { formatCurrency } from "@/lib/utils";
 import type { AccountWithStats } from "@/lib/types";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Landmark, Wallet, Bitcoin, ArrowLeftRight, Banknote, MoreHorizontal } from "lucide-react";
+
+const ACCOUNT_TYPE_META: Record<string, { label: string; icon: typeof Landmark }> = {
+  bank: { label: "Bank", icon: Landmark },
+  wallet: { label: "Wallet", icon: Wallet },
+  crypto: { label: "Crypto", icon: Bitcoin },
+  exchange: { label: "Exchange", icon: ArrowLeftRight },
+  cash: { label: "Cash", icon: Banknote },
+  other: { label: "Other", icon: MoreHorizontal },
+};
 
 export function AccountsContent() {
   const [accounts, setAccounts] = useState<AccountWithStats[]>([]);
@@ -57,14 +66,20 @@ export function AccountsContent() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div
-                      className="h-4 w-4 rounded-full"
-                      style={{ backgroundColor: acc.color }}
-                    />
+                      className="flex h-9 w-9 items-center justify-center rounded-full"
+                      style={{ backgroundColor: acc.color + "20" }}
+                    >
+                      {(() => {
+                        const Icon = ACCOUNT_TYPE_META[acc.type ?? "bank"]?.icon ?? Landmark;
+                        return <Icon className="h-4 w-4" style={{ color: acc.color }} />;
+                      })()}
+                    </div>
                     <div>
                       <h3 className="font-semibold">{acc.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {acc.bank && <span>{acc.bank} &middot; </span>}
-                        {acc.transactionCount} transactions
+                        {ACCOUNT_TYPE_META[acc.type ?? "bank"]?.label ?? "Bank"}
+                        {acc.bank && <span> · {acc.bank}</span>}
+                        {" · "}{acc.transactionCount} txns
                       </p>
                     </div>
                   </div>

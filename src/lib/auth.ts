@@ -6,6 +6,33 @@ import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 
+const DEFAULT_CATEGORIES = [
+  { name: "Food & Dining", color: "#f97316", icon: "🍔" },
+  { name: "Groceries", color: "#22c55e", icon: "🛒" },
+  { name: "Transport", color: "#3b82f6", icon: "🚗" },
+  { name: "Shopping", color: "#a855f7", icon: "🛍️" },
+  { name: "Entertainment", color: "#ec4899", icon: "🎬" },
+  { name: "Health", color: "#ef4444", icon: "🏥" },
+  { name: "Bills & Utilities", color: "#64748b", icon: "📄" },
+  { name: "Rent & Housing", color: "#8b5cf6", icon: "🏠" },
+  { name: "Education", color: "#06b6d4", icon: "📚" },
+  { name: "Travel", color: "#14b8a6", icon: "✈️" },
+  { name: "Subscriptions", color: "#6366f1", icon: "🔄" },
+  { name: "Salary", color: "#16a34a", icon: "💰" },
+  { name: "Freelance", color: "#84cc16", icon: "💻" },
+  { name: "Transfer", color: "#6b7280", icon: "🔁" },
+  { name: "Other", color: "#9ca3af", icon: "📦" },
+];
+
+export async function seedNewUser(userId: string) {
+  await prisma.account.create({
+    data: { name: "Cash", type: "cash", color: "#22c55e", userId },
+  });
+  await prisma.category.createMany({
+    data: DEFAULT_CATEGORIES.map((c) => ({ ...c, userId })),
+  });
+}
+
 const baseAdapter = PrismaAdapter(prisma);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -63,6 +90,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  events: {
+    async createUser({ user }) {
+      if (user.id) {
+        await seedNewUser(user.id);
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {

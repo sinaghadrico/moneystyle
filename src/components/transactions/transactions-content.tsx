@@ -226,24 +226,30 @@ export function TransactionsContent({
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const data = await getTransactions({
-      dateFrom: filters.dateFrom || undefined,
-      dateTo: filters.dateTo || undefined,
-      categoryId: filters.categoryId || undefined,
-      accountId: filters.accountId || undefined,
-      type: filters.type || undefined,
-      merchant: debouncedMerchant || undefined,
-      search: debouncedSearch || undefined,
-      amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
-      amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
-      source: filters.source || undefined,
-      page,
-      pageSize: settings.defaultPageSize,
-      sortBy,
-      sortOrder,
-    });
-    setResult(data);
-    setLoading(false);
+    try {
+      const data = await getTransactions({
+        dateFrom: filters.dateFrom || undefined,
+        dateTo: filters.dateTo || undefined,
+        categoryId: filters.categoryId || undefined,
+        accountId: filters.accountId || undefined,
+        type: filters.type || undefined,
+        merchant: debouncedMerchant || undefined,
+        search: debouncedSearch || undefined,
+        amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+        amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+        source: filters.source || undefined,
+        page,
+        pageSize: settings.defaultPageSize,
+        sortBy,
+        sortOrder,
+      });
+      setResult(data);
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+      setResult({ data: [], total: 0, page: 1, totalPages: 0 });
+    } finally {
+      setLoading(false);
+    }
   }, [
     filters.dateFrom,
     filters.dateTo,
@@ -527,6 +533,13 @@ export function TransactionsContent({
           ? [...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-[120px] rounded-xl" />
             ))
+          : result?.data.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-4xl mb-3">📭</p>
+              <p className="text-lg font-medium">No transactions yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Add your first transaction to get started</p>
+            </div>
+          )
           : result?.data.map((tx, txIdx) => (
               <SwipeableCard
                 key={tx.id}
@@ -727,6 +740,15 @@ export function TransactionsContent({
                     ))}
                   </TableRow>
                 ))
+              : result?.data.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="h-40 text-center">
+                      <p className="text-4xl mb-2">📭</p>
+                      <p className="font-medium">No transactions yet</p>
+                      <p className="text-sm text-muted-foreground">Add your first transaction to get started</p>
+                    </TableCell>
+                  </TableRow>
+                )
               : result?.data.map((tx) => (
                   <TableRow
                     key={tx.id}

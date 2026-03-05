@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, CalendarHeart, ChefHat, ShoppingCart, PartyPopper } from "lucide-react";
+import { Sparkles, CalendarHeart, ChefHat, ShoppingCart } from "lucide-react";
 import { MoneyAdviceSection } from "@/components/profile/money-advice-section";
+import { ProfileCompletenessBanner } from "./profile-completeness-banner";
 import { WeekendPlannerContent } from "@/components/weekend-planner/weekend-planner-content";
 import { MealPlannerContent } from "@/components/meal-planner/meal-planner-content";
 import { ShoppingBasketsSection } from "./shopping-baskets-section";
@@ -49,6 +50,8 @@ export function LifestyleContent({ initialTab }: { initialTab?: string }) {
           );
         })}
       </div>
+
+      <ProfileCompletenessBanner />
 
       {/* Tab content */}
       {activeTab === "money-advice" && <MoneyAdviceSection />}

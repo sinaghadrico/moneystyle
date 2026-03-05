@@ -226,18 +226,18 @@ export function TransactionFilters({
         <div className="grid gap-1">
           <Label className="text-xs text-muted-foreground">From</Label>
           <Input
-            type="date"
-            value={filters.dateFrom}
-            onChange={(e) => onChange("dateFrom", e.target.value)}
-          />
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => onChange("dateFrom", e.target.value)}
+            />
         </div>
         <div className="grid gap-1">
           <Label className="text-xs text-muted-foreground">To</Label>
           <Input
-            type="date"
-            value={filters.dateTo}
-            onChange={(e) => onChange("dateTo", e.target.value)}
-          />
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => onChange("dateTo", e.target.value)}
+            />
         </div>
         <div className="grid gap-1">
           <Label className="text-xs text-muted-foreground">Account</Label>

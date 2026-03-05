@@ -6,8 +6,25 @@ import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 
+const baseAdapter = PrismaAdapter(prisma);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: {
+    ...baseAdapter,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    linkAccount: (data: any) => prisma.oAuthAccount.create({ data }) as any,
+    unlinkAccount: ({ provider, providerAccountId }: { provider: string; providerAccountId: string }) =>
+      prisma.oAuthAccount.delete({ where: { provider_providerAccountId: { provider, providerAccountId } } }) as any,
+    getAccount: (providerAccountId: string, provider: string) =>
+      prisma.oAuthAccount.findUnique({ where: { provider_providerAccountId: { provider, providerAccountId } } }) as any,
+    getUserByAccount: async ({ provider, providerAccountId }: { provider: string; providerAccountId: string }) => {
+      const account = await prisma.oAuthAccount.findUnique({
+        where: { provider_providerAccountId: { provider, providerAccountId } },
+        include: { user: true },
+      });
+      return account?.user ?? null;
+    },
+  },
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",

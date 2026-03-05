@@ -145,7 +145,7 @@ export function ItemDetailDialog({ itemKey, mode, fuzzy, open, onOpenChange }: P
                           {formatCurrency(ph.price)}
                         </span>
                         <Link
-                          href={`/transactions?tab=list&search=${encodeURIComponent(ph.transactionId)}`}
+                          href={`/transactions?search=${encodeURIComponent(ph.transactionId)}`}
                           className="text-muted-foreground hover:text-foreground"
                           onClick={(e) => e.stopPropagation()}
                         >

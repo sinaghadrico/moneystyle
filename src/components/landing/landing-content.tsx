@@ -15,11 +15,13 @@ import {
   Globe,
   LayoutDashboard,
   LineChart,
+  Link2,
   Moon,
   PiggyBank,
   Receipt,
   Repeat,
   Shield,
+  ShoppingBasket,
   ShoppingCart,
   Smartphone,
   Sparkles,
@@ -38,7 +40,7 @@ const FEATURES = [
     icon: LayoutDashboard,
     title: "Smart Dashboard",
     description:
-      "Real-time overview of income, expenses, budgets, and savings — all at a glance with beautiful charts.",
+      "Real-time overview with spending heatmaps, category breakdowns, trend charts, and expense predictions — all at a glance.",
     color: "text-blue-500",
     bg: "bg-blue-500/10",
   },
@@ -46,17 +48,9 @@ const FEATURES = [
     icon: CreditCard,
     title: "Transaction Tracking",
     description:
-      "Log every transaction with categories, tags, merchants, and multiple accounts. Auto-categorize with rules.",
+      "Log every transaction with categories, tags, line items, merchants, and multiple accounts. Split expenses and spread costs across months.",
     color: "text-green-500",
     bg: "bg-green-500/10",
-  },
-  {
-    icon: ShoppingCart,
-    title: "Price Analysis",
-    description:
-      "Compare prices across merchants, track your personal inflation rate, and find the cheapest store for your shopping list.",
-    color: "text-orange-500",
-    bg: "bg-orange-500/10",
   },
   {
     icon: Receipt,
@@ -67,8 +61,24 @@ const FEATURES = [
     bg: "bg-purple-500/10",
   },
   {
+    icon: BarChart3,
+    title: "Budget Management",
+    description:
+      "Set monthly limits per category with alert thresholds. Get Telegram alerts before you overspend.",
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+  },
+  {
+    icon: Target,
+    title: "Savings Goals",
+    description:
+      "Set savings targets with deadlines, track progress visually, add funds, and stay motivated to hit your financial goals.",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
+  {
     icon: PiggyBank,
-    title: "Reserves & Savings",
+    title: "Reserves & Net Worth",
     description:
       "Track cash, gold, crypto, and other reserves with historical snapshots. Know your net worth at any time.",
     color: "text-amber-500",
@@ -78,79 +88,63 @@ const FEATURES = [
     icon: Repeat,
     title: "Installments & Bills",
     description:
-      "Manage loan payments with progress tracking and recurring bills with payment history. Never miss a due date.",
+      "Manage loan payments and recurring bills with progress tracking, payment history, and due-date reminders.",
     color: "text-red-500",
     bg: "bg-red-500/10",
+  },
+  {
+    icon: TrendingUp,
+    title: "Income Tracking",
+    description:
+      "Define income sources with deposit schedules, record deposits, and link them to actual bank transactions.",
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+  },
+  {
+    icon: Link2,
+    title: "Transaction Linking",
+    description:
+      "Connect bank transactions to installment payments, bill payments, and income deposits. Auto-suggest matching transactions.",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+  },
+  {
+    icon: ShoppingCart,
+    title: "Price Analysis",
+    description:
+      "Compare prices across merchants, track your personal inflation rate, and find the cheapest store for every item.",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+  },
+  {
+    icon: ShoppingBasket,
+    title: "Smart Shopping",
+    description:
+      "Build shopping lists and AI tells you which store has the best price for each item — or the best store for the whole basket.",
+    color: "text-lime-500",
+    bg: "bg-lime-500/10",
+  },
+  {
+    icon: Users,
+    title: "Shared Expenses",
+    description:
+      "Split expenses with friends and family, track who owes whom, and settle debts with a clear balance sheet.",
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
   },
   {
     icon: Sparkles,
     title: "AI Money Advice",
     description:
-      "Get personalized investment suggestions based on your actual income, expenses, and idle reserves.",
+      "Get personalized investment suggestions based on your actual income, expenses, and idle reserves — with real numbers.",
     color: "text-yellow-500",
     bg: "bg-yellow-500/10",
-  },
-  {
-    icon: Users,
-    title: "Debt Tracking",
-    description:
-      "Split expenses with friends and family, track who owes whom, and settle debts with a clear balance sheet.",
-    color: "text-cyan-500",
-    bg: "bg-cyan-500/10",
-  },
-  {
-    icon: BarChart3,
-    title: "Budget Management",
-    description:
-      "Set monthly limits per category with alert thresholds. Visual progress bars show where you stand.",
-    color: "text-indigo-500",
-    bg: "bg-indigo-500/10",
-  },
-  {
-    icon: Globe,
-    title: "Multi-Currency",
-    description:
-      "Full support for multiple currencies with automatic conversion. Track income and expenses in any currency.",
-    color: "text-teal-500",
-    bg: "bg-teal-500/10",
-  },
-  {
-    icon: Bell,
-    title: "Telegram Reminders",
-    description:
-      "Get notified via Telegram when bills and installments are due. Smart daily reminders keep you on track.",
-    color: "text-sky-500",
-    bg: "bg-sky-500/10",
-  },
-  {
-    icon: Smartphone,
-    title: "SMS Import",
-    description:
-      "Parse bank SMS messages with custom regex patterns to auto-create transactions. Works with any bank.",
-    color: "text-pink-500",
-    bg: "bg-pink-500/10",
-  },
-  {
-    icon: CalendarRange,
-    title: "Spread Across Months",
-    description:
-      "Spread lump-sum payments (quarterly bills, annual subscriptions) across multiple months for accurate budgeting.",
-    color: "text-violet-500",
-    bg: "bg-violet-500/10",
-  },
-  {
-    icon: Target,
-    title: "Savings Goals",
-    description:
-      "Set savings targets with deadlines, track progress visually, and stay motivated to reach your financial goals.",
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
   },
   {
     icon: Calendar,
     title: "Weekend Planner",
     description:
-      "AI-generated weekend plans based on your preferences, budget, and city. Rate activities and get better suggestions over time.",
+      "AI-generated weekend plans based on your preferences, city, budget, and companion type. Rate activities and AI learns.",
     color: "text-rose-500",
     bg: "bg-rose-500/10",
   },
@@ -158,17 +152,41 @@ const FEATURES = [
     icon: UtensilsCrossed,
     title: "Meal Planner",
     description:
-      "Weekly meal plans tailored to your food preferences and budget. Never wonder what to cook again.",
-    color: "text-lime-500",
-    bg: "bg-lime-500/10",
+      "Weekly meal plans based on what you actually buy. AI generates recipes and shopping lists from your purchase history.",
+    color: "text-teal-500",
+    bg: "bg-teal-500/10",
+  },
+  {
+    icon: Globe,
+    title: "Multi-Currency",
+    description:
+      "Full support for multiple currencies with automatic conversion. Dashboard, budgets, and goals all work in any currency.",
+    color: "text-sky-500",
+    bg: "bg-sky-500/10",
+  },
+  {
+    icon: Bell,
+    title: "Telegram Bot",
+    description:
+      "Payment reminders, budget alerts, transaction notifications, monthly reports, and weekend plans — all delivered via Telegram.",
+    color: "text-blue-400",
+    bg: "bg-blue-400/10",
+  },
+  {
+    icon: Smartphone,
+    title: "SMS Import",
+    description:
+      "Parse bank SMS messages with custom regex patterns to auto-create transactions. Works with any bank worldwide.",
+    color: "text-fuchsia-500",
+    bg: "bg-fuchsia-500/10",
   },
 ];
 
 const STATS = [
-  { value: "16+", label: "Feature Modules" },
-  { value: "100%", label: "Open Source" },
+  { value: "20+", label: "Feature Modules" },
+  { value: "6", label: "AI Features" },
   { value: "PWA", label: "Works Offline" },
-  { value: "AI", label: "Powered" },
+  { value: "100%", label: "Self-Hosted" },
 ];
 
 const HIGHLIGHTS = [
@@ -176,7 +194,7 @@ const HIGHLIGHTS = [
     icon: Zap,
     title: "Spending Wrapped",
     description:
-      "Monthly and yearly spending summaries — your top categories, biggest expenses, favorite merchants, and no-spend streaks.",
+      "Monthly and yearly spending summaries — top categories, biggest expenses, favorite merchants, and spending heatmaps.",
   },
   {
     icon: LineChart,
@@ -188,25 +206,25 @@ const HIGHLIGHTS = [
     icon: Shield,
     title: "Merge Duplicates",
     description:
-      "Intelligent duplicate detection finds similar transactions and lets you merge them with one click.",
+      "Intelligent duplicate detection finds similar transactions and lets you merge them — combining media, items, and notes.",
+  },
+  {
+    icon: CalendarRange,
+    title: "Spread Across Months",
+    description:
+      "Pay 900 for 3 months of water? Spread it so each month shows 300 — budgets and charts stay accurate.",
   },
   {
     icon: Brain,
     title: "Customizable AI Prompts",
     description:
-      "Fine-tune every AI prompt in settings. Adjust receipt parsing, money advice, and item normalization to your needs.",
-  },
-  {
-    icon: CalendarRange,
-    title: "Prepaid Amortization",
-    description:
-      "Pay 900 for 3 months of water? Spread it so each month shows 300 — your budgets and charts stay accurate.",
+      "Fine-tune every AI prompt in settings. Adjust receipt parsing, money advice, meal planning, and item normalization.",
   },
   {
     icon: Bell,
-    title: "Custom Notification Templates",
+    title: "Custom Notifications",
     description:
-      "Customize every alert message — budget warnings, payment reminders, and transaction notifications — with your own templates.",
+      "Customize every alert template — budget warnings, payment reminders, and transaction notifications with your own wording.",
   },
 ];
 
@@ -280,9 +298,9 @@ export function LandingContent() {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-            Track every transaction, analyze spending patterns, manage bills and
-            installments, and get AI-powered advice to grow your wealth — all in
-            one beautiful app.
+            Track transactions, manage budgets and savings goals, analyze prices,
+            plan your meals and weekends, and get AI-powered financial advice —
+            all in one self-hosted app.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-4 sm:px-0">
             {isLoggedIn ? (
@@ -396,12 +414,10 @@ export function LandingContent() {
               AI That Knows Your Finances
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground text-lg">
-              MoneyLoom uses AI to scan receipts, normalize product names for
-              price comparison, and analyze your complete financial picture to
-              suggest how to put idle money to work — with specific numbers
-              based on your actual data.
+              From scanning receipts to planning your weekend — AI is woven into
+              every part of MoneyLoom, always based on your real data.
             </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3 text-left max-w-3xl mx-auto">
+            <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-6 text-left max-w-4xl mx-auto">
               <div className="rounded-xl border bg-card p-4">
                 <Receipt className="h-5 w-5 text-purple-500 mb-2" />
                 <p className="text-sm font-medium">Receipt Scanner</p>
@@ -411,16 +427,37 @@ export function LandingContent() {
               </div>
               <div className="rounded-xl border bg-card p-4">
                 <TrendingUp className="h-5 w-5 text-green-500 mb-2" />
-                <p className="text-sm font-medium">Investment Advice</p>
+                <p className="text-sm font-medium">Money Advice</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Personalized to your reserves
+                  Investment tips from your data
                 </p>
               </div>
               <div className="rounded-xl border bg-card p-4">
                 <ShoppingCart className="h-5 w-5 text-orange-500 mb-2" />
-                <p className="text-sm font-medium">Smart Grouping</p>
+                <p className="text-sm font-medium">Item Grouping</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Auto-normalize product names
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <Calendar className="h-5 w-5 text-rose-500 mb-2" />
+                <p className="text-sm font-medium">Weekend Plans</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Activities based on your taste
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <UtensilsCrossed className="h-5 w-5 text-teal-500 mb-2" />
+                <p className="text-sm font-medium">Meal Plans</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Recipes from what you buy
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <ShoppingBasket className="h-5 w-5 text-lime-500 mb-2" />
+                <p className="text-sm font-medium">Shop Optimizer</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Best store for your basket
                 </p>
               </div>
             </div>
@@ -468,7 +505,7 @@ export function LandingContent() {
             Ready to Take Control?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
-            Start tracking your finances today — your data, your control.
+            Start tracking your finances today — your data, your server, your control.
           </p>
           {isLoggedIn ? (
             <Button asChild size="lg" className="mt-8 text-base">

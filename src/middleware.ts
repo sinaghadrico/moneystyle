@@ -42,11 +42,9 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Redirect unauthenticated users to login with callback
+  // Redirect unauthenticated users to landing page
   if (!req.auth) {
-    const loginUrl = new URL("/auth/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();

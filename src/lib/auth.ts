@@ -5,6 +5,11 @@ import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
+import {
+  validateTelegramLoginWidget,
+  validateTelegramMiniApp,
+  findOrCreateTelegramUser,
+} from "./telegram-auth";
 
 const DEFAULT_CATEGORIES = [
   { name: "Food & Dining", color: "#f97316", icon: "🍔" },
@@ -80,6 +85,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!isValid) return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+        };
+      },
+    }),
+    Credentials({
+      id: "telegram",
+      name: "Telegram",
+      credentials: {
+        telegramData: { type: "text" },
+        authType: { type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.telegramData || !credentials?.authType) return null;
+
+        const authType = credentials.authType as string;
+        const rawData = credentials.telegramData as string;
+
+        let tgUser;
+        if (authType === "widget") {
+          const data = JSON.parse(rawData);
+          tgUser = validateTelegramLoginWidget(data);
+        } else if (authType === "miniapp") {
+          tgUser = validateTelegramMiniApp(rawData);
+        }
+
+        if (!tgUser) return null;
+
+        const user = await findOrCreateTelegramUser(tgUser);
 
         return {
           id: user.id,

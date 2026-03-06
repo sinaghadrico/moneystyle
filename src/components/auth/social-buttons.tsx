@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { TelegramLoginButton } from "./telegram-login-button";
 
 export function SocialButtons() {
   return (
@@ -41,6 +42,7 @@ export function SocialButtons() {
         </svg>
         Continue with GitHub
       </Button>
+      <TelegramLoginButton />
     </div>
   );
 }

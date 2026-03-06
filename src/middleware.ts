@@ -5,6 +5,7 @@ const publicPaths = [
   "/auth/login",
   "/auth/register",
   "/auth/error",
+  "/auth/telegram-miniapp",
   "/offline",
   "/pricing",
   "/opengraph-image",

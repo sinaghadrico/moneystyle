@@ -91,6 +91,32 @@ export async function signInWithCredentials(data: {
   }
 }
 
+export async function signInWithTelegramWidget(data: Record<string, string>) {
+  try {
+    await signIn("telegram", {
+      telegramData: JSON.stringify(data),
+      authType: "widget",
+      redirect: false,
+    });
+    return { success: true };
+  } catch {
+    return { error: "Telegram authentication failed" };
+  }
+}
+
+export async function signInWithTelegramMiniApp(initData: string) {
+  try {
+    await signIn("telegram", {
+      telegramData: initData,
+      authType: "miniapp",
+      redirect: false,
+    });
+    return { success: true };
+  } catch {
+    return { error: "Telegram Mini App authentication failed" };
+  }
+}
+
 const DEMO_EMAIL = "demo@moneystyle.app";
 const DEMO_PASSWORD = "demo-moneystyle-2026";
 

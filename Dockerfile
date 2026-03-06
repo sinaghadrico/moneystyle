@@ -16,6 +16,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
 ENV NODE_OPTIONS="--max-old-space-size=1536"
+ARG NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+ENV NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
 RUN pnpm next build
 
 # --- Runner ---

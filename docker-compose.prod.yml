@@ -18,7 +18,10 @@ services:
       retries: 10
 
   app:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: ${NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}
     restart: unless-stopped
     ports:
       - "3020:3000"

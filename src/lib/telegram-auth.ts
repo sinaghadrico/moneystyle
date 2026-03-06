@@ -25,7 +25,7 @@ interface TelegramUser {
  * Secret key = SHA256(bot_token)
  */
 export function validateTelegramLoginWidget(
-  data: TelegramLoginData
+  data: TelegramLoginData,
 ): TelegramUser | null {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken) return null;
@@ -66,9 +66,7 @@ export function validateTelegramLoginWidget(
  * Validate Telegram Mini App initData using HMAC-SHA256.
  * Secret key = HMAC-SHA256("WebAppData", bot_token)
  */
-export function validateTelegramMiniApp(
-  initData: string
-): TelegramUser | null {
+export function validateTelegramMiniApp(initData: string): TelegramUser | null {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken) return null;
 
@@ -121,6 +119,7 @@ export function validateTelegramMiniApp(
  */
 export async function findOrCreateTelegramUser(tgUser: TelegramUser) {
   const telegramId = tgUser.id;
+  const username = tgUser.username || `tg_${telegramId}`;
 
   // 1. Check existing OAuthAccount
   const existingOAuth = await prisma.oAuthAccount.findUnique({
@@ -157,14 +156,15 @@ export async function findOrCreateTelegramUser(tgUser: TelegramUser) {
   }
 
   // 3. Create new user
-  const displayName = [tgUser.firstName, tgUser.lastName]
-    .filter(Boolean)
-    .join(" ") || tgUser.username || `Telegram User ${telegramId}`;
+  const displayName =
+    [tgUser.firstName, tgUser.lastName].filter(Boolean).join(" ") ||
+    tgUser.username ||
+    `Telegram User ${telegramId}`;
 
   const user = await prisma.user.create({
     data: {
       name: displayName,
-      email: `tg_${telegramId}@telegram.local`,
+      email: `${username}@telegram`,
       image: tgUser.photoUrl,
     },
   });

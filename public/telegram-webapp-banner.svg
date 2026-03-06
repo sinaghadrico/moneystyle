@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <!-- Logo icon -->
+  <g transform="translate(220, 60) scale(0.35)">
+    <rect width="512" height="512" rx="112" fill="rgba(255,255,255,0.15)"/>
+    <path
+      d="M128 368 L128 176 L216 288 L256 208 L296 288 L384 144 L384 368"
+      stroke="white"
+      stroke-width="44"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+    <circle cx="384" cy="144" r="22" fill="white"/>
+  </g>
+  <!-- App name -->
+  <text x="320" y="290" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="white" letter-spacing="-1">MoneyStyle</text>
+  <!-- Tagline -->
+  <text x="320" y="330" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="rgba(255,255,255,0.8)">Know Where Every Dollar Goes</text>
+</svg>

@@ -119,7 +119,7 @@ const STEPS = [
     num: "1",
     title: "Create your free account",
     description:
-      "Sign up in 10 seconds. No credit card required. Start using MoneyLoom immediately.",
+      "Sign up in 10 seconds. No credit card required. Start using MoneyStyle immediately.",
   },
   {
     num: "2",
@@ -362,7 +362,7 @@ export function LandingContent() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
             <LogoMark className="h-7 w-7" />
-            <span className="text-lg font-bold tracking-tight">MoneyLoom</span>
+            <span className="text-lg font-bold tracking-tight">MoneyStyle</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -433,7 +433,7 @@ export function LandingContent() {
               <p
                 className={`mt-6 text-lg text-muted-foreground sm:text-xl max-w-lg transition-all duration-700 delay-200 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
               >
-                MoneyLoom shows you exactly where every dollar goes — and helps
+                MoneyStyle shows you exactly where every dollar goes — and helps
                 you keep more of it. AI-powered tracking, smart shopping, and
                 personalized advice. Sign up and start in seconds.
               </p>
@@ -934,7 +934,7 @@ export function LandingContent() {
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <LogoMark className="h-4 w-4" />
-              <span>MoneyLoom</span>
+              <span>MoneyStyle</span>
             </div>
             <p>AI-powered personal finance tracker</p>
           </div>

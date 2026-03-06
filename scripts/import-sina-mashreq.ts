@@ -559,7 +559,7 @@ async function main() {
   copyMediaFiles(transactions);
 
   // Ensure a user exists
-  const seedEmail = process.env.ADMIN_EMAIL || "admin@moneyloom.app";
+  const seedEmail = process.env.ADMIN_EMAIL || "admin@moneystyle.app";
   const user = await prisma.user.upsert({
     where: { email: seedEmail },
     update: {},

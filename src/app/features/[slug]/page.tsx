@@ -21,17 +21,17 @@ export async function generateMetadata({
   const description = feature.tagline;
 
   return {
-    title: `${feature.title} — MoneyLoom`,
+    title: `${feature.title} — MoneyStyle`,
     description,
     openGraph: {
-      title: `${feature.title} — MoneyLoom`,
+      title: `${feature.title} — MoneyStyle`,
       description,
       type: "website",
-      siteName: "MoneyLoom",
+      siteName: "MoneyStyle",
     },
     twitter: {
       card: "summary_large_image",
-      title: `${feature.title} — MoneyLoom`,
+      title: `${feature.title} — MoneyStyle`,
       description,
     },
   };

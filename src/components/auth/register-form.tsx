@@ -72,7 +72,7 @@ export function RegisterForm() {
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-bold">Create an account</h1>
         <p className="text-sm text-muted-foreground">
-          Get started with MoneyLoom
+          Get started with MoneyStyle
         </p>
       </div>
 

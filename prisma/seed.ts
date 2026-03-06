@@ -41,7 +41,7 @@ async function main() {
   console.log(`Found ${transactions.length} transactions`);
 
   // Ensure a seed user exists
-  const seedEmail = process.env.ADMIN_EMAIL || "admin@moneyloom.app";
+  const seedEmail = process.env.ADMIN_EMAIL || "admin@moneystyle.app";
   const user = await prisma.user.upsert({
     where: { email: seedEmail },
     update: {},

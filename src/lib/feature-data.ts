@@ -559,7 +559,7 @@ export const FEATURES: FeatureConfig[] = [
       {
         title: "Link to Bank",
         description:
-          "Connect income records to actual bank transactions. MoneyLoom auto-suggests matching transactions.",
+          "Connect income records to actual bank transactions. MoneyStyle auto-suggests matching transactions.",
         items: [
           { label: "Salary → Checking", value: "Linked", highlight: true },
           { label: "Freelance → PayPal", value: "Linked" },
@@ -1045,7 +1045,7 @@ export const FEATURES: FeatureConfig[] = [
       {
         title: "Track in Any Currency",
         description:
-          "Log transactions in their original currency. MoneyLoom automatically converts for reports and dashboards.",
+          "Log transactions in their original currency. MoneyStyle automatically converts for reports and dashboards.",
         items: [
           { label: "London Hotel", value: "£250 ($315)" },
           { label: "Paris Dinner", value: "€85 ($92)" },
@@ -1110,7 +1110,7 @@ export const FEATURES: FeatureConfig[] = [
           { label: "Setup", value: "30 seconds" },
           { label: "Method", value: "QR Code / Chat ID" },
           { label: "Status", value: "Connected", highlight: true },
-          { label: "Bot name", value: "@MoneyLoomBot" },
+          { label: "Bot name", value: "@MoneyStyleBot" },
         ],
       },
       {
@@ -1151,7 +1151,7 @@ export const FEATURES: FeatureConfig[] = [
       },
       {
         title: "No App Needed",
-        description: "Get updates without opening MoneyLoom.",
+        description: "Get updates without opening MoneyStyle.",
       },
     ],
     ogPhone: {
@@ -1176,7 +1176,7 @@ export const FEATURES: FeatureConfig[] = [
       {
         title: "Set Up Patterns",
         description:
-          "Define regex patterns for your bank's SMS format. MoneyLoom includes common templates for popular banks.",
+          "Define regex patterns for your bank's SMS format. MoneyStyle includes common templates for popular banks.",
         items: [
           { label: "Bank", value: "Your Bank Name" },
           { label: "Pattern", value: "Custom Regex" },
@@ -1187,7 +1187,7 @@ export const FEATURES: FeatureConfig[] = [
       {
         title: "SMS Auto-Parsed",
         description:
-          "When you receive a bank SMS, MoneyLoom extracts the amount, merchant, date, and account automatically.",
+          "When you receive a bank SMS, MoneyStyle extracts the amount, merchant, date, and account automatically.",
         items: [
           { label: "SMS received", value: "Purchase $45.80" },
           { label: "Amount", value: "$45.80" },

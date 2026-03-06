@@ -537,7 +537,7 @@ export async function generateTodayStats(userId?: string): Promise<string> {
 
 export function generateHelp(): string {
   return [
-    "💰 MoneyLoom Bot — Commands",
+    "💰 MoneyStyle Bot — Commands",
     "",
     "📝 Record a transaction:",
     "  250 Carrefour #grocery",

@@ -158,7 +158,7 @@ export function SmartShoppingLanding() {
               <ArrowLeft className="h-4 w-4" />
               <LogoMark className="h-7 w-7" />
               <span className="text-lg font-bold tracking-tight text-foreground">
-                MoneyLoom
+                MoneyStyle
               </span>
             </Link>
           </div>
@@ -622,7 +622,7 @@ export function SmartShoppingLanding() {
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <LogoMark className="h-4 w-4" />
-              <span>MoneyLoom</span>
+              <span>MoneyStyle</span>
             </div>
             <Link href="/" className="hover:text-foreground transition-colors">
               Back to Home

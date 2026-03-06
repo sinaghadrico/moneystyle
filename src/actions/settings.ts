@@ -75,7 +75,7 @@ export async function testTelegramConnection(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
-          text: "MoneyLoom app connected successfully!",
+          text: "MoneyStyle app connected successfully!",
         }),
       },
     );

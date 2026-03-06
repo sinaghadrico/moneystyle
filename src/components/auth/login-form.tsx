@@ -67,8 +67,8 @@ export function LoginForm() {
         </h1>
         <p className="text-sm text-muted-foreground">
           {isRedirected
-            ? "Log in or register to access MoneyLoom"
-            : "Sign in to your MoneyLoom account"}
+            ? "Log in or register to access MoneyStyle"
+            : "Sign in to your MoneyStyle account"}
         </p>
       </div>
 

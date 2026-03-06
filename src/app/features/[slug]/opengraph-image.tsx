@@ -111,7 +111,7 @@ export default async function OGImage({
                 fontWeight: 500,
               }}
             >
-              MoneyLoom
+              MoneyStyle
             </span>
           </div>
 

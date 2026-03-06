@@ -91,8 +91,8 @@ export async function signInWithCredentials(data: {
   }
 }
 
-const DEMO_EMAIL = "demo@moneyloom.app";
-const DEMO_PASSWORD = "demo-moneyloom-2026";
+const DEMO_EMAIL = "demo@moneystyle.app";
+const DEMO_PASSWORD = "demo-moneystyle-2026";
 
 export async function signInAsDemo() {
   // Create demo user if it doesn't exist

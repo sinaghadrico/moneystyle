@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 export const alt =
-  "MoneyLoom Smart Shopping — Compare prices, split across stores, save more";
+  "MoneyStyle Smart Shopping — Compare prices, split across stores, save more";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -101,7 +101,7 @@ export default function OGImage() {
                 fontWeight: 500,
               }}
             >
-              MoneyLoom
+              MoneyStyle
             </span>
           </div>
 

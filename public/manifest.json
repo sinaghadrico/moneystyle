@@ -1,6 +1,6 @@
 {
-  "name": "MoneyLoom - Finance Tracker",
-  "short_name": "MoneyLoom",
+  "name": "MoneyStyle - Finance Tracker",
+  "short_name": "MoneyStyle",
   "display": "standalone",
   "start_url": "/",
   "theme_color": "#09090b",

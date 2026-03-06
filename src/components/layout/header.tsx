@@ -21,7 +21,7 @@ export function Header() {
 
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-4 md:hidden">
-      <h1 className="text-lg font-bold tracking-tight">MoneyLoom</h1>
+      <h1 className="text-lg font-bold tracking-tight">MoneyStyle</h1>
       <div className="flex items-center gap-2">
         <WrappedButton />
         <UserMenu />

@@ -12,6 +12,7 @@ import { useTelegramAutoAuth } from "@/hooks/use-telegram-auto-auth";
 import { LogoMark } from "@/components/ui/logo";
 import {
   ArrowRight,
+  Loader2,
   BarChart3,
   Bell,
   Brain,
@@ -335,7 +336,7 @@ export function LandingContent() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [demoLoading, setDemoLoading] = useState(false);
-  const { isTelegram: isTelegramMiniApp, authStatus: tgAuthStatus } = useTelegramAutoAuth();
+  const { isTelegram: isTelegramMiniApp, authStatus: tgAuthStatus, signInWithTelegram } = useTelegramAutoAuth();
 
   const hero = useInView(0.1);
   const pain = useInView(0.15);
@@ -384,7 +385,7 @@ export function LandingContent() {
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
-            ) : (
+            ) : !isTelegramMiniApp ? (
               <>
                 <Button asChild variant="ghost" size="sm">
                   <Link href="/auth/login">
@@ -399,38 +400,10 @@ export function LandingContent() {
                   </Link>
                 </Button>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </nav>
-
-      {/* ── Telegram Mini App Banner ── */}
-      {isTelegramMiniApp && (
-        <div className="border-b bg-blue-500/10 px-4 py-3">
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Send className="h-4 w-4 text-blue-500" />
-              {tgAuthStatus === "loading" && (
-                <span className="text-muted-foreground">Signing in with Telegram...</span>
-              )}
-              {tgAuthStatus === "done" && (
-                <span className="font-medium text-blue-600 dark:text-blue-400">Signed in via Telegram</span>
-              )}
-              {tgAuthStatus === "error" && (
-                <span className="text-destructive">Authentication failed</span>
-              )}
-            </div>
-            {tgAuthStatus === "done" && (
-              <Button asChild size="sm" variant="default">
-                <Link href="/dashboard">
-                  Open App
-                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Hero ── */}
       <section ref={hero.ref} className="relative overflow-hidden">
@@ -478,6 +451,31 @@ export function LandingContent() {
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
+                ) : isTelegramMiniApp ? (
+                  <>
+                    <Button
+                      size="lg"
+                      className="text-base"
+                      onClick={signInWithTelegram}
+                      disabled={tgAuthStatus === "loading"}
+                    >
+                      {tgAuthStatus === "loading" ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="mr-2 h-5 w-5" />
+                      )}
+                      {tgAuthStatus === "loading" ? "Signing in..." : "Sign in with Telegram"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="text-base"
+                      onClick={handleDemo}
+                      disabled={demoLoading}
+                    >
+                      {demoLoading ? "Loading..." : "Try Live Demo"}
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button asChild size="lg" className="text-base">

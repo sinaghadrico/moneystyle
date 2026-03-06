@@ -7,9 +7,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { SocialButtons } from "./social-buttons";
-import { registerUser } from "@/actions/auth";
+import { registerUser, signInAsDemo } from "@/actions/auth";
 import { useTelegramAutoAuth } from "@/hooks/use-telegram-auto-auth";
 
 export function RegisterForm() {
@@ -18,19 +18,53 @@ export function RegisterForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { isTelegram, authStatus } = useTelegramAutoAuth();
+  const [demoLoading, setDemoLoading] = useState(false);
+  const { isTelegram, authStatus, signInWithTelegram } = useTelegramAutoAuth();
+
+  const handleDemo = async () => {
+    setDemoLoading(true);
+    const result = await signInAsDemo();
+    if (result.success) {
+      window.location.href = "/dashboard";
+    }
+    setDemoLoading(false);
+  };
 
   if (isTelegram) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-3">
-        {authStatus === "loading" && (
-          <>
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-            <p className="text-sm text-muted-foreground">Signing in with Telegram...</p>
-          </>
-        )}
+      <div className="space-y-6">
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-bold">Welcome to MoneyStyle</h1>
+          <p className="text-sm text-muted-foreground">
+            Choose how you want to continue
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <Button
+            size="lg"
+            className="w-full text-base"
+            onClick={signInWithTelegram}
+            disabled={authStatus === "loading"}
+          >
+            {authStatus === "loading" ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Send className="mr-2 h-5 w-5" />
+            )}
+            {authStatus === "loading" ? "Signing in..." : "Sign in with Telegram"}
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full text-base"
+            onClick={handleDemo}
+            disabled={demoLoading}
+          >
+            {demoLoading ? "Loading..." : "Try Live Demo"}
+          </Button>
+        </div>
         {authStatus === "error" && (
-          <p className="text-sm text-destructive">Telegram authentication failed</p>
+          <p className="text-center text-sm text-destructive">Telegram authentication failed</p>
         )}
       </div>
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { signInWithTelegramMiniApp } from "@/actions/auth";
 
 export function useTelegramAutoAuth() {
@@ -9,22 +9,26 @@ export function useTelegramAutoAuth() {
 
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
-    if (!tg?.initData) return;
-
-    setIsTelegram(true);
-    setAuthStatus("loading");
-    tg.ready();
-    tg.expand();
-
-    signInWithTelegramMiniApp(tg.initData).then((result) => {
-      if (result.error) {
-        setAuthStatus("error");
-      } else {
-        setAuthStatus("done");
-        window.location.href = "/dashboard";
-      }
-    });
+    if (tg?.initData) {
+      setIsTelegram(true);
+      tg.ready();
+      tg.expand();
+    }
   }, []);
 
-  return { isTelegram, authStatus };
+  const signInWithTelegram = useCallback(async () => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (!tg?.initData) return;
+
+    setAuthStatus("loading");
+    const result = await signInWithTelegramMiniApp(tg.initData);
+    if (result.error) {
+      setAuthStatus("error");
+    } else {
+      setAuthStatus("done");
+      window.location.href = "/dashboard";
+    }
+  }, []);
+
+  return { isTelegram, authStatus, signInWithTelegram };
 }

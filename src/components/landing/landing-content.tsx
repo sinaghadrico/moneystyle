@@ -386,20 +386,12 @@ export function LandingContent() {
                 </Link>
               </Button>
             ) : !isTelegramMiniApp ? (
-              <>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/auth/login">
-                    <LogIn className="mr-1 h-4 w-4" />
-                    Sign in
-                  </Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link href="/auth/register">
-                    Get Started
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-              </>
+              <Button asChild size="sm">
+                <Link href="/auth/login">
+                  Get Started
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
             ) : null}
           </div>
         </div>

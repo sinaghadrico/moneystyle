@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send } from "lucide-react";
 import { signInWithTelegramWidget } from "@/actions/auth";
@@ -8,6 +8,9 @@ import { signInWithTelegramWidget } from "@/actions/auth";
 declare global {
   interface Window {
     onTelegramAuth?: (user: Record<string, string>) => void;
+    TelegramLoginWidget?: {
+      auth: (options: { bot_id: string; request_access?: string; lang?: string }, callback: (user: Record<string, string> | false) => void) => void;
+    };
   }
 }
 
@@ -16,56 +19,53 @@ export function TelegramLoginButton() {
   const [error, setError] = useState("");
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
 
+  const handleAuth = useCallback(async (user: Record<string, string>) => {
+    setLoading(true);
+    setError("");
+    const result = await signInWithTelegramWidget(user);
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      window.location.href = "/dashboard";
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!botUsername) return;
+
+    // Global callback for Telegram widget
+    window.onTelegramAuth = (user) => {
+      handleAuth(user);
+    };
+
+    return () => {
+      delete window.onTelegramAuth;
+    };
+  }, [botUsername, handleAuth]);
+
   if (!botUsername) return null;
 
   const handleClick = () => {
     if (loading) return;
 
-    // Set up global callback
-    window.onTelegramAuth = async (user) => {
-      setLoading(true);
-      setError("");
-      const result = await signInWithTelegramWidget(user);
-      if (result.error) {
-        setError(result.error);
-        setLoading(false);
-      } else {
-        window.location.href = "/dashboard";
-      }
-    };
+    // Open Telegram OAuth directly in a popup
+    const botId = botUsername;
+    const origin = encodeURIComponent(window.location.origin);
+    const popup = window.open(
+      `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&embed=0&request_access=write&return_to=${encodeURIComponent(window.location.href)}`,
+      "telegram_oauth",
+      `width=550,height=500,left=${(screen.width - 550) / 2},top=${(screen.height - 500) / 2}`
+    );
 
-    // Load widget script in a hidden container to trigger Telegram auth popup
-    const existing = document.getElementById("tg-widget-container");
-    if (existing) existing.remove();
-
-    const container = document.createElement("div");
-    container.id = "tg-widget-container";
-    container.style.position = "fixed";
-    container.style.top = "-9999px";
-    document.body.appendChild(container);
-
-    const script = document.createElement("script");
-    script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.setAttribute("data-telegram-login", botUsername);
-    script.setAttribute("data-size", "large");
-    script.setAttribute("data-onauth", "onTelegramAuth(user)");
-    script.setAttribute("data-request-access", "write");
-    script.setAttribute("data-auth-url", window.location.href);
-    script.async = true;
-    container.appendChild(script);
-
-    // After widget loads, click the iframe button to open popup
-    setTimeout(() => {
-      const iframe = container.querySelector("iframe");
-      if (iframe) {
-        iframe.style.position = "fixed";
-        iframe.style.top = "50%";
-        iframe.style.left = "50%";
-        iframe.style.transform = "translate(-50%, -50%)";
-        iframe.style.zIndex = "9999";
-        iframe.click();
-      }
-    }, 1000);
+    // Poll for popup close and check for auth data in URL
+    if (popup) {
+      const interval = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(interval);
+        }
+      }, 500);
+    }
   };
 
   return (

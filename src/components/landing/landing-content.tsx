@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
 import { signInAsDemo } from "@/actions/auth";
 import { useInView } from "@/hooks/use-in-view";
 import { useTelegramAutoAuth } from "@/hooks/use-telegram-auto-auth";
@@ -348,9 +349,12 @@ export function LandingContent() {
 
   const handleDemo = async () => {
     setDemoLoading(true);
+    if (isLoggedIn) {
+      await signOut({ redirect: false });
+    }
     const result = await signInAsDemo();
     if (result.success) {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
     setDemoLoading(false);
   };
@@ -436,57 +440,46 @@ export function LandingContent() {
               <div
                 className={`mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition-all duration-700 delay-300 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
               >
-                {isLoggedIn ? (
+                {isLoggedIn && (
                   <Button asChild size="lg" className="text-base">
                     <Link href="/dashboard">
                       Go to Dashboard
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
-                ) : isTelegramMiniApp ? (
-                  <>
-                    <Button
-                      size="lg"
-                      className="text-base"
-                      onClick={signInWithTelegram}
-                      disabled={tgAuthStatus === "loading"}
-                    >
-                      {tgAuthStatus === "loading" ? (
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="mr-2 h-5 w-5" />
-                      )}
-                      {tgAuthStatus === "loading" ? "Signing in..." : "Sign in with Telegram"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-base"
-                      onClick={handleDemo}
-                      disabled={demoLoading}
-                    >
-                      {demoLoading ? "Loading..." : "Try Live Demo"}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button asChild size="lg" className="text-base">
-                      <Link href="/auth/register">
-                        Get Started Free
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-base"
-                      onClick={handleDemo}
-                      disabled={demoLoading}
-                    >
-                      {demoLoading ? "Loading..." : "Try Live Demo"}
-                    </Button>
-                  </>
                 )}
+                {!isLoggedIn && isTelegramMiniApp && (
+                  <Button
+                    size="lg"
+                    className="text-base"
+                    onClick={signInWithTelegram}
+                    disabled={tgAuthStatus === "loading"}
+                  >
+                    {tgAuthStatus === "loading" ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="mr-2 h-5 w-5" />
+                    )}
+                    {tgAuthStatus === "loading" ? "Signing in..." : "Sign in with Telegram"}
+                  </Button>
+                )}
+                {!isLoggedIn && !isTelegramMiniApp && (
+                  <Button asChild size="lg" className="text-base">
+                    <Link href="/auth/login">
+                      Get Started Free
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-base"
+                  onClick={handleDemo}
+                  disabled={demoLoading}
+                >
+                  {demoLoading ? "Loading..." : "Try Live Demo"}
+                </Button>
               </div>
             </div>
 

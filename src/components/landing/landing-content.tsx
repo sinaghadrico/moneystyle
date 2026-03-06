@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { signInAsDemo } from "@/actions/auth";
+import { signInAsDemo, signInWithTelegramMiniApp } from "@/actions/auth";
 import { useInView } from "@/hooks/use-in-view";
 import { LogoMark } from "@/components/ui/logo";
 import {
@@ -26,6 +26,7 @@ import {
   Receipt,
   Repeat,
   ScanLine,
+  Send,
   Shield,
   ShoppingBasket,
   ShoppingCart,
@@ -333,6 +334,33 @@ export function LandingContent() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [demoLoading, setDemoLoading] = useState(false);
+  const [isTelegramMiniApp, setIsTelegramMiniApp] = useState(false);
+  const [tgAuthStatus, setTgAuthStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+
+  useEffect(() => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg?.initData) {
+      setIsTelegramMiniApp(true);
+      tg.ready();
+      tg.expand();
+
+      // Don't auto-auth if already logged in
+      if (session?.user) {
+        setTgAuthStatus("done");
+        return;
+      }
+
+      setTgAuthStatus("loading");
+      signInWithTelegramMiniApp(tg.initData).then((result) => {
+        if (result.error) {
+          setTgAuthStatus("error");
+        } else {
+          setTgAuthStatus("done");
+          window.location.href = "/dashboard";
+        }
+      });
+    }
+  }, [session?.user]);
 
   const hero = useInView(0.1);
   const pain = useInView(0.15);
@@ -400,6 +428,34 @@ export function LandingContent() {
           </div>
         </div>
       </nav>
+
+      {/* ── Telegram Mini App Banner ── */}
+      {isTelegramMiniApp && (
+        <div className="border-b bg-blue-500/10 px-4 py-3">
+          <div className="mx-auto flex max-w-6xl items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <Send className="h-4 w-4 text-blue-500" />
+              {tgAuthStatus === "loading" && (
+                <span className="text-muted-foreground">Signing in with Telegram...</span>
+              )}
+              {tgAuthStatus === "done" && (
+                <span className="font-medium text-blue-600 dark:text-blue-400">Signed in via Telegram</span>
+              )}
+              {tgAuthStatus === "error" && (
+                <span className="text-destructive">Authentication failed</span>
+              )}
+            </div>
+            {tgAuthStatus === "done" && (
+              <Button asChild size="sm" variant="default">
+                <Link href="/dashboard">
+                  Open App
+                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Hero ── */}
       <section ref={hero.ref} className="relative overflow-hidden">

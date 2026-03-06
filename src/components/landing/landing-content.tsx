@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { signInAsDemo, signInWithTelegramMiniApp } from "@/actions/auth";
+import { signInAsDemo } from "@/actions/auth";
 import { useInView } from "@/hooks/use-in-view";
+import { useTelegramAutoAuth } from "@/hooks/use-telegram-auto-auth";
 import { LogoMark } from "@/components/ui/logo";
 import {
   ArrowRight,
@@ -334,33 +335,7 @@ export function LandingContent() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [demoLoading, setDemoLoading] = useState(false);
-  const [isTelegramMiniApp, setIsTelegramMiniApp] = useState(false);
-  const [tgAuthStatus, setTgAuthStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-
-  useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg?.initData) {
-      setIsTelegramMiniApp(true);
-      tg.ready();
-      tg.expand();
-
-      // Don't auto-auth if already logged in
-      if (session?.user) {
-        setTgAuthStatus("done");
-        return;
-      }
-
-      setTgAuthStatus("loading");
-      signInWithTelegramMiniApp(tg.initData).then((result) => {
-        if (result.error) {
-          setTgAuthStatus("error");
-        } else {
-          setTgAuthStatus("done");
-          window.location.href = "/dashboard";
-        }
-      });
-    }
-  }, [session?.user]);
+  const { isTelegram: isTelegramMiniApp, authStatus: tgAuthStatus } = useTelegramAutoAuth();
 
   const hero = useInView(0.1);
   const pain = useInView(0.15);

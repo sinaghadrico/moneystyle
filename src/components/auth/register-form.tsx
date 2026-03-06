@@ -7,8 +7,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import { SocialButtons } from "./social-buttons";
 import { registerUser } from "@/actions/auth";
+import { useTelegramAutoAuth } from "@/hooks/use-telegram-auto-auth";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -16,6 +18,23 @@ export function RegisterForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { isTelegram, authStatus } = useTelegramAutoAuth();
+
+  if (isTelegram) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-3">
+        {authStatus === "loading" && (
+          <>
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+            <p className="text-sm text-muted-foreground">Signing in with Telegram...</p>
+          </>
+        )}
+        {authStatus === "error" && (
+          <p className="text-sm text-destructive">Telegram authentication failed</p>
+        )}
+      </div>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

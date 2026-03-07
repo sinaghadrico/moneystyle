@@ -1126,12 +1126,36 @@ export function TransactionsContent({
         );
         return (
         <div className="fixed left-3 right-3 z-[55] flex flex-col items-end gap-2 md:hidden" style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 8px)" }}>
-          <button
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95"
-            onClick={() => setShowAdd(true)}
-          >
-            <Plus className="h-6 w-6" />
-          </button>
+          {fabOpen && (
+            <>
+              <button
+                className="fixed inset-0 z-[-1] bg-black/20"
+                onClick={() => setFabOpen(false)}
+              />
+              <button
+                className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2.5 shadow-lg border active:scale-95"
+                onClick={() => { setFabOpen(false); setShowImport(true); }}
+              >
+                <Upload className="h-4 w-4" />
+                <span className="text-sm font-medium">Import</span>
+              </button>
+              <button
+                className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2.5 shadow-lg border active:scale-95"
+                onClick={() => { setFabOpen(false); setShowAdd(true); }}
+              >
+                <Plus className="h-4 w-4" />
+                <span className="text-sm font-medium">Add Transaction</span>
+              </button>
+            </>
+          )}
+          {!fabOpen && (
+            <button
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+              onClick={() => setFabOpen(true)}
+            >
+              <Plus className="h-6 w-6" />
+            </button>
+          )}
           <div className="flex w-full items-center justify-between rounded-2xl bg-primary px-4 py-2.5 shadow-xl">
             <span className="text-sm font-medium text-primary-foreground">
               {selected.size} selected

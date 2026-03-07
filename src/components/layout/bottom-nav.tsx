@@ -142,10 +142,10 @@ export function BottomNav() {
       {!fabOpen && (
         <button
           onClick={() => setFabOpen(true)}
-          className="fixed z-50 right-4 rounded-full bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-900 shadow-lg shadow-black/40 flex items-center justify-center active:scale-95 transition-transform bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] h-12 w-12 md:bottom-6 md:h-10 md:w-auto md:gap-2 md:px-4 animate-fab-pulse overflow-hidden fab-shimmer"
+          className="fixed z-50 right-4 rounded-full bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-900 shadow-lg shadow-black/40 flex items-center justify-center gap-2 px-4 active:scale-95 transition-transform bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] h-12 w-auto md:bottom-6 md:h-10 animate-fab-pulse overflow-hidden fab-shimmer"
         >
           <Sparkles className="h-5 w-5 text-amber-400 md:h-4 md:w-4 animate-[spin_4s_linear_infinite]" />
-          <span className="hidden md:inline text-sm font-medium text-white">AI & Lifestyle</span>
+          <span className="text-sm font-medium text-white">AI & Lifestyle</span>
         </button>
       )}
 

@@ -499,3 +499,30 @@ export type FinancialOverview = {
     kind: "installment" | "bill";
   }[];
 };
+
+// Cashflow Calendar types
+
+export type CashflowEvent = {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  day: number;
+  kind: "income" | "installment" | "bill" | "expense" | "deposit";
+};
+
+export type CashflowDayData = {
+  date: string; // YYYY-MM-DD
+  day: number;
+  events: CashflowEvent[];
+  projectedBalance: number;
+};
+
+export type CashflowData = {
+  month: string; // YYYY-MM
+  primaryCurrency: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netCashflow: number;
+  days: CashflowDayData[];
+};

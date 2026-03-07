@@ -30,6 +30,9 @@ import type {
   BillPaymentData,
   IncomeDepositData,
   FinancialOverview,
+  CashflowData,
+  CashflowEvent,
+  CashflowDayData,
 } from "@/lib/types";
 
 // ── Income Sources ──
@@ -915,6 +918,124 @@ export async function getFinancialOverview(): Promise<FinancialOverview> {
     totalReserves: Math.round(totalReserves * 100) / 100,
     reservesByType,
     upcomingPayments,
+  };
+}
+
+// ── Cashflow Calendar ──
+
+export async function getCashflowData(month: string): Promise<CashflowData> {
+  const userId = await requireAuth();
+  const [year, mon] = month.split("-").map(Number);
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  const monthStart = new Date(year, mon - 1, 1);
+  const monthEnd = new Date(year, mon, 0, 23, 59, 59, 999);
+
+  const [incomeSources, installments, bills, transactions, settings, rates] = await Promise.all([
+    prisma.incomeSource.findMany({ where: { userId, isActive: true } }),
+    prisma.installment.findMany({ where: { userId, isActive: true } }),
+    prisma.bill.findMany({ where: { userId, isActive: true } }),
+    prisma.transaction.findMany({
+      where: { userId, date: { gte: monthStart, lte: monthEnd } },
+      select: { id: true, merchant: true, description: true, amount: true, type: true, date: true, currency: true },
+      orderBy: { date: "asc" },
+    }),
+    prisma.appSettings.findUnique({ where: { userId } }),
+    getCurrencyRates(),
+  ]);
+
+  const primaryCurrency = settings?.currency ?? "AED";
+
+  // Build events per day
+  const dayEventsMap = new Map<number, CashflowEvent[]>();
+  for (let d = 1; d <= daysInMonth; d++) dayEventsMap.set(d, []);
+
+  // Recurring: income sources
+  for (const src of incomeSources) {
+    const day = Math.min(src.depositDay, daysInMonth);
+    dayEventsMap.get(day)!.push({
+      id: src.id,
+      name: src.name,
+      amount: convertAmount(Number(src.amount), src.currency, primaryCurrency, rates),
+      currency: primaryCurrency,
+      day,
+      kind: "income",
+    });
+  }
+
+  // Recurring: installments
+  for (const inst of installments) {
+    const day = Math.min(inst.dueDay, daysInMonth);
+    dayEventsMap.get(day)!.push({
+      id: inst.id,
+      name: inst.name,
+      amount: convertAmount(Number(inst.amount), inst.currency, primaryCurrency, rates),
+      currency: primaryCurrency,
+      day,
+      kind: "installment",
+    });
+  }
+
+  // Recurring: bills
+  for (const bill of bills) {
+    const day = Math.min(bill.dueDay, daysInMonth);
+    dayEventsMap.get(day)!.push({
+      id: bill.id,
+      name: bill.name,
+      amount: convertAmount(Number(bill.amount), bill.currency, primaryCurrency, rates),
+      currency: primaryCurrency,
+      day,
+      kind: "bill",
+    });
+  }
+
+  // Actual transactions
+  for (const tx of transactions) {
+    const day = new Date(tx.date).getDate();
+    const amount = convertAmount(Math.abs(Number(tx.amount)), tx.currency, primaryCurrency, rates);
+    const isIncome = tx.type === "income";
+    dayEventsMap.get(day)!.push({
+      id: tx.id,
+      name: tx.merchant || tx.description || (isIncome ? "Income" : "Expense"),
+      amount,
+      currency: primaryCurrency,
+      day,
+      kind: isIncome ? "deposit" : "expense",
+    });
+  }
+
+  // Calculate projected balance day by day
+  let runningBalance = 0;
+  let totalIncome = 0;
+  let totalExpenses = 0;
+  const days: CashflowDayData[] = [];
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const events = dayEventsMap.get(d)!;
+    for (const ev of events) {
+      if (ev.kind === "income" || ev.kind === "deposit") {
+        runningBalance += ev.amount;
+        totalIncome += ev.amount;
+      } else {
+        runningBalance -= ev.amount;
+        totalExpenses += ev.amount;
+      }
+    }
+    const dateStr = `${year}-${String(mon).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    days.push({
+      date: dateStr,
+      day: d,
+      events,
+      projectedBalance: Math.round(runningBalance * 100) / 100,
+    });
+  }
+
+  return {
+    month,
+    primaryCurrency,
+    totalIncome: Math.round(totalIncome * 100) / 100,
+    totalExpenses: Math.round(totalExpenses * 100) / 100,
+    netCashflow: Math.round((totalIncome - totalExpenses) * 100) / 100,
+    days,
   };
 }
 

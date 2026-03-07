@@ -11,6 +11,11 @@ import {
   type SmsPatternUpdateInput,
 } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
+import { randomBytes } from "crypto";
+
+function generateApiKey() {
+  return `ms_${randomBytes(16).toString("base64url")}`;
+}
 
 const DEFAULTS = {
   currency: "AED",
@@ -23,7 +28,6 @@ const DEFAULTS = {
   telegramBotToken: null,
   telegramWebhookSecret: null,
   telegramChatId: null,
-  smsApiKey: null,
   aiEnabled: false,
   openaiApiKey: null,
   notifyPaymentReminders: true,
@@ -35,8 +39,20 @@ const DEFAULTS = {
 
 export async function getSettings() {
   const userId = await requireAuth();
-  const row = await prisma.appSettings.findUnique({ where: { userId } });
-  return row ?? DEFAULTS;
+  let row = await prisma.appSettings.findUnique({ where: { userId } });
+
+  if (!row) {
+    row = await prisma.appSettings.create({
+      data: { userId, smsApiKey: generateApiKey() },
+    });
+  } else if (!row.smsApiKey || row.smsApiKey.length > 30) {
+    row = await prisma.appSettings.update({
+      where: { userId },
+      data: { smsApiKey: generateApiKey() },
+    });
+  }
+
+  return row;
 }
 
 export async function updateSettings(

@@ -303,7 +303,6 @@ export const settingsUpdateSchema = z.object({
   telegramBotToken: z.string().nullable().optional(),
   telegramWebhookSecret: z.string().nullable().optional(),
   telegramChatId: z.string().nullable().optional(),
-  smsApiKey: z.string().nullable().optional(),
   aiEnabled: z.boolean().optional(),
   openaiApiKey: z.string().nullable().optional(),
   notifyPaymentReminders: z.boolean().optional(),

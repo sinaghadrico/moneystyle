@@ -42,7 +42,6 @@ import {
   updateSmsPattern,
   deleteSmsPattern,
   testSmsPattern,
-  updateSettings,
   getSettings,
 } from "@/actions/settings";
 import type { SmsPatternCreateInput } from "@/lib/validators";
@@ -155,7 +154,6 @@ export function SmsPatternsSection() {
 
   // SMS API Key
   const [smsApiKey, setSmsApiKey] = useState("");
-  const [savingKey, setSavingKey] = useState(false);
 
   // Setup guide
   const [guideOpen, setGuideOpen] = useState(false);
@@ -282,18 +280,6 @@ export function SmsPatternsSection() {
     }
   };
 
-  const handleSaveApiKey = async () => {
-    setSavingKey(true);
-    const result = await updateSettings({
-      smsApiKey: smsApiKey || null,
-    });
-    setSavingKey(false);
-    if ("error" in result) {
-      toast.error("❌ " + result.error);
-    } else {
-      toast.success("✅ API key saved");
-    }
-  };
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -325,31 +311,26 @@ export function SmsPatternsSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* API Key */}
-          <div className="flex items-end gap-2">
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="smsApiKey" className="text-xs">
-                API Key
-              </Label>
-              <Input
-                id="smsApiKey"
-                type="password"
-                value={smsApiKey}
-                onChange={(e) => setSmsApiKey(e.target.value)}
-                placeholder="Bearer token for /api/sms"
-                className="h-8 text-sm"
-              />
+          {/* API Key (auto-generated, read-only) */}
+          <div className="space-y-1">
+            <Label className="text-xs">API Key</Label>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 truncate rounded bg-muted px-3 py-2 text-xs font-mono">
+                {smsApiKey || "Loading..."}
+              </code>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => copyToClipboard(smsApiKey, "apikey")}
+              >
+                {copied === "apikey" ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSaveApiKey}
-              disabled={savingKey}
-              className="h-8"
-            >
-              {savingKey && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-              Save
-            </Button>
           </div>
 
           {/* Setup Guide */}

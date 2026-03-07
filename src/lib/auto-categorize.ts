@@ -30,6 +30,7 @@ export async function resolveCategory(
       merchant: { equals: merchant, mode: "insensitive" },
       categoryId: { not: null },
       mergedIntoId: null,
+      confirmed: true,
       ...(userId ? { userId } : {}),
     },
     select: { categoryId: true },

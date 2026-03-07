@@ -37,6 +37,7 @@ async function getMySpentForCategory(userId: string, categoryId: string, startOf
     type: "expense" as const,
     date: { gte: startOfMonth, lte: endOfMonth },
     mergedIntoId: null,
+    confirmed: true,
     amount: { not: null },
   };
 
@@ -65,6 +66,7 @@ async function getMySpentForCategory(userId: string, categoryId: string, startOf
         userId,
         type: "expense",
         mergedIntoId: null,
+        confirmed: true,
         amount: { not: null },
         spreadMonths: { gt: 1 },
         categoryId,

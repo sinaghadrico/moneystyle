@@ -11,7 +11,7 @@ export async function getCategoriesWithStats() {
     where: { userId },
     include: {
       _count: {
-        select: { transactions: { where: { mergedIntoId: null } } },
+        select: { transactions: { where: { mergedIntoId: null, confirmed: true } } },
       },
     },
     orderBy: { name: "asc" },
@@ -25,7 +25,7 @@ export async function getCategoriesWithStats() {
     prisma.transaction.groupBy({
       by: ["categoryId"],
       _sum: { amount: true },
-      where: { userId, amount: { not: null }, mergedIntoId: null },
+      where: { userId, amount: { not: null }, mergedIntoId: null, confirmed: true },
     }),
     prisma.transaction.groupBy({
       by: ["categoryId"],
@@ -34,6 +34,7 @@ export async function getCategoriesWithStats() {
         userId,
         amount: { not: null },
         mergedIntoId: null,
+        confirmed: true,
         date: { gte: monthStart, lt: monthEnd },
       },
     }),

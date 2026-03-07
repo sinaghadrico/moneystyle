@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/auth-utils";
 import type { WrappedData } from "@/lib/types";
 import { Prisma } from "@prisma/client";
 
-const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null };
+const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null, confirmed: true };
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 

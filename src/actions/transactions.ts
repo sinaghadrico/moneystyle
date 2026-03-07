@@ -42,6 +42,7 @@ export async function getTransactions(
     amountMax,
     search,
     source,
+    confirmed,
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
     sortBy = "date",
@@ -51,6 +52,12 @@ export async function getTransactions(
   const userId = await requireAuth();
 
   const where: Prisma.TransactionWhereInput = { mergedIntoId: null, userId };
+
+  if (confirmed !== undefined) {
+    where.confirmed = confirmed;
+  } else {
+    where.confirmed = true;
+  }
 
   if (dateFrom || dateTo) {
     where.date = {};
@@ -493,4 +500,24 @@ export async function removeTransactionMedia(
 
   revalidatePath("/transactions");
   return { success: true };
+}
+
+export async function confirmTransactions(ids: string[]) {
+  const userId = await requireAuth();
+  if (!ids.length) return { count: 0 };
+
+  const result = await prisma.transaction.updateMany({
+    where: { id: { in: ids }, userId },
+    data: { confirmed: true },
+  });
+
+  revalidatePath("/transactions");
+  return { count: result.count };
+}
+
+export async function getUnconfirmedCount() {
+  const userId = await requireAuth();
+  return prisma.transaction.count({
+    where: { userId, confirmed: false, mergedIntoId: null },
+  });
 }

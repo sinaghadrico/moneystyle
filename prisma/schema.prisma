@@ -184,6 +184,7 @@ model Transaction {
   items        String?
   source       String?
   spreadMonths Int?
+  confirmed    Boolean              @default(true)
   hasReceipt   Boolean              @default(false)
   mediaFiles   String[]
   mergedIntoId String?

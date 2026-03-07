@@ -26,6 +26,7 @@ type FiltersState = {
   amountMin: string;
   amountMax: string;
   source: string;
+  confirmed: string;
 };
 
 export function TransactionFilters({
@@ -166,6 +167,21 @@ export function TransactionFilters({
                   <SelectItem value="all">All Sources</SelectItem>
                   <SelectItem value="manual">Manual</SelectItem>
                   <SelectItem value="telegram">Telegram</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1">
+              <Label className="text-xs text-muted-foreground">Status</Label>
+              <Select
+                value={filters.confirmed || "confirmed"}
+                onValueChange={(v) => onChange("confirmed", v === "confirmed" ? "" : v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Confirmed" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="unconfirmed">Unconfirmed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -365,6 +381,21 @@ export function TransactionFilters({
                 <SelectItem value="all">All Sources</SelectItem>
                 <SelectItem value="manual">Manual</SelectItem>
                 <SelectItem value="telegram">Telegram</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1">
+            <Label className="text-xs text-muted-foreground">Status</Label>
+            <Select
+              value={filters.confirmed || "confirmed"}
+              onValueChange={(v) => onChange("confirmed", v === "confirmed" ? "" : v)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Confirmed" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="unconfirmed">Unconfirmed</SelectItem>
               </SelectContent>
             </Select>
           </div>

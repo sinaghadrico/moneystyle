@@ -19,7 +19,7 @@ export async function getAccountsWithStats() {
       where: { userId },
       include: {
         _count: {
-          select: { transactions: { where: { mergedIntoId: null } } },
+          select: { transactions: { where: { mergedIntoId: null, confirmed: true } } },
         },
       },
       orderBy: { name: "asc" },
@@ -31,7 +31,7 @@ export async function getAccountsWithStats() {
   const primaryCurrency = settings?.currency ?? "AED";
 
   const transactions = await prisma.transaction.findMany({
-    where: { userId, amount: { not: null }, mergedIntoId: null },
+    where: { userId, amount: { not: null }, mergedIntoId: null, confirmed: true },
     select: { accountId: true, amount: true, currency: true },
   });
 

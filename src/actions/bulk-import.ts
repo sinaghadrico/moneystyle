@@ -178,6 +178,7 @@ export async function createTransactionFromReceipt(
   currency: string,
   categoryId: string | null,
   storedFilePath?: string,
+  confirmed: boolean = false,
 ): Promise<{ success: true } | { error: string }> {
   const userId = await requireAuth();
 
@@ -199,6 +200,7 @@ export async function createTransactionFromReceipt(
       merchant: receipt.merchant,
       source: "import",
       accountId,
+      confirmed,
     },
   });
 
@@ -322,6 +324,7 @@ export async function bulkCreateTransactions(
   transactions: ParsedTransaction[],
   accountId: string,
   currency: string,
+  confirmed: boolean = false,
 ): Promise<{ count: number } | { error: string }> {
   const userId = await requireAuth();
 
@@ -354,6 +357,7 @@ export async function bulkCreateTransactions(
     merchant: tx.description,
     source: "import",
     accountId,
+    confirmed,
   }));
 
   const result = await prisma.transaction.createMany({ data });

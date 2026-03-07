@@ -103,6 +103,7 @@ export function BulkImportDialog({
   const [parseProgress, setParseProgress] = useState({ current: 0, total: 0 });
 
   const [importCount, setImportCount] = useState(0);
+  const [confirmImport, setConfirmImport] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function reset() {
@@ -117,6 +118,7 @@ export function BulkImportDialog({
     setEditingTxId(null);
     setParseProgress({ current: 0, total: 0 });
     setImportCount(0);
+    setConfirmImport(false);
   }
 
   // Match a raw category name (from AI or CSV) to user's categories
@@ -498,6 +500,7 @@ export function BulkImportDialog({
           settings.currency,
           entry.categoryId || null,
           entry.storedPath || undefined,
+          confirmImport,
         );
         if ("error" in result) {
           toast.error(`${entry.receipt.merchant}: ${result.error}`);
@@ -512,6 +515,7 @@ export function BulkImportDialog({
           toImport,
           accountId,
           settings.currency,
+          confirmImport,
         );
         if ("error" in result) {
           toast.error(result.error);
@@ -582,6 +586,7 @@ export function BulkImportDialog({
         toImport,
         accountId,
         settings.currency,
+        confirmImport,
       );
       if ("error" in result) {
         toast.error(result.error);
@@ -1075,30 +1080,41 @@ export function BulkImportDialog({
             </div>
 
             <ResponsiveDialogFooter>
-              <div className="flex w-full gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setStep("upload");
-                    setReceipts([]);
-                    setTransactions([]);
-                  }}
-                >
-                  Back
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handleImportAll}
-                  disabled={loading || selected.size === 0}
-                >
-                  {loading ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCheck className="mr-1.5 h-4 w-4" />
-                  )}
-                  Import {selected.size}
-                </Button>
+              <div className="w-full space-y-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmImport}
+                    onChange={(e) => setConfirmImport(e.target.checked)}
+                    className="rounded"
+                  />
+                  Mark as confirmed
+                </label>
+                <div className="flex w-full gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setStep("upload");
+                      setReceipts([]);
+                      setTransactions([]);
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleImportAll}
+                    disabled={loading || selected.size === 0}
+                  >
+                    {loading ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCheck className="mr-1.5 h-4 w-4" />
+                    )}
+                    Import {selected.size}
+                  </Button>
+                </div>
               </div>
             </ResponsiveDialogFooter>
           </div>
@@ -1248,31 +1264,42 @@ export function BulkImportDialog({
               </div>
 
               <ResponsiveDialogFooter>
-                <div className="flex w-full gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setStep("upload");
-                      setTransactions([]);
-                      setSelected(new Set());
-                      setReceipts([]);
-                    }}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={handleImportCSV}
-                    disabled={loading || selected.size === 0}
-                  >
-                    {loading ? (
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    ) : (
-                      <CheckCheck className="mr-1.5 h-4 w-4" />
-                    )}
-                    Import {selected.size}
-                  </Button>
+                <div className="w-full space-y-2">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={confirmImport}
+                      onChange={(e) => setConfirmImport(e.target.checked)}
+                      className="rounded"
+                    />
+                    Mark as confirmed
+                  </label>
+                  <div className="flex w-full gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setStep("upload");
+                        setTransactions([]);
+                        setSelected(new Set());
+                        setReceipts([]);
+                      }}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      onClick={handleImportCSV}
+                      disabled={loading || selected.size === 0}
+                    >
+                      {loading ? (
+                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCheck className="mr-1.5 h-4 w-4" />
+                      )}
+                      Import {selected.size}
+                    </Button>
+                  </div>
                 </div>
               </ResponsiveDialogFooter>
             </div>
@@ -1289,6 +1316,11 @@ export function BulkImportDialog({
                 ? "Transaction imported"
                 : `${importCount} transactions imported`}
             </p>
+            {!confirmImport && (
+              <p className="text-sm text-muted-foreground">
+                Saved as unconfirmed. Review them in the Unconfirmed tab.
+              </p>
+            )}
             <ResponsiveDialogFooter>
               <Button className="w-full" onClick={() => onOpenChange(false)}>
                 Close

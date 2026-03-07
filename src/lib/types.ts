@@ -84,6 +84,7 @@ export type TransactionFilters = {
   amountMax?: number;
   search?: string;
   source?: string;
+  confirmed?: boolean;
   page?: number;
   pageSize?: number;
   sortBy?: string;

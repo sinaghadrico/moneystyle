@@ -18,7 +18,7 @@ import { getCurrencyRates } from "@/actions/currencies";
 import { convertAmount } from "@/lib/currency";
 import { getSpreadEntries, getSpreadFraction } from "@/lib/spread-utils";
 
-const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null };
+const NOT_MERGED: Prisma.TransactionWhereInput = { mergedIntoId: null, confirmed: true };
 
 async function getPrimaryCurrency(userId: string): Promise<string> {
   const settings = await prisma.appSettings.findFirst({ where: { userId } });
@@ -455,6 +455,7 @@ export async function getExpensePrediction(): Promise<ExpensePrediction> {
     type: "expense",
     date: { gte: startOfMonth, lte: endOfMonth },
     mergedIntoId: null,
+    confirmed: true,
     amount: { not: null },
   };
 

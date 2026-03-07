@@ -43,6 +43,8 @@ import {
   getCategories,
   getAccountsList,
   deleteTransactions,
+  confirmTransactions,
+  getUnconfirmedCount,
 } from "@/actions/transactions";
 import { getPersons } from "@/actions/persons";
 import type { TransactionWithCategory, PaginatedResult } from "@/lib/types";
@@ -67,6 +69,8 @@ import {
   ArrowDown,
   X,
   Upload,
+  CheckCheck,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -160,6 +164,7 @@ export function TransactionsContent({
     amountMin: urlAmountMin,
     amountMax: urlAmountMax,
     source: urlSource,
+    confirmed: "",
   });
   const [sortBy, setSortBy] = useState(urlSortBy);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">(urlSortOrder);
@@ -185,6 +190,11 @@ export function TransactionsContent({
   const [deleting, setDeleting] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
+  const [showUnconfirmed, setShowUnconfirmed] = useState(false);
+  const [unconfirmedCount, setUnconfirmedCount] = useState(0);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmAllDialog, setConfirmAllDialog] = useState(false);
 
   const { containerRef, pullDistance, refreshing, onTouchStart, onTouchEnd } =
     usePullToRefresh(async () => { await loadData(); });
@@ -231,23 +241,28 @@ export function TransactionsContent({
     if (!settingsReady) return;
     setLoading(true);
     try {
-      const data = await getTransactions({
-        dateFrom: filters.dateFrom || undefined,
-        dateTo: filters.dateTo || undefined,
-        categoryId: filters.categoryId || undefined,
-        accountId: filters.accountId || undefined,
-        type: filters.type || undefined,
-        merchant: debouncedMerchant || undefined,
-        search: debouncedSearch || undefined,
-        amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
-        amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
-        source: filters.source || undefined,
-        page,
-        pageSize: settings.defaultPageSize,
-        sortBy,
-        sortOrder,
-      });
+      const [data, unconfCount] = await Promise.all([
+        getTransactions({
+          dateFrom: filters.dateFrom || undefined,
+          dateTo: filters.dateTo || undefined,
+          categoryId: filters.categoryId || undefined,
+          accountId: filters.accountId || undefined,
+          type: filters.type || undefined,
+          merchant: debouncedMerchant || undefined,
+          search: debouncedSearch || undefined,
+          amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+          amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+          source: filters.source || undefined,
+          confirmed: filters.confirmed === "unconfirmed" ? false : true,
+          page,
+          pageSize: settings.defaultPageSize,
+          sortBy,
+          sortOrder,
+        }),
+        getUnconfirmedCount(),
+      ]);
       setResult(data);
+      setUnconfirmedCount(unconfCount);
     } catch (err) {
       console.error("Failed to load transactions:", err);
       setResult({ data: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
@@ -266,6 +281,7 @@ export function TransactionsContent({
     filters.amountMin,
     filters.amountMax,
     filters.source,
+    filters.confirmed,
     page,
     sortBy,
     sortOrder,
@@ -319,6 +335,10 @@ export function TransactionsContent({
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((f) => ({ ...f, [key]: value }));
+    if (key === "confirmed") {
+      setShowUnconfirmed(value === "unconfirmed");
+      setSelected(new Set());
+    }
     setPage(1);
   };
 
@@ -361,6 +381,16 @@ export function TransactionsContent({
     setDeleteIds([]);
   };
 
+  const handleConfirm = async (ids: string[]) => {
+    if (!ids.length) return;
+    setConfirming(true);
+    const res = await confirmTransactions(ids);
+    setConfirming(false);
+    toast.success(`Confirmed ${res.count} transaction${res.count > 1 ? "s" : ""}`);
+    setSelected(new Set());
+    loadData();
+  };
+
   const selectedTransactions =
     result?.data.filter((t) => selected.has(t.id)) ?? [];
 
@@ -378,7 +408,7 @@ export function TransactionsContent({
           {(() => {
             const activeFilterCount = Object.entries(filters).filter(
               ([, v]) => v !== "",
-            ).length;
+            ).length + (showUnconfirmed ? 1 : 0);
             return (
               <Button
                 variant="outline"
@@ -413,6 +443,20 @@ export function TransactionsContent({
               Merge {selected.size} Selected
             </Button>
           )}
+          {showUnconfirmed && selected.size > 0 && (
+            <Button
+              className="hidden sm:flex"
+              onClick={() => handleConfirm([...selected])}
+              disabled={confirming}
+            >
+              {confirming ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCheck className="mr-1 h-4 w-4" />
+              )}
+              Confirm {selected.size}
+            </Button>
+          )}
           <Button variant="outline" className="hidden sm:flex" onClick={() => setShowImport(true)}>
             <Upload className="mr-1 h-4 w-4" />
             Import
@@ -423,6 +467,67 @@ export function TransactionsContent({
           </Button>
         </div>
       </div>
+
+      {/* Unconfirmed banner */}
+      {unconfirmedCount > 0 && !showUnconfirmed && (
+        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 dark:border-amber-800 dark:bg-amber-950/30">
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <span className="text-amber-800 dark:text-amber-200">
+              {unconfirmedCount} unconfirmed transaction{unconfirmedCount > 1 ? "s" : ""} to review
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+            onClick={() => {
+              setShowUnconfirmed(true);
+              setFilters((f) => ({ ...f, confirmed: "unconfirmed" }));
+              setPage(1);
+              setSelected(new Set());
+            }}
+          >
+            Review
+          </Button>
+        </div>
+      )}
+      {showUnconfirmed && (
+        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 dark:border-blue-800 dark:bg-blue-950/30">
+          <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+            <Clock className="h-4 w-4" />
+            Showing unconfirmed transactions
+          </div>
+          <div className="flex items-center gap-2">
+            {result && result.data.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900"
+                onClick={() => setConfirmAllDialog(true)}
+                disabled={confirming}
+              >
+                {confirming ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <CheckCheck className="mr-1 h-3.5 w-3.5" />}
+                Confirm All
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setShowUnconfirmed(false);
+                setFilters((f) => ({ ...f, confirmed: "" }));
+                setPage(1);
+                setSelected(new Set());
+              }}
+            >
+              <ChevronLeft className="mr-1 h-3.5 w-3.5" />
+              Back to Transactions
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Mobile: filter drawer */}
       {(() => {
@@ -457,7 +562,9 @@ export function TransactionsContent({
                         amountMin: "",
                         amountMax: "",
                         source: "",
+                        confirmed: "",
                       });
+                      setShowUnconfirmed(false);
                       setSortBy("date");
                       setSortOrder("desc");
                       setPage(1);
@@ -481,7 +588,9 @@ export function TransactionsContent({
                           amountMin: "",
                           amountMax: "",
                           source: "",
+                          confirmed: "",
                         });
+                        setShowUnconfirmed(false);
                         setSortBy("date");
                         setSortOrder("desc");
                         setPage(1);
@@ -519,7 +628,9 @@ export function TransactionsContent({
               amountMin: "",
               amountMax: "",
               source: "",
+              confirmed: "",
             });
+            setShowUnconfirmed(false);
             setSortBy("date");
             setSortOrder("desc");
             setPage(1);
@@ -981,13 +1092,37 @@ export function TransactionsContent({
         const anyOpen = showAdd || showImport || !!deleteIds.length || showMerge || filterDrawerOpen || !!editTx || !!splitTx || !!itemsTx || viewMedia.length > 0;
         if (anyOpen) return null;
         if (selected.size === 0) return (
-          <button
-            className="fixed right-4 z-[51] flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 md:hidden"
-            style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 16px + 3rem + 8px)" }}
-            onClick={() => setShowAdd(true)}
-          >
-            <Plus className="h-5 w-5" />
-          </button>
+          <div className="fixed right-4 z-[51] flex flex-col items-end gap-2 md:hidden" style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 16px + 3rem + 8px)" }}>
+            {fabOpen && (
+              <>
+                <button
+                  className="fixed inset-0 z-[-1]"
+                  onClick={() => setFabOpen(false)}
+                />
+                <button
+                  className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
+                  onClick={() => { setFabOpen(false); setShowImport(true); }}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm font-medium">Import</span>
+                </button>
+                <button
+                  className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
+                  onClick={() => { setFabOpen(false); setShowAdd(true); }}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="text-sm font-medium">Add Transaction</span>
+                </button>
+              </>
+            )}
+            <button
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+              onClick={() => setFabOpen((v) => !v)}
+              style={{ transform: fabOpen ? "rotate(45deg)" : undefined }}
+            >
+              <Plus className="h-6 w-6" />
+            </button>
+          </div>
         );
         return (
         <div className="fixed left-3 right-3 z-[55] flex flex-col items-end gap-2 md:hidden" style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 8px)" }}>
@@ -1002,6 +1137,16 @@ export function TransactionsContent({
               {selected.size} selected
             </span>
             <div className="flex items-center gap-2">
+              {showUnconfirmed && (
+                <button
+                  className="flex items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-sm font-medium text-white active:scale-95"
+                  onClick={() => handleConfirm([...selected])}
+                  disabled={confirming}
+                >
+                  <CheckCheck className="h-4 w-4" />
+                  Confirm
+                </button>
+              )}
               {selected.size >= 2 && (
                 <button
                   className="flex items-center gap-1.5 rounded-full bg-primary-foreground/20 px-3 py-1.5 text-sm font-medium text-primary-foreground active:scale-95"
@@ -1134,6 +1279,39 @@ export function TransactionsContent({
                 onClick={handleDelete}
               >
                 {deleting ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+
+      {/* Confirm all dialog */}
+      <ResponsiveDialog
+        open={confirmAllDialog}
+        onOpenChange={setConfirmAllDialog}
+      >
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Confirm All Transactions</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Are you sure you want to confirm all {result?.total ?? 0} unconfirmed transactions? They will appear in your reports and charts.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmAllDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={confirming}
+                onClick={async () => {
+                  if (!result) return;
+                  setConfirmAllDialog(false);
+                  await handleConfirm(result.data.map((t) => t.id));
+                }}
+              >
+                {confirming ? "Confirming..." : "Confirm All"}
               </Button>
             </div>
           </ResponsiveDialogFooter>

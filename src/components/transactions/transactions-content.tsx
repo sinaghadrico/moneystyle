@@ -37,6 +37,7 @@ import { MergeDialog } from "./merge-dialog";
 import { SplitDialog } from "./split-dialog";
 import { ItemsDialog } from "./items-dialog";
 import { SwipeableCard } from "./swipeable-card";
+import { BulkImportDialog } from "./bulk-import-dialog";
 import {
   getTransactions,
   getCategories,
@@ -65,6 +66,7 @@ import {
   Loader2,
   ArrowDown,
   X,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -182,6 +184,7 @@ export function TransactionsContent({
   const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const { containerRef, pullDistance, refreshing, onTouchStart, onTouchEnd } =
     usePullToRefresh(async () => { await loadData(); });
@@ -410,6 +413,10 @@ export function TransactionsContent({
               Merge {selected.size} Selected
             </Button>
           )}
+          <Button variant="outline" className="hidden sm:flex" onClick={() => setShowImport(true)}>
+            <Upload className="mr-1 h-4 w-4" />
+            Import
+          </Button>
           <Button className="hidden sm:flex" onClick={() => setShowAdd(true)}>
             <Plus className="mr-1 h-4 w-4" />
             Add Transaction
@@ -971,7 +978,7 @@ export function TransactionsContent({
 
       {/* Mobile selection bar + FAB — hide when any dialog/drawer is open */}
       {(() => {
-        const anyOpen = showAdd || !!deleteIds.length || showMerge || filterDrawerOpen || !!editTx || !!splitTx || !!itemsTx || viewMedia.length > 0;
+        const anyOpen = showAdd || showImport || !!deleteIds.length || showMerge || filterDrawerOpen || !!editTx || !!splitTx || !!itemsTx || viewMedia.length > 0;
         if (anyOpen) return null;
         if (selected.size === 0) return (
           <button
@@ -1040,6 +1047,16 @@ export function TransactionsContent({
           accounts={accounts}
           open={showAdd}
           onOpenChange={setShowAdd}
+          onSuccess={loadData}
+        />
+      )}
+
+      {showImport && (
+        <BulkImportDialog
+          accounts={accounts}
+          categories={categories}
+          open={showImport}
+          onOpenChange={setShowImport}
           onSuccess={loadData}
         />
       )}

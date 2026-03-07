@@ -195,6 +195,7 @@ export function TransactionsContent({
   const [unconfirmedCount, setUnconfirmedCount] = useState(0);
   const [confirming, setConfirming] = useState(false);
   const [confirmAllDialog, setConfirmAllDialog] = useState(false);
+  const [confirmSelectedDialog, setConfirmSelectedDialog] = useState(false);
 
   const { containerRef, pullDistance, refreshing, onTouchStart, onTouchEnd } =
     usePullToRefresh(async () => { await loadData(); });
@@ -446,7 +447,7 @@ export function TransactionsContent({
           {showUnconfirmed && selected.size > 0 && (
             <Button
               className="hidden sm:flex"
-              onClick={() => handleConfirm([...selected])}
+              onClick={() => setConfirmSelectedDialog(true)}
               disabled={confirming}
             >
               {confirming ? (
@@ -493,9 +494,9 @@ export function TransactionsContent({
         </div>
       )}
       {showUnconfirmed && (
-        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 dark:border-blue-800 dark:bg-blue-950/30">
+        <div className="flex flex-col gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 dark:border-blue-800 dark:bg-blue-950/30 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
-            <Clock className="h-4 w-4" />
+            <Clock className="h-4 w-4 shrink-0" />
             Showing unconfirmed transactions
           </div>
           <div className="flex items-center gap-2">
@@ -503,7 +504,7 @@ export function TransactionsContent({
               <Button
                 size="sm"
                 variant="outline"
-                className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900"
+                className="flex-1 sm:flex-none border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900"
                 onClick={() => setConfirmAllDialog(true)}
                 disabled={confirming}
               >
@@ -514,7 +515,7 @@ export function TransactionsContent({
             <Button
               size="sm"
               variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
+              className="flex-1 sm:flex-none text-muted-foreground hover:text-foreground"
               onClick={() => {
                 setShowUnconfirmed(false);
                 setFilters((f) => ({ ...f, confirmed: "" }));
@@ -523,7 +524,7 @@ export function TransactionsContent({
               }}
             >
               <ChevronLeft className="mr-1 h-3.5 w-3.5" />
-              Back to Transactions
+              Back
             </Button>
           </div>
         </div>
@@ -1087,9 +1088,12 @@ export function TransactionsContent({
         </div>
       )}
 
+      {/* Mobile bottom spacer for FAB/tab bar */}
+      <div className="h-44 md:hidden" />
+
       {/* Mobile selection bar + FAB — hide when any dialog/drawer is open */}
       {(() => {
-        const anyOpen = showAdd || showImport || !!deleteIds.length || showMerge || filterDrawerOpen || !!editTx || !!splitTx || !!itemsTx || viewMedia.length > 0;
+        const anyOpen = showAdd || showImport || !!deleteIds.length || showMerge || filterDrawerOpen || !!editTx || !!splitTx || !!itemsTx || viewMedia.length > 0 || confirmAllDialog || confirmSelectedDialog;
         if (anyOpen) return null;
         if (selected.size === 0) return (
           <div className="fixed right-4 z-[51] flex flex-col items-end gap-2 md:hidden" style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 16px + 3rem + 8px)" }}>
@@ -1156,15 +1160,13 @@ export function TransactionsContent({
               <Plus className="h-6 w-6" />
             </button>
           )}
-          <div className="flex w-full items-center justify-between rounded-2xl bg-primary px-4 py-2.5 shadow-xl">
-            <span className="text-sm font-medium text-primary-foreground">
-              {selected.size} selected
-            </span>
-            <div className="flex items-center gap-2">
+          <div className="relative flex w-full items-center rounded-2xl bg-primary px-3 py-2.5 shadow-xl">
+            <span className="absolute -top-5 left-3 rounded-t-lg rounded-b-none bg-primary text-primary-foreground text-[11px] font-semibold px-3 pt-1.5 pb-2 leading-none">{selected.size} items selected</span>
+            <div className="flex flex-1 items-center gap-1.5">
               {showUnconfirmed && (
                 <button
                   className="flex items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-sm font-medium text-white active:scale-95"
-                  onClick={() => handleConfirm([...selected])}
+                  onClick={() => setConfirmSelectedDialog(true)}
                   disabled={confirming}
                 >
                   <CheckCheck className="h-4 w-4" />
@@ -1187,13 +1189,13 @@ export function TransactionsContent({
                 <Trash2 className="h-4 w-4" />
                 Delete
               </button>
-              <button
-                className="flex items-center justify-center rounded-full bg-primary-foreground/20 p-1.5 text-primary-foreground active:scale-95"
-                onClick={() => setSelected(new Set())}
-              >
-                <X className="h-4 w-4" />
-              </button>
             </div>
+            <button
+              className="flex shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 p-1.5 text-primary-foreground active:scale-95 ml-1.5"
+              onClick={() => setSelected(new Set())}
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
         );
@@ -1336,6 +1338,38 @@ export function TransactionsContent({
                 }}
               >
                 {confirming ? "Confirming..." : "Confirm All"}
+              </Button>
+            </div>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+
+      {/* Confirm selected dialog */}
+      <ResponsiveDialog
+        open={confirmSelectedDialog}
+        onOpenChange={setConfirmSelectedDialog}
+      >
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Confirm Transactions</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Are you sure you want to confirm {selected.size} selected transaction{selected.size > 1 ? "s" : ""}? They will appear in your reports and charts.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogFooter>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmSelectedDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={confirming}
+                onClick={async () => {
+                  setConfirmSelectedDialog(false);
+                  await handleConfirm([...selected]);
+                }}
+              >
+                {confirming ? "Confirming..." : `Confirm ${selected.size}`}
               </Button>
             </div>
           </ResponsiveDialogFooter>

@@ -41,10 +41,12 @@ import {
   Download,
   Pencil,
   X,
+  MessageCircle,
 } from "lucide-react";
+import JSZip from "jszip";
 
 type Step = "upload" | "review" | "done";
-type Mode = "ai" | "csv";
+type Mode = "ai" | "csv" | "telegram";
 type ReceiptEntry = {
   id: string;
   receipt: ParsedReceipt;
@@ -52,7 +54,17 @@ type ReceiptEntry = {
   storedPath: string | null;
 };
 
-
+type TelegramMessage = {
+  id: number;
+  type: string;
+  date: string;
+  text: string;
+  photo?: string;
+  file?: string;
+  file_name?: string;
+  mime_type?: string;
+  text_entities?: { type: string; text: string }[];
+};
 
 export function BulkImportDialog({
   open,
@@ -78,7 +90,9 @@ export function BulkImportDialog({
   // AI receipt state (multi-file)
   const [receipts, setReceipts] = useState<ReceiptEntry[]>([]);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null);
+  const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(
+    null,
+  );
 
   // CSV state
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([]);
@@ -114,12 +128,16 @@ export function BulkImportDialog({
     if (exact) return exact.name;
     // Partial: category name includes the raw or raw includes category name
     const partial = categories.find(
-      (c) => c.name.toLowerCase().includes(lower) || lower.includes(c.name.toLowerCase()),
+      (c) =>
+        c.name.toLowerCase().includes(lower) ||
+        lower.includes(c.name.toLowerCase()),
     );
     return partial ? partial.name : "";
   }
 
-  function matchTransactionCategories(txs: ParsedTransaction[]): ParsedTransaction[] {
+  function matchTransactionCategories(
+    txs: ParsedTransaction[],
+  ): ParsedTransaction[] {
     return txs.map((t) => ({ ...t, category: matchCategory(t.category) }));
   }
 
@@ -132,9 +150,13 @@ export function BulkImportDialog({
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("/api/parse-receipt", { method: "POST", body: formData });
+    const res = await fetch("/api/parse-receipt", {
+      method: "POST",
+      body: formData,
+    });
     const result = await res.json();
-    if (!res.ok || "error" in result) return { error: result.error || "Failed to parse" };
+    if (!res.ok || "error" in result)
+      return { error: result.error || "Failed to parse" };
 
     if (result.result.kind === "receipt") {
       return {
@@ -193,7 +215,9 @@ export function BulkImportDialog({
           newTransactions.push(...matched);
         }
       } catch (e) {
-        errors.push(`${fileArray[i].name}: ${e instanceof Error ? e.message : "Failed to process"}`);
+        errors.push(
+          `${fileArray[i].name}: ${e instanceof Error ? e.message : "Failed to process"}`,
+        );
       }
     }
 
@@ -227,24 +251,203 @@ export function BulkImportDialog({
     setParseProgress({ current: 0, total: 0 });
   }
 
+  async function handleTelegramZip(file: File) {
+    setLoading(true);
+    try {
+      const zip = await JSZip.loadAsync(file);
+
+      // Find result.json (might be in a subfolder, skip __MACOSX)
+      let jsonFile: JSZip.JSZipObject | null = null;
+      let basePath = "";
+      zip.forEach((path, entry) => {
+        if (
+          path.endsWith("result.json") &&
+          !entry.dir &&
+          !path.includes("__MACOSX")
+        ) {
+          jsonFile = entry;
+          basePath = path.replace("result.json", "");
+        }
+      });
+
+      if (!jsonFile) {
+        toast.error("result.json not found in zip.");
+        setLoading(false);
+        return;
+      }
+
+      const rawBytes = await (jsonFile as JSZip.JSZipObject).async(
+        "uint8array",
+      );
+      let jsonText = new TextDecoder("utf-8").decode(rawBytes);
+      // Strip BOM
+      if (jsonText.charCodeAt(0) === 0xfeff) jsonText = jsonText.slice(1);
+      const data = JSON.parse(jsonText);
+      const messages: TelegramMessage[] = (data.messages || []).filter(
+        (m: TelegramMessage) => m.type === "message" && m.text,
+      );
+
+      if (messages.length === 0) {
+        toast.error("No messages found in export.");
+        setLoading(false);
+        return;
+      }
+
+      // Extract amount from text (supports Persian/Arabic digits)
+      function extractAmount(text: string): number {
+        // Normalize Persian/Arabic digits to Latin
+        const normalized = text
+          .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
+          .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
+        // Match number patterns (with optional decimal)
+        const matches = normalized.match(/(\d[\d,]*\.?\d*)/g);
+        if (!matches) return 0;
+        // Return the largest number found (likely the total)
+        let max = 0;
+        for (const m of matches) {
+          const n = parseFloat(m.replace(/,/g, ""));
+          if (n > max) max = n;
+        }
+        return max;
+      }
+
+      // Process messages
+      const newReceipts: ReceiptEntry[] = [];
+      const newTransactions: ParsedTransaction[] = [];
+      const withAttachment = messages.filter((m) => m.photo || m.file);
+      const aiCount = settings.aiEnabled ? withAttachment.length : 0;
+      setParseProgress({ current: 0, total: messages.length });
+
+      for (let i = 0; i < messages.length; i++) {
+        const msg = messages[i];
+        setParseProgress({ current: i + 1, total: messages.length });
+        const msgText =
+          typeof msg.text === "string"
+            ? msg.text
+            : msg.text_entities?.map((e) => e.text).join("") || "";
+        const msgDate = msg.date.split("T")[0]; // YYYY-MM-DD
+        const attachmentPath = msg.photo || msg.file;
+
+        let aiAmount: number | null = null;
+        let storedPath: string | null = null;
+
+        if (attachmentPath && settings.aiEnabled) {
+          const fullPath = basePath + attachmentPath;
+          const attachmentEntry = zip.file(fullPath);
+          if (attachmentEntry) {
+            try {
+              const blob = await attachmentEntry.async("blob");
+              const ext =
+                attachmentPath.split(".").pop()?.toLowerCase() || "jpg";
+              const attachmentFile = new File(
+                [blob],
+                attachmentPath.split("/").pop() || `file.${ext}`,
+                {
+                  type:
+                    msg.mime_type ||
+                    (ext === "pdf" ? "application/pdf" : `image/${ext}`),
+                },
+              );
+              const formData = new FormData();
+              formData.append("file", attachmentFile);
+              const res = await fetch("/api/parse-receipt", {
+                method: "POST",
+                body: formData,
+              });
+              const result = await res.json();
+
+              if (res.ok && !("error" in result)) {
+                storedPath = result.storedPath || null;
+                if (result.result.kind === "receipt") {
+                  aiAmount = result.result.receipt.total;
+                } else if (
+                  result.result.kind === "transactions" &&
+                  result.result.transactions.length > 0
+                ) {
+                  aiAmount = result.result.transactions.reduce(
+                    (s: number, t: ParsedTransaction) => s + t.amount,
+                    0,
+                  );
+                }
+              }
+            } catch {
+              // AI failed — continue with text extraction
+            }
+          }
+        }
+
+        // Use AI amount if available, otherwise try extracting from text
+        const amount = aiAmount ?? extractAmount(msgText);
+
+        newTransactions.push({
+          id: `tg-${msg.id}`,
+          date: msgDate,
+          amount,
+          description: msgText,
+          type: "expense",
+          category: "",
+        });
+      }
+
+      if (newTransactions.length === 0) {
+        toast.error("No transactions found.");
+        setLoading(false);
+        setParseProgress({ current: 0, total: 0 });
+        return;
+      }
+
+      const matched = matchTransactionCategories(newTransactions);
+      setTransactions(matched);
+      setSelected(new Set(matched.map((t) => t.id)));
+      setStep("review");
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Failed to process Telegram export.",
+      );
+    }
+    setLoading(false);
+    setParseProgress({ current: 0, total: 0 });
+  }
+
   // Receipt operations (multi-receipt)
-  function updateEntryReceipt(entryId: string, field: keyof ParsedReceipt, value: string | number) {
+  function updateEntryReceipt(
+    entryId: string,
+    field: keyof ParsedReceipt,
+    value: string | number,
+  ) {
     setReceipts((prev) =>
-      prev.map((e) => e.id === entryId ? { ...e, receipt: { ...e.receipt, [field]: value } } : e),
+      prev.map((e) =>
+        e.id === entryId
+          ? { ...e, receipt: { ...e.receipt, [field]: value } }
+          : e,
+      ),
     );
   }
 
   function updateEntryCategory(entryId: string, categoryId: string) {
     setReceipts((prev) =>
-      prev.map((e) => e.id === entryId ? { ...e, categoryId } : e),
+      prev.map((e) => (e.id === entryId ? { ...e, categoryId } : e)),
     );
   }
 
-  function updateEntryItem(entryId: string, itemId: string, field: keyof ParsedReceiptItem, value: string | number) {
+  function updateEntryItem(
+    entryId: string,
+    itemId: string,
+    field: keyof ParsedReceiptItem,
+    value: string | number,
+  ) {
     setReceipts((prev) =>
       prev.map((e) =>
         e.id === entryId
-          ? { ...e, receipt: { ...e.receipt, items: e.receipt.items.map((item) => item.id === itemId ? { ...item, [field]: value } : item) } }
+          ? {
+              ...e,
+              receipt: {
+                ...e.receipt,
+                items: e.receipt.items.map((item) =>
+                  item.id === itemId ? { ...item, [field]: value } : item,
+                ),
+              },
+            }
           : e,
       ),
     );
@@ -255,7 +458,14 @@ export function BulkImportDialog({
       prev.map((e) => {
         if (e.id !== entryId) return e;
         const items = e.receipt.items.filter((i) => i.id !== itemId);
-        return { ...e, receipt: { ...e.receipt, items, total: items.reduce((s, i) => s + i.totalPrice, 0) } };
+        return {
+          ...e,
+          receipt: {
+            ...e.receipt,
+            items,
+            total: items.reduce((s, i) => s + i.totalPrice, 0),
+          },
+        };
       }),
     );
   }
@@ -263,7 +473,11 @@ export function BulkImportDialog({
   function deleteReceipt(entryId: string) {
     setReceipts((prev) => prev.filter((e) => e.id !== entryId));
     if (expandedReceiptId === entryId) setExpandedReceiptId(null);
-    setSelected((prev) => { const n = new Set(prev); n.delete(entryId); return n; });
+    setSelected((prev) => {
+      const n = new Set(prev);
+      n.delete(entryId);
+      return n;
+    });
   }
 
   async function handleImportAll() {
@@ -276,7 +490,8 @@ export function BulkImportDialog({
     try {
       // Import selected receipts
       for (const entry of receipts) {
-        if (!selected.has(entry.id) || entry.receipt.items.length === 0) continue;
+        if (!selected.has(entry.id) || entry.receipt.items.length === 0)
+          continue;
         const result = await createTransactionFromReceipt(
           entry.receipt,
           accountId,
@@ -293,7 +508,11 @@ export function BulkImportDialog({
       // Import individual transactions
       const toImport = transactions.filter((t) => selected.has(t.id));
       if (toImport.length > 0) {
-        const result = await bulkCreateTransactions(toImport, accountId, settings.currency);
+        const result = await bulkCreateTransactions(
+          toImport,
+          accountId,
+          settings.currency,
+        );
         if ("error" in result) {
           toast.error(result.error);
         } else {
@@ -325,9 +544,7 @@ export function BulkImportDialog({
       ...receipts.map((r) => r.id),
       ...transactions.map((t) => t.id),
     ];
-    setSelected(
-      selected.size === allIds.length ? new Set() : new Set(allIds),
-    );
+    setSelected(selected.size === allIds.length ? new Set() : new Set(allIds));
   }
 
   function updateTxField(
@@ -403,7 +620,8 @@ export function BulkImportDialog({
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {step === "upload" && "Import"}
-            {step === "review" && `Review (${receipts.length + transactions.length})`}
+            {step === "review" &&
+              `Review (${receipts.length + transactions.length})`}
             {step === "done" && "Done"}
           </ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
@@ -415,28 +633,41 @@ export function BulkImportDialog({
               <Button
                 variant={mode === "csv" ? "default" : "outline"}
                 className="flex-1"
+                size="sm"
                 onClick={() => setMode("csv")}
               >
-                <FileSpreadsheet className="mr-1.5 h-4 w-4" />
+                <FileSpreadsheet className="mr-1 h-4 w-4" />
                 CSV
               </Button>
               <Button
                 variant={mode === "ai" ? "default" : "outline"}
                 className="flex-1"
+                size="sm"
                 onClick={() => setMode("ai")}
               >
-                <Sparkles className="mr-1.5 h-4 w-4" />
-                Receipt (AI)
+                <Sparkles className="mr-1 h-4 w-4" />
+                AI
+              </Button>
+              <Button
+                variant={mode === "telegram" ? "default" : "outline"}
+                className="flex-1"
+                size="sm"
+                onClick={() => setMode("telegram")}
+              >
+                <MessageCircle className="mr-1 h-4 w-4" />
+                Telegram
               </Button>
             </div>
 
-            {mode === "ai" && !settings.aiEnabled && (
+            {(mode === "ai" || mode === "telegram") && !settings.aiEnabled && (
               <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900/50 dark:bg-yellow-950/30">
                 <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                   AI is not enabled
                 </p>
                 <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
-                  Go to Settings → enable AI and add your OpenAI API key to use this feature.
+                  {mode === "telegram"
+                    ? "Receipts won't be parsed for amounts. Enable AI in Settings for best results."
+                    : "Go to Settings → enable AI and add your OpenAI API key to use this feature."}
                 </p>
               </div>
             )}
@@ -459,17 +690,25 @@ export function BulkImportDialog({
 
             <div
               className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-primary/50 hover:bg-muted/30"
-              onClick={() => !loading && (mode !== "ai" || settings.aiEnabled) && fileRef.current?.click()}
+              onClick={() =>
+                !loading &&
+                (mode === "csv" || mode === "telegram" || settings.aiEnabled) &&
+                fileRef.current?.click()
+              }
             >
               {loading ? (
                 <>
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
-                    {mode === "ai"
-                      ? parseProgress.total > 1
-                        ? `Parsing file ${parseProgress.current} of ${parseProgress.total}...`
-                        : "AI is parsing your receipt..."
-                      : "Parsing CSV..."}
+                    {mode === "telegram"
+                      ? parseProgress.total > 0
+                        ? `Processing ${parseProgress.current} of ${parseProgress.total} messages...`
+                        : "Reading Telegram export..."
+                      : mode === "ai"
+                        ? parseProgress.total > 1
+                          ? `Parsing file ${parseProgress.current} of ${parseProgress.total}...`
+                          : "AI is parsing your receipt..."
+                        : "Parsing CSV..."}
                   </p>
                 </>
               ) : (
@@ -478,10 +717,16 @@ export function BulkImportDialog({
                   <p className="text-sm text-muted-foreground">
                     {mode === "csv"
                       ? "Upload CSV file"
-                      : "Upload receipts / statements"}
+                      : mode === "telegram"
+                        ? "Upload Telegram export (.zip)"
+                        : "Upload receipts / statements"}
                   </p>
                   <p className="text-xs text-muted-foreground/60">
-                    {mode === "csv" ? ".csv" : "Image, PDF, or any document — select multiple"}
+                    {mode === "csv"
+                      ? ".csv"
+                      : mode === "telegram"
+                        ? "Export chat from Telegram Desktop → zip the folder"
+                        : "Image, PDF, or any document — select multiple"}
                   </p>
                 </>
               )}
@@ -494,11 +739,18 @@ export function BulkImportDialog({
                 accept={
                   mode === "csv"
                     ? ".csv,.tsv,.txt,text/csv,text/plain,application/vnd.ms-excel"
-                    : "image/*,.pdf,.heic,.webp,.csv,.tsv,.txt,.json"
+                    : mode === "telegram"
+                      ? ".zip,application/zip"
+                      : "image/*,.pdf,.heic,.webp,.csv,.tsv,.txt,.json"
                 }
                 onChange={(e) => {
                   const files = e.target.files;
-                  if (files && files.length > 0) handleFiles(files);
+                  if (!files || files.length === 0) return;
+                  if (mode === "telegram") {
+                    handleTelegramZip(files[0]);
+                  } else {
+                    handleFiles(files);
+                  }
                   e.target.value = "";
                 }}
               />
@@ -513,6 +765,20 @@ export function BulkImportDialog({
                 Download CSV template
               </button>
             )}
+
+            {mode === "telegram" && (
+              <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+                <p className="text-xs font-medium">
+                  How to export from Telegram:
+                </p>
+                <ol className="list-inside list-decimal space-y-0.5 text-xs text-muted-foreground">
+                  <li>Open Telegram Desktop</li>
+                  <li>Open the chat → ⋮ menu → Export chat history</li>
+                  <li>Check &quot;Photos&quot; and &quot;Files&quot;</li>
+                  <li>Export, then zip the folder and upload here</li>
+                </ol>
+              </div>
+            )}
           </div>
         )}
 
@@ -525,7 +791,9 @@ export function BulkImportDialog({
                 className="text-sm text-muted-foreground hover:text-foreground"
                 onClick={toggleAll}
               >
-                {selected.size === receipts.length + transactions.length ? "Deselect all" : "Select all"}
+                {selected.size === receipts.length + transactions.length
+                  ? "Deselect all"
+                  : "Select all"}
               </button>
               <span className="text-xs text-muted-foreground">
                 {selected.size} selected
@@ -537,12 +805,17 @@ export function BulkImportDialog({
                 const isExpanded = expandedReceiptId === entry.id;
                 const isSelected = selected.has(entry.id);
                 return (
-                  <div key={entry.id} className={`rounded-lg border transition-colors ${isSelected ? "border-primary/40 bg-primary/5" : ""}`}>
+                  <div
+                    key={entry.id}
+                    className={`rounded-lg border transition-colors ${isSelected ? "border-primary/40 bg-primary/5" : ""}`}
+                  >
                     {/* Collapsed header */}
                     <div className="flex w-full items-center gap-2 p-3">
                       <button
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs transition-colors ${
-                          isSelected ? "border-primary bg-primary text-primary-foreground" : ""
+                          isSelected
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : ""
                         }`}
                         onClick={() => toggleSelect(entry.id)}
                       >
@@ -550,12 +823,17 @@ export function BulkImportDialog({
                       </button>
                       <button
                         className="flex flex-1 items-center gap-2 text-left min-w-0"
-                        onClick={() => setExpandedReceiptId(isExpanded ? null : entry.id)}
+                        onClick={() =>
+                          setExpandedReceiptId(isExpanded ? null : entry.id)
+                        }
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="truncate text-sm font-medium">{entry.receipt.merchant}</p>
+                          <p className="truncate text-sm font-medium">
+                            {entry.receipt.merchant.replace(/\n+/g, " ")}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {entry.receipt.date} · {entry.receipt.items.length} items
+                            {entry.receipt.date} · {entry.receipt.items.length}{" "}
+                            items
                           </p>
                         </div>
                         <p className="shrink-0 text-sm font-semibold tabular-nums">
@@ -574,28 +852,51 @@ export function BulkImportDialog({
                     {isExpanded && (
                       <div className="space-y-3 border-t px-3 pb-3 pt-3">
                         <div>
-                          <p className="text-xs text-muted-foreground">Merchant</p>
+                          <p className="text-xs text-muted-foreground">
+                            Merchant
+                          </p>
                           <Input
                             value={entry.receipt.merchant}
                             className="mt-1 h-9 text-sm font-medium"
-                            onChange={(e) => updateEntryReceipt(entry.id, "merchant", e.target.value)}
+                            onChange={(e) =>
+                              updateEntryReceipt(
+                                entry.id,
+                                "merchant",
+                                e.target.value,
+                              )
+                            }
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <p className="text-xs text-muted-foreground">Date</p>
+                            <p className="text-xs text-muted-foreground">
+                              Date
+                            </p>
                             <Input
                               type="date"
                               value={entry.receipt.date}
                               className="mt-1 h-9 text-sm"
-                              onChange={(e) => updateEntryReceipt(entry.id, "date", e.target.value)}
+                              onChange={(e) =>
+                                updateEntryReceipt(
+                                  entry.id,
+                                  "date",
+                                  e.target.value,
+                                )
+                              }
                             />
                           </div>
                           <div>
-                            <p className="text-xs text-muted-foreground">Category</p>
+                            <p className="text-xs text-muted-foreground">
+                              Category
+                            </p>
                             <Select
                               value={entry.categoryId || "none"}
-                              onValueChange={(v) => updateEntryCategory(entry.id, v === "none" ? "" : v)}
+                              onValueChange={(v) =>
+                                updateEntryCategory(
+                                  entry.id,
+                                  v === "none" ? "" : v,
+                                )
+                              }
                             >
                               <SelectTrigger className="mt-1 h-9 text-sm">
                                 <SelectValue placeholder="None" />
@@ -603,7 +904,9 @@ export function BulkImportDialog({
                               <SelectContent>
                                 <SelectItem value="none">None</SelectItem>
                                 {categories.map((c) => (
-                                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                  <SelectItem key={c.id} value={c.id}>
+                                    {c.name}
+                                  </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -617,33 +920,61 @@ export function BulkImportDialog({
                           </p>
                           <div className="space-y-1.5">
                             {entry.receipt.items.map((item) => (
-                              <div key={item.id} className="rounded-lg border p-2.5">
+                              <div
+                                key={item.id}
+                                className="rounded-lg border p-2.5"
+                              >
                                 {editingItemId === item.id ? (
                                   <div className="space-y-1.5">
                                     <Input
                                       value={item.name}
                                       className="h-8 text-sm"
                                       placeholder="Item name"
-                                      onChange={(e) => updateEntryItem(entry.id, item.id, "name", e.target.value)}
+                                      onChange={(e) =>
+                                        updateEntryItem(
+                                          entry.id,
+                                          item.id,
+                                          "name",
+                                          e.target.value,
+                                        )
+                                      }
                                     />
                                     <div className="flex gap-2">
                                       <div className="w-20">
-                                        <p className="mb-0.5 text-[10px] text-muted-foreground">Qty</p>
+                                        <p className="mb-0.5 text-[10px] text-muted-foreground">
+                                          Qty
+                                        </p>
                                         <Input
                                           type="number"
                                           value={item.quantity}
                                           className="h-8 text-sm"
-                                          onChange={(e) => updateEntryItem(entry.id, item.id, "quantity", Number(e.target.value))}
+                                          onChange={(e) =>
+                                            updateEntryItem(
+                                              entry.id,
+                                              item.id,
+                                              "quantity",
+                                              Number(e.target.value),
+                                            )
+                                          }
                                         />
                                       </div>
                                       <div className="flex-1">
-                                        <p className="mb-0.5 text-[10px] text-muted-foreground">Price</p>
+                                        <p className="mb-0.5 text-[10px] text-muted-foreground">
+                                          Price
+                                        </p>
                                         <Input
                                           type="number"
                                           step="0.01"
                                           value={item.totalPrice}
                                           className="h-8 text-sm"
-                                          onChange={(e) => updateEntryItem(entry.id, item.id, "totalPrice", Number(e.target.value))}
+                                          onChange={(e) =>
+                                            updateEntryItem(
+                                              entry.id,
+                                              item.id,
+                                              "totalPrice",
+                                              Number(e.target.value),
+                                            )
+                                          }
                                         />
                                       </div>
                                       <button
@@ -657,10 +988,15 @@ export function BulkImportDialog({
                                 ) : (
                                   <div className="flex items-center gap-2">
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm leading-snug">{item.name}</p>
+                                      <p className="text-sm leading-snug">
+                                        {item.name}
+                                      </p>
                                       {item.quantity > 1 && (
                                         <p className="text-xs text-muted-foreground">
-                                          {item.quantity} x {item.unitPrice != null ? item.unitPrice.toFixed(2) : ""}
+                                          {item.quantity} x{" "}
+                                          {item.unitPrice != null
+                                            ? item.unitPrice.toFixed(2)
+                                            : ""}
                                         </p>
                                       )}
                                     </div>
@@ -669,13 +1005,17 @@ export function BulkImportDialog({
                                     </p>
                                     <div className="flex shrink-0 gap-1">
                                       <button
-                                        onClick={() => setEditingItemId(item.id)}
+                                        onClick={() =>
+                                          setEditingItemId(item.id)
+                                        }
                                         className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                                       >
                                         <Pencil className="h-3.5 w-3.5" />
                                       </button>
                                       <button
-                                        onClick={() => deleteEntryItem(entry.id, item.id)}
+                                        onClick={() =>
+                                          deleteEntryItem(entry.id, item.id)
+                                        }
                                         className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                       >
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -694,38 +1034,44 @@ export function BulkImportDialog({
               })}
 
               {/* Also show transactions if AI detected some as transaction lists */}
-              {transactions.length > 0 && transactions.map((tx) => (
-              <div
-                key={tx.id}
-                className={`rounded-lg border p-2.5 transition-colors ${selected.has(tx.id) ? "border-primary/40 bg-primary/5" : ""}`}
-              >
-                <div className="flex items-center gap-2">
-                  <button
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs transition-colors ${
-                      selected.has(tx.id) ? "border-primary bg-primary text-primary-foreground" : ""
-                    }`}
-                    onClick={() => toggleSelect(tx.id)}
+              {transactions.length > 0 &&
+                transactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className={`rounded-lg border p-2.5 transition-colors ${selected.has(tx.id) ? "border-primary/40 bg-primary/5" : ""}`}
                   >
-                    {selected.has(tx.id) && <Check className="h-3 w-3" />}
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium">{tx.description}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {tx.date} · {tx.type}{tx.category ? ` · ${tx.category}` : ""}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs transition-colors ${
+                          selected.has(tx.id)
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : ""
+                        }`}
+                        onClick={() => toggleSelect(tx.id)}
+                      >
+                        {selected.has(tx.id) && <Check className="h-3 w-3" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {tx.description}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {tx.date} · {tx.type}
+                          {tx.category ? ` · ${tx.category}` : ""}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-sm font-medium tabular-nums">
+                        {tx.amount.toFixed(2)}
+                      </p>
+                      <button
+                        onClick={() => deleteTx(tx.id)}
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <p className="shrink-0 text-sm font-medium tabular-nums">
-                    {tx.amount.toFixed(2)}
-                  </p>
-                  <button
-                    onClick={() => deleteTx(tx.id)}
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-              ))}
+                ))}
             </div>
 
             <ResponsiveDialogFooter>
@@ -759,185 +1105,178 @@ export function BulkImportDialog({
         )}
 
         {/* ── STEP 2: Review Transactions (CSV or AI-detected list) ── */}
-        {step === "review" && receipts.length === 0 && transactions.length > 0 && (
-          <div className="space-y-3">
-            {/* Select all / deselect */}
-            <div className="flex items-center justify-between">
-              <button
-                className="text-sm text-muted-foreground hover:text-foreground"
-                onClick={toggleAll}
-              >
-                {selected.size === transactions.length
-                  ? "Deselect all"
-                  : "Select all"}
-              </button>
-              <span className="text-xs text-muted-foreground">
-                {selected.size} selected
-              </span>
-            </div>
-
-            <div className="max-h-[50vh] space-y-1.5 overflow-auto">
-              {transactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  className={`rounded-lg border p-2.5 transition-colors ${selected.has(tx.id) ? "border-primary/40 bg-primary/5" : ""}`}
+        {step === "review" &&
+          receipts.length === 0 &&
+          transactions.length > 0 && (
+            <div className="space-y-3">
+              {/* Select all / deselect */}
+              <div className="flex items-center justify-between">
+                <button
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                  onClick={toggleAll}
                 >
-                  {editingTxId === tx.id ? (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
+                  {selected.size === transactions.length
+                    ? "Deselect all"
+                    : "Select all"}
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  {selected.size} selected
+                </span>
+              </div>
+
+              <div className="max-h-[50vh] space-y-1.5 overflow-auto">
+                {transactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className={`rounded-lg border p-2.5 transition-colors ${selected.has(tx.id) ? "border-primary/40 bg-primary/5" : ""}`}
+                  >
+                    {editingTxId === tx.id ? (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            type="date"
+                            value={tx.date}
+                            className="h-8 flex-1 text-sm"
+                            onChange={(e) =>
+                              updateTxField(tx.id, "date", e.target.value)
+                            }
+                          />
+                          <Select
+                            value={tx.type}
+                            onValueChange={(v) =>
+                              updateTxField(tx.id, "type", v)
+                            }
+                          >
+                            <SelectTrigger className="h-8 w-28 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="expense">Expense</SelectItem>
+                              <SelectItem value="income">Income</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <Input
-                          type="date"
-                          value={tx.date}
-                          className="h-8 flex-1 text-sm"
+                          value={tx.description}
+                          className="h-8 text-sm"
+                          placeholder="Description"
                           onChange={(e) =>
-                            updateTxField(tx.id, "date", e.target.value)
+                            updateTxField(tx.id, "description", e.target.value)
                           }
                         />
-                        <Select
-                          value={tx.type}
-                          onValueChange={(v) => updateTxField(tx.id, "type", v)}
-                        >
-                          <SelectTrigger className="h-8 w-28 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="expense">Expense</SelectItem>
-                            <SelectItem value="income">Income</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={tx.amount}
+                            className="h-8 flex-1 text-sm"
+                            onChange={(e) =>
+                              updateTxField(
+                                tx.id,
+                                "amount",
+                                Number(e.target.value),
+                              )
+                            }
+                          />
+                          <Select
+                            value={tx.category || "none"}
+                            onValueChange={(v) =>
+                              updateTxField(
+                                tx.id,
+                                "category",
+                                v === "none" ? "" : v,
+                              )
+                            }
+                          >
+                            <SelectTrigger className="h-8 flex-1 text-sm">
+                              <SelectValue placeholder="Category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              {categories.map((c) => (
+                                <SelectItem key={c.id} value={c.name}>
+                                  {c.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <button
+                            onClick={() => setEditingTxId(null)}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                      <Input
-                        value={tx.description}
-                        className="h-8 text-sm"
-                        placeholder="Description"
-                        onChange={(e) =>
-                          updateTxField(tx.id, "description", e.target.value)
-                        }
-                      />
-                      <div className="flex gap-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={tx.amount}
-                          className="h-8 flex-1 text-sm"
-                          onChange={(e) =>
-                            updateTxField(
-                              tx.id,
-                              "amount",
-                              Number(e.target.value),
-                            )
-                          }
-                        />
-                        <Select
-                          value={tx.category || "none"}
-                          onValueChange={(v) => updateTxField(tx.id, "category", v === "none" ? "" : v)}
-                        >
-                          <SelectTrigger className="h-8 flex-1 text-sm">
-                            <SelectValue placeholder="Category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            {categories.map((c) => (
-                              <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    ) : (
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setEditingTxId(null)}
-                          className="text-muted-foreground hover:text-foreground"
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs transition-colors ${
+                            selected.has(tx.id)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : ""
+                          }`}
+                          onClick={() => toggleSelect(tx.id)}
                         >
-                          <Check className="h-4 w-4" />
+                          {selected.has(tx.id) && <Check className="h-3 w-3" />}
+                        </button>
+                        <div
+                          className="flex-1 overflow-hidden cursor-pointer"
+                          onClick={() => setEditingTxId(tx.id)}
+                        >
+                          <p className="truncate text-sm font-medium max-w-[200px]">
+                            {tx.description.replace(/\n+/g, " ")}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {tx.date}
+                            {tx.category ? ` · ${tx.category}` : ""}
+                          </p>
+                        </div>
+                        <p className="shrink-0 text-sm font-semibold tabular-nums">
+                          {tx.amount.toFixed(2)}
+                        </p>
+                        <button
+                          onClick={() => deleteTx(tx.id)}
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <button
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs transition-colors ${
-                          selected.has(tx.id)
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : ""
-                        }`}
-                        onClick={() => toggleSelect(tx.id)}
-                      >
-                        {selected.has(tx.id) && <Check className="h-3 w-3" />}
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-medium">
-                            {tx.description}
-                          </p>
-                          <span
-                            className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                              tx.type === "income"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                            }`}
-                          >
-                            {tx.type}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{tx.date}</span>
-                          {tx.category && (
-                            <>
-                              <span>·</span>
-                              <span>{tx.category}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <p className="shrink-0 text-sm font-medium">
-                        {tx.amount.toFixed(2)}
-                      </p>
-                      <button
-                        onClick={() => setEditingTxId(tx.id)}
-                        className="shrink-0 text-muted-foreground hover:text-foreground"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteTx(tx.id)}
-                        className="shrink-0 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <ResponsiveDialogFooter>
-              <div className="flex w-full gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setStep("upload");
-                    setTransactions([]);
-                    setSelected(new Set());
-                    setReceipts([]);
-                  }}
-                >
-                  Back
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handleImportCSV}
-                  disabled={loading || selected.size === 0}
-                >
-                  {loading ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCheck className="mr-1.5 h-4 w-4" />
-                  )}
-                  Import {selected.size}
-                </Button>
+                    )}
+                  </div>
+                ))}
               </div>
-            </ResponsiveDialogFooter>
-          </div>
-        )}
+
+              <ResponsiveDialogFooter>
+                <div className="flex w-full gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setStep("upload");
+                      setTransactions([]);
+                      setSelected(new Set());
+                      setReceipts([]);
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleImportCSV}
+                    disabled={loading || selected.size === 0}
+                  >
+                    {loading ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCheck className="mr-1.5 h-4 w-4" />
+                    )}
+                    Import {selected.size}
+                  </Button>
+                </div>
+              </ResponsiveDialogFooter>
+            </div>
+          )}
 
         {/* ── STEP 3: Done ── */}
         {step === "done" && (

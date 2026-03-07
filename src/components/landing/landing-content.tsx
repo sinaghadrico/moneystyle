@@ -38,6 +38,8 @@ import {
   Sun,
   Target,
   TrendingUp,
+  Trophy,
+  Upload,
   Users,
   UtensilsCrossed,
   Wallet,
@@ -308,6 +310,30 @@ const FEATURES: {
     color: "text-fuchsia-500",
     bg: "bg-fuchsia-500/10",
     href: "/features/sms-import",
+  },
+  {
+    icon: Upload,
+    title: "Bulk Import",
+    description:
+      "Import bank CSV statements or Telegram chat exports to bulk-create transactions instantly.",
+    color: "text-slate-500",
+    bg: "bg-slate-500/10",
+  },
+  {
+    icon: Wallet,
+    title: "Account Management",
+    description:
+      "Manage multiple accounts — bank, wallet, exchange, cash — each with its own color and icon.",
+    color: "text-zinc-500",
+    bg: "bg-zinc-500/10",
+  },
+  {
+    icon: Trophy,
+    title: "Spending Wrapped",
+    description:
+      "Your annual spending recap — top categories, biggest expense, favorite merchant, and trends.",
+    color: "text-amber-400",
+    bg: "bg-amber-400/10",
   },
 ];
 
@@ -745,7 +771,7 @@ export function LandingContent() {
             className={`text-center mb-12 transition-all duration-700 ${features.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
           >
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              20+ features. One app.
+              21 features. One app.
             </h2>
             <p className="mt-3 text-muted-foreground text-lg">
               Everything you need to manage your money — and then some.

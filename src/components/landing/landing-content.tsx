@@ -42,6 +42,7 @@ import {
   Upload,
   Scissors,
   CalendarDays,
+  MessageCircle,
   Users,
   UtensilsCrossed,
   Wallet,
@@ -352,6 +353,14 @@ const FEATURES: {
       "Monthly calendar showing income, bills, and expenses day by day with projected balance chart.",
     color: "text-indigo-500",
     bg: "bg-indigo-500/10",
+  },
+  {
+    icon: MessageCircle,
+    title: "Money Chat",
+    description:
+      "Chat with your finances — ask questions like \"how much did I spend on food?\" and get instant answers.",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
   },
 ];
 
@@ -789,7 +798,7 @@ export function LandingContent() {
             className={`text-center mb-12 transition-all duration-700 ${features.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
           >
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              23 features. One app.
+              24 features. One app.
             </h2>
             <p className="mt-3 text-muted-foreground text-lg">
               Everything you need to manage your money — and then some.

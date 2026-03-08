@@ -43,6 +43,7 @@ model User {
   mealPlans             MealPlan[]
   moneyAdvices          MoneyAdvice[]
   billNegotiations      BillNegotiation[]
+  chatSessions          ChatSession[]
   weekendPlans          WeekendPlan[]
   shoppingLists         ShoppingList[]
   appSettings           AppSettings?
@@ -553,6 +554,19 @@ model MoneyAdvice {
 
   @@index([userId])
   @@map("money_advices")
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  title     String
+  messages  Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("chat_sessions")
 }
 
 model BillNegotiation {

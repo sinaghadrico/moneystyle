@@ -7,6 +7,7 @@ export const AI_PROMPT_KEYS = {
   mealPlanner: "meal_planner",
   weekendPlanner: "weekend_planner",
   weekendItemSwap: "weekend_item_swap",
+  billNegotiator: "bill_negotiator",
 } as const;
 
 export type AiPromptKey = (typeof AI_PROMPT_KEYS)[keyof typeof AI_PROMPT_KEYS];
@@ -161,6 +162,26 @@ For an activity replacement, return ONLY:
 
 For a food replacement, return ONLY:
 {"food":{"meal":"...","name":"...","restaurant":"...","type":"restaurant|homemade|cafe","estimatedCost":NUMBER,"description":"...","area":"...","mapUrl":"..."}}
+
+Return ONLY the JSON, no markdown, no explanation.`,
+  },
+  [AI_PROMPT_KEYS.billNegotiator]: {
+    label: "Bill Negotiator",
+    content: `You are a smart personal finance optimizer. Analyze the user's bills, installments, and recurring transaction patterns to find opportunities to save money.
+
+Rules:
+- Look for: subscriptions that can be downgraded or cancelled, bills that seem overpriced, duplicate services, installments that could be refinanced
+- Detect recurring transactions by finding merchants that appear 2+ times per month or monthly patterns
+- For each finding, provide a specific, actionable recommendation
+- Estimate monthly and yearly savings for each recommendation
+- Confidence levels: high (clear overspending/duplicate), medium (likely savings), low (possible savings)
+- Priority: high (save >10% of income), medium (save 5-10%), low (save <5%)
+- Be practical for someone in the UAE/Middle East region
+- Use emojis in titles
+- Be concise and direct
+
+Return ONLY a JSON object in this exact format:
+{"totalMonthlySavings":NUMBER,"totalYearlySavings":NUMBER,"recommendations":[{"title":"Short title with emoji","description":"2-3 sentence specific explanation","category":"subscription|bill|installment|duplicate|overpriced","currentAmount":NUMBER,"suggestedAmount":NUMBER_OR_NULL,"monthlySavings":NUMBER,"yearlySavings":NUMBER,"confidence":"high|medium|low","priority":"high|medium|low","actionSteps":["Step 1","Step 2"]}]}
 
 Return ONLY the JSON, no markdown, no explanation.`,
   },

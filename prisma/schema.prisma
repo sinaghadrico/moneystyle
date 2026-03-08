@@ -42,6 +42,7 @@ model User {
   bills                 Bill[]
   mealPlans             MealPlan[]
   moneyAdvices          MoneyAdvice[]
+  billNegotiations      BillNegotiation[]
   weekendPlans          WeekendPlan[]
   shoppingLists         ShoppingList[]
   appSettings           AppSettings?
@@ -552,6 +553,19 @@ model MoneyAdvice {
 
   @@index([userId])
   @@map("money_advices")
+}
+
+model BillNegotiation {
+  id                  String   @id @default(cuid())
+  totalMonthlySavings Float
+  totalYearlySavings  Float
+  recommendations     Json
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now())
+
+  @@index([userId])
+  @@map("bill_negotiations")
 }
 
 model UserPreference {

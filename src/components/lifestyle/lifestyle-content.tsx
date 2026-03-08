@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, CalendarHeart, ChefHat, ShoppingCart } from "lucide-react";
+import { Sparkles, CalendarHeart, ChefHat, ShoppingCart, Scissors } from "lucide-react";
 import { MoneyAdviceSection } from "@/components/profile/money-advice-section";
+import { BillNegotiatorSection } from "@/components/profile/bill-negotiator-section";
 import { ProfileCompletenessBanner } from "./profile-completeness-banner";
 import { WeekendPlannerContent } from "@/components/weekend-planner/weekend-planner-content";
 import { MealPlannerContent } from "@/components/meal-planner/meal-planner-content";
@@ -11,6 +12,7 @@ import { ShoppingBasketsSection } from "./shopping-baskets-section";
 
 const TABS = [
   { key: "money-advice", label: "Advice", icon: Sparkles, route: "/lifestyle/advice" },
+  { key: "negotiate", label: "Negotiate", icon: Scissors, route: "/lifestyle/negotiate" },
   { key: "weekend", label: "Weekend", icon: CalendarHeart, route: "/lifestyle/weekend" },
   { key: "meals", label: "Meals", icon: ChefHat, route: "/lifestyle/meals" },
   { key: "shopping", label: "Shopping", icon: ShoppingCart, route: "/lifestyle/shopping" },
@@ -55,6 +57,7 @@ export function LifestyleContent({ initialTab }: { initialTab?: string }) {
 
       {/* Tab content */}
       {activeTab === "money-advice" && <MoneyAdviceSection />}
+      {activeTab === "negotiate" && <BillNegotiatorSection />}
       {activeTab === "weekend" && <WeekendPlannerContent />}
       {activeTab === "meals" && <MealPlannerContent />}
       {activeTab === "shopping" && <ShoppingBasketsSection />}

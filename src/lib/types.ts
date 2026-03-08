@@ -526,3 +526,29 @@ export type CashflowData = {
   netCashflow: number;
   days: CashflowDayData[];
 };
+
+// Bill Negotiator types
+
+export type BillNegotiatorRecommendation = {
+  title: string;
+  description: string;
+  category: "subscription" | "bill" | "installment" | "duplicate" | "overpriced";
+  currentAmount: number;
+  suggestedAmount: number | null;
+  monthlySavings: number;
+  yearlySavings: number;
+  confidence: "high" | "medium" | "low";
+  priority: "high" | "medium" | "low";
+  actionSteps: string[];
+};
+
+export type BillNegotiatorResult = {
+  totalMonthlySavings: number;
+  totalYearlySavings: number;
+  recommendations: BillNegotiatorRecommendation[];
+};
+
+export type BillNegotiatorHistoryItem = BillNegotiatorResult & {
+  id: string;
+  createdAt: string;
+};

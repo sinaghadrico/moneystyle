@@ -1,13 +1,40 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Sparkles, CalendarHeart, ChefHat, ShoppingCart } from "lucide-react";
+import {
+  Sparkles,
+  CalendarHeart,
+  ChefHat,
+  ShoppingCart,
+  Scissors,
+} from "lucide-react";
 
 const TABS = [
-  { key: "advice", label: "Advice", icon: Sparkles, route: "/lifestyle/advice" },
-  { key: "weekend", label: "Weekend", icon: CalendarHeart, route: "/lifestyle/weekend" },
+  {
+    key: "advice",
+    label: "Advice",
+    icon: Sparkles,
+    route: "/lifestyle/advice",
+  },
+  {
+    key: "negotiate",
+    label: "Negotiate",
+    icon: Scissors,
+    route: "/lifestyle/negotiate",
+  },
+  {
+    key: "weekend",
+    label: "Weekend",
+    icon: CalendarHeart,
+    route: "/lifestyle/weekend",
+  },
   { key: "meals", label: "Meals", icon: ChefHat, route: "/lifestyle/meals" },
-  { key: "shopping", label: "Shopping", icon: ShoppingCart, route: "/lifestyle/shopping" },
+  {
+    key: "shopping",
+    label: "Shopping",
+    icon: ShoppingCart,
+    route: "/lifestyle/shopping",
+  },
 ] as const;
 
 export function LifestyleTabs() {
@@ -18,7 +45,9 @@ export function LifestyleTabs() {
     <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
       {TABS.map((tab) => {
         const Icon = tab.icon;
-        const isActive = pathname === tab.route || (pathname === "/lifestyle" && tab.key === "advice");
+        const isActive =
+          pathname === tab.route ||
+          (pathname === "/lifestyle" && tab.key === "advice");
         return (
           <button
             key={tab.key}

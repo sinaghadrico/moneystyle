@@ -40,6 +40,8 @@ import {
   TrendingUp,
   Trophy,
   Upload,
+  Scissors,
+  CalendarDays,
   Users,
   UtensilsCrossed,
   Wallet,
@@ -334,6 +336,22 @@ const FEATURES: {
       "Your annual spending recap — top categories, biggest expense, favorite merchant, and trends.",
     color: "text-amber-400",
     bg: "bg-amber-400/10",
+  },
+  {
+    icon: Scissors,
+    title: "Bill Negotiator",
+    description:
+      "AI analyzes your bills and recurring expenses to find subscriptions to cancel and costs to reduce.",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+  },
+  {
+    icon: CalendarDays,
+    title: "Cashflow Calendar",
+    description:
+      "Monthly calendar showing income, bills, and expenses day by day with projected balance chart.",
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
   },
 ];
 
@@ -771,7 +789,7 @@ export function LandingContent() {
             className={`text-center mb-12 transition-all duration-700 ${features.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
           >
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              21 features. One app.
+              23 features. One app.
             </h2>
             <p className="mt-3 text-muted-foreground text-lg">
               Everything you need to manage your money — and then some.

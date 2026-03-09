@@ -21,8 +21,12 @@ jobs:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: ENV_FILE
           script: |
             cd ~/revenue
+
+            echo "==> Writing .env from GitHub Secrets..."
+            echo "$ENV_FILE" > .env
 
             echo "==> Pulling latest code..."
             git pull origin main
@@ -34,3 +38,5 @@ jobs:
             docker image prune -f
 
             echo "==> Done!"
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}

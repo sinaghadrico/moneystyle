@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 const publicPaths = [
   "/auth/login",
@@ -16,8 +17,8 @@ const publicPaths = [
   "/api/telegram",
 ];
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
   // Landing page (root) is public for everyone
   if (pathname === "/") {
@@ -25,13 +26,7 @@ export default auth((req) => {
   }
 
   // Allow public paths
-  if (publicPaths.some((p) => pathname.startsWith(p))) {
-    // Redirect authenticated users away from auth pages
-    if (req.auth && pathname.startsWith("/auth/")) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-    return NextResponse.next();
-  }
+  const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
   // Allow static assets and Next.js internals
   if (
@@ -42,13 +37,24 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Get session
+  const session = await auth();
+
+  if (isPublic) {
+    // Redirect authenticated users away from auth pages
+    if (session && pathname.startsWith("/auth/")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.next();
+  }
+
   // Redirect unauthenticated users to landing page
-  if (!req.auth) {
-    return NextResponse.redirect(new URL("/", req.url));
+  if (!session) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [

@@ -12,12 +12,28 @@ export const metadata: Metadata = {
       "AI-powered finance tracking. Scan receipts, compare prices, manage budgets. Free to start.",
     type: "website",
     siteName: "MoneyStyle",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "MoneyStyle — AI-powered personal finance tracker",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "MoneyStyle — Know Where Every Dollar Goes",
     description:
       "AI-powered finance tracking. Scan receipts, compare prices, manage budgets. Free to start.",
+    images: [
+      {
+        url: "/twitter-image",
+        width: 1200,
+        height: 630,
+        alt: "MoneyStyle — AI-powered personal finance tracker",
+      },
+    ],
   },
 };
 

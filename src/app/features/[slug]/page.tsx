@@ -28,11 +28,27 @@ export async function generateMetadata({
       description,
       type: "website",
       siteName: "MoneyStyle",
+      images: [
+        {
+          url: `/features/${slug}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          alt: `${feature.title} — MoneyStyle`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${feature.title} — MoneyStyle`,
       description,
+      images: [
+        {
+          url: `/features/${slug}/twitter-image`,
+          width: 1200,
+          height: 630,
+          alt: `${feature.title} — MoneyStyle`,
+        },
+      ],
     },
   };
 }

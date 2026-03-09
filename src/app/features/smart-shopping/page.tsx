@@ -11,12 +11,28 @@ export const metadata: Metadata = {
       "Compare real prices from your purchase history. Find the best store or split across stores for maximum savings.",
     type: "website",
     siteName: "MoneyStyle",
+    images: [
+      {
+        url: "/features/smart-shopping/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Smart Shopping — MoneyStyle",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Smart Shopping — MoneyStyle",
     description:
       "Compare real prices from your purchase history. Find the best store or split across stores for maximum savings.",
+    images: [
+      {
+        url: "/features/smart-shopping/twitter-image",
+        width: 1200,
+        height: 630,
+        alt: "Smart Shopping — MoneyStyle",
+      },
+    ],
   },
 };
 

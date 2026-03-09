@@ -8,6 +8,14 @@ import { formatCurrency } from "@/lib/utils";
 import { createSettlement } from "@/actions/persons";
 import { Share2, CheckCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 
 type PersonSummary = {
   id: string;
@@ -35,6 +43,7 @@ type PersonSummary = {
 export function PersonSummaryContent({ summary }: { summary: PersonSummary }) {
   const router = useRouter();
   const [settling, setSettling] = useState(false);
+  const [settleConfirm, setSettleConfirm] = useState(false);
 
   const handleShare = async () => {
     const lines = [
@@ -74,7 +83,7 @@ export function PersonSummaryContent({ summary }: { summary: PersonSummary }) {
   };
 
   const handleSettle = async () => {
-    if (summary.balance <= 0) return;
+    setSettleConfirm(false);
     setSettling(true);
     const res = await createSettlement({
       personId: summary.id,
@@ -83,10 +92,10 @@ export function PersonSummaryContent({ summary }: { summary: PersonSummary }) {
     });
     setSettling(false);
     if ("success" in res) {
-      toast.success("✅ Settlement recorded");
+      toast.success("Settlement recorded");
       router.refresh();
     } else {
-      toast.error("❌ Failed to settle");
+      toast.error("Failed to settle");
     }
   };
 
@@ -146,7 +155,7 @@ export function PersonSummaryContent({ summary }: { summary: PersonSummary }) {
               <Button
                 className="flex-1"
                 disabled={settling}
-                onClick={handleSettle}
+                onClick={() => setSettleConfirm(true)}
               >
                 <CheckCircle className="mr-1.5 h-4 w-4" />
                 {settling ? "Settling..." : "Settle Up"}
@@ -217,6 +226,33 @@ export function PersonSummaryContent({ summary }: { summary: PersonSummary }) {
             ))}
           </CardContent>
         </Card>
+      )}
+      {summary.balance > 0 && (
+        <ResponsiveDialog open={settleConfirm} onOpenChange={setSettleConfirm}>
+          <ResponsiveDialogContent>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Settle Up</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Are you sure you want to settle{" "}
+                {formatCurrency(summary.balance)} with {summary.name}?
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogFooter>
+              <div className="flex w-full gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setSettleConfirm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={handleSettle}>
+                  Settle
+                </Button>
+              </div>
+            </ResponsiveDialogFooter>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
       )}
     </div>
   );

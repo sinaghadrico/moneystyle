@@ -27,9 +27,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXTAUTH_URL || "https://moneystyle.app"),
-  title: "MoneyStyle - Finance Tracker",
-  description: "Personal finance dashboard for tracking transactions",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://moneystyle.app"
+  ),
+  title: "MoneyStyle - Smart Finance Tracker",
+  description:
+    "AI-powered personal finance app with receipt scanning, bill negotiation, wealth insights, and smart budgeting to help you take control of your money.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

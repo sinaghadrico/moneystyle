@@ -16,6 +16,7 @@ import {
   UtensilsCrossed,
   ShoppingCart,
   MessageCircle,
+  Rocket,
 } from "lucide-react";
 
 const PRIMARY_NAV = [
@@ -26,6 +27,7 @@ const PRIMARY_NAV = [
 
 const QUICK_ACTIONS = [
   { href: "/chat", label: "Money Chat", icon: MessageCircle, color: "text-violet-500", bg: "bg-violet-500/10" },
+  { href: "/wealth", label: "Wealth Pilot", icon: Rocket, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   { href: "/lifestyle/advice", label: "Money Advice", icon: Brain, color: "text-amber-500", bg: "bg-amber-500/10" },
   { href: "/lifestyle/weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10" },
   { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10" },

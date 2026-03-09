@@ -529,6 +529,53 @@ export type CashflowData = {
 
 // Bill Negotiator types
 
+// Wealth Pilot types
+
+export type WealthScoreBreakdown = {
+  savingsRate: { score: number; max: number; detail: string };
+  emergencyFund: { score: number; max: number; detail: string };
+  diversification: { score: number; max: number; detail: string };
+  debtRatio: { score: number; max: number; detail: string };
+  passiveIncome: { score: number; max: number; detail: string };
+};
+
+export type WealthProjections = {
+  oneYear: number;
+  threeYear: number;
+  fiveYear: number;
+  assumptions: string;
+};
+
+export type WealthAction = {
+  id: string;
+  category: "quick_win" | "monthly_habit" | "growth_move" | "trade_signal" | "expense_hack";
+  title: string;
+  description: string;
+  platform: string | null;
+  expectedReturn: string;
+  risk: "low" | "medium" | "high";
+  timeline: "tomorrow" | "this_week" | "this_month" | "next_3_months";
+  steps: string[];
+};
+
+export type WealthPlanResult = {
+  wealthScore: number;
+  scoreBreakdown: WealthScoreBreakdown;
+  monthlySurplus: number;
+  investableCapital: number;
+  projections: WealthProjections;
+  actions: WealthAction[];
+  summary: string;
+};
+
+export type WealthPlanHistoryItem = WealthPlanResult & {
+  id: string;
+  completedActions: string[];
+  createdAt: string;
+};
+
+// Bill Negotiator types
+
 export type BillNegotiatorRecommendation = {
   title: string;
   description: string;

@@ -44,6 +44,7 @@ model User {
   moneyAdvices          MoneyAdvice[]
   billNegotiations      BillNegotiation[]
   chatSessions          ChatSession[]
+  wealthPlans           WealthPlan[]
   weekendPlans          WeekendPlan[]
   shoppingLists         ShoppingList[]
   appSettings           AppSettings?
@@ -554,6 +555,24 @@ model MoneyAdvice {
 
   @@index([userId])
   @@map("money_advices")
+}
+
+model WealthPlan {
+  id                 String   @id @default(cuid())
+  wealthScore        Int
+  scoreBreakdown     Json
+  monthlySurplus     Float
+  investableCapital  Float
+  projections        Json
+  actions            Json
+  summary            String
+  completedActions   String[] @default([])
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+
+  @@index([userId])
+  @@map("wealth_plans")
 }
 
 model ChatSession {

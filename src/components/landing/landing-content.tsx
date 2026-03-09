@@ -43,6 +43,7 @@ import {
   Scissors,
   CalendarDays,
   MessageCircle,
+  Rocket,
   Users,
   UtensilsCrossed,
   Wallet,
@@ -361,6 +362,14 @@ const FEATURES: {
       "Chat with your finances — ask questions like \"how much did I spend on food?\" and get instant answers.",
     color: "text-violet-500",
     bg: "bg-violet-500/10",
+  },
+  {
+    icon: Rocket,
+    title: "Wealth Pilot",
+    description:
+      "AI-powered wealth growth plan with exact amounts, platforms, and timelines tailored to your finances.",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
   },
 ];
 
@@ -798,7 +807,7 @@ export function LandingContent() {
             className={`text-center mb-12 transition-all duration-700 ${features.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
           >
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              24 features. One app.
+              25 features. One app.
             </h2>
             <p className="mt-3 text-muted-foreground text-lg">
               Everything you need to manage your money — and then some.

@@ -10,6 +10,7 @@ import {
   UserCircle,
   Palette,
   MessageCircle,
+  Rocket,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { WrappedButton } from "./wrapped-button";
@@ -18,6 +19,7 @@ import { UserMenu } from "@/components/auth/user-menu";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
+  { href: "/wealth", label: "Wealth Pilot", icon: Rocket },
   { href: "/chat", label: "Money Chat", icon: MessageCircle },
   { href: "/lifestyle", label: "Lifestyle", icon: Palette },
   { href: "/profile", label: "Profile", icon: UserCircle },

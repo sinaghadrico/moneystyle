@@ -21,13 +21,23 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config << EOF
+          Host deploy-server
+            HostName ${{ secrets.REMOTE_HOST }}
+            User ${{ secrets.REMOTE_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
 
-      - name: Deploy
+      - name: Test SSH
+        run: ssh deploy-server "echo 'SSH OK'"
+
+      - name: Write .env
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
-        run: |
-          # Write .env to server
-          echo "$ENV_FILE" | ssh -i ~/.ssh/deploy_key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cat > ~/revenue/.env"
+        run: echo "$ENV_FILE" | ssh deploy-server "cat > ~/revenue/.env"
 
-          # Pull and rebuild
-          ssh -i ~/.ssh/deploy_key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd ~/revenue && git pull origin main && docker compose -f docker-compose.prod.yml up -d --build && docker image prune -f"
+      - name: Deploy
+        run: |
+          ssh deploy-server "cd ~/revenue && git pull origin main && docker compose -f docker-compose.prod.yml up -d --build && docker image prune -f"

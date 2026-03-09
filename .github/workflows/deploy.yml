@@ -15,28 +15,19 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: ENV_FILE
-          script: |
-            cd ~/revenue
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-            echo "==> Writing .env from GitHub Secrets..."
-            echo "$ENV_FILE" > .env
-
-            echo "==> Pulling latest code..."
-            git pull origin main
-
-            echo "==> Building & restarting..."
-            docker compose -f docker-compose.prod.yml up -d --build
-
-            echo "==> Cleaning up old images..."
-            docker image prune -f
-
-            echo "==> Done!"
+      - name: Deploy
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          # Write .env to server
+          echo "$ENV_FILE" | ssh -i ~/.ssh/deploy_key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cat > ~/revenue/.env"
+
+          # Pull and rebuild
+          ssh -i ~/.ssh/deploy_key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd ~/revenue && git pull origin main && docker compose -f docker-compose.prod.yml up -d --build && docker image prune -f"

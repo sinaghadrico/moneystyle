@@ -13,7 +13,12 @@ export default async function OGImage({
   const { slug } = await params;
   const feature = getFeature(slug);
   if (!feature) {
-    return new ImageResponse(<div>Not found</div>, { ...size });
+    return new ImageResponse(
+      <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: "#0a0a0a", color: "white", fontSize: "32px" }}>
+        Not found
+      </div>,
+      { ...size }
+    );
   }
 
   const { hex, hexSecondary, badge, headline, headlineAccent, tagline, ogPhone } =

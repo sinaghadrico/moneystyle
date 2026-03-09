@@ -1,0 +1,36 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/revenue
+
+            echo "==> Pulling latest code..."
+            git pull origin main
+
+            echo "==> Building & restarting..."
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            echo "==> Cleaning up old images..."
+            docker image prune -f
+
+            echo "==> Done!"

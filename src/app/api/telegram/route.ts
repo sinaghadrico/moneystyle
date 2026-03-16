@@ -255,6 +255,7 @@ async function handleTelegram(
         merchant: parsed.merchant ?? null,
         description: parsed.description ?? null,
         source: "telegram",
+        confirmed: false,
         userId,
       },
     });

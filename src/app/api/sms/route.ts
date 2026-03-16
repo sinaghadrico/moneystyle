@@ -101,6 +101,7 @@ async function handleSms(
       merchant: parsed.merchant ?? null,
       description: parsed.description ?? null,
       source: "sms",
+      confirmed: false,
       userId,
     },
   });

@@ -75,7 +75,12 @@ async function handleSms(
   }
 
   // Get default account for this user
-  const account = await prisma.account.findFirst({ where: { userId } });
+  let account = settings.defaultAccountId
+    ? await prisma.account.findUnique({ where: { id: settings.defaultAccountId } })
+    : null;
+  if (!account) {
+    account = await prisma.account.findFirst({ where: { userId } });
+  }
   if (!account) {
     return NextResponse.json({ error: "No account found" }, { status: 500 });
   }

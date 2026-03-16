@@ -210,9 +210,13 @@ async function handleTelegram(
     if (parsed.accountHint) {
       account = await resolveAccountByHint(parsed.accountHint, userId);
     }
-    if (!account) {
-      const defaultAcc = await prisma.account.findFirst({ where: { userId } });
+    if (!account && settings.defaultAccountId) {
+      const defaultAcc = await prisma.account.findUnique({ where: { id: settings.defaultAccountId } });
       if (defaultAcc) account = { id: defaultAcc.id, name: defaultAcc.name };
+    }
+    if (!account) {
+      const firstAcc = await prisma.account.findFirst({ where: { userId } });
+      if (firstAcc) account = { id: firstAcc.id, name: firstAcc.name };
     }
     if (!account) {
       await reply("No accounts found in the database.");

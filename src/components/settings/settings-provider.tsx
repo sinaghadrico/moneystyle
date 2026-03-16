@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { getSettings } from "@/actions/settings";
 import { setCurrencyOverride } from "@/lib/utils";
+import { type FeatureFlags, type FeatureKey, DEFAULT_FEATURE_FLAGS, parseFeatureFlags } from "@/lib/feature-flags";
 
 type AppSettings = {
   currency: string;
@@ -13,6 +14,8 @@ type AppSettings = {
   autoCategorize: boolean;
   aiEnabled: boolean;
   hasOpenaiKey: boolean;
+  featureFlags: FeatureFlags;
+  isAdmin: boolean;
 };
 
 const DEFAULTS: AppSettings = {
@@ -24,6 +27,8 @@ const DEFAULTS: AppSettings = {
   autoCategorize: true,
   aiEnabled: false,
   hasOpenaiKey: false,
+  featureFlags: DEFAULT_FEATURE_FLAGS,
+  isAdmin: false,
 };
 
 const SettingsContext = createContext<{
@@ -34,6 +39,12 @@ const SettingsContext = createContext<{
 
 export function useAppSettings() {
   return useContext(SettingsContext);
+}
+
+export function useFeatureFlag(key: FeatureKey): boolean {
+  const { settings } = useAppSettings();
+  if (settings.isAdmin) return true;
+  return settings.featureFlags[key];
 }
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
@@ -52,6 +63,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       autoCategorize: s.autoCategorize,
       aiEnabled: s.aiEnabled,
       hasOpenaiKey: !!s.openaiApiKey,
+      featureFlags: parseFeatureFlags(s.featureFlags),
+      isAdmin: s.userRole === "admin",
     });
     setReady(true);
   }, []);

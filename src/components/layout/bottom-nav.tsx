@@ -25,16 +25,19 @@ const PRIMARY_NAV = [
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
+import { useAppSettings } from "@/components/settings/settings-provider";
+import type { FeatureKey } from "@/lib/feature-flags";
+
 const QUICK_ACTIONS = [
-  { href: "/chat", label: "Money Chat", icon: MessageCircle, color: "text-violet-500", bg: "bg-violet-500/10" },
-  { href: "/wealth", label: "Wealth Pilot", icon: Rocket, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  { href: "/lifestyle/advice", label: "Money Advice", icon: Brain, color: "text-amber-500", bg: "bg-amber-500/10" },
-  { href: "/lifestyle/weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10" },
-  { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10" },
-  { href: "/lifestyle/shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { href: "/chat", label: "Money Chat", icon: MessageCircle, color: "text-violet-500", bg: "bg-violet-500/10", feature: "chat" as FeatureKey },
+  { href: "/wealth", label: "Wealth Pilot", icon: Rocket, color: "text-emerald-500", bg: "bg-emerald-500/10", feature: "wealthPilot" as FeatureKey },
+  { href: "/lifestyle/advice", label: "Money Advice", icon: Brain, color: "text-amber-500", bg: "bg-amber-500/10", feature: "lifestyle" as FeatureKey },
+  { href: "/lifestyle/weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10", feature: "lifestyle" as FeatureKey },
+  { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10", feature: "lifestyle" as FeatureKey },
+  { href: "/lifestyle/shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10", feature: "lifestyle" as FeatureKey },
 ];
 
-function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
+function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => void; actions: typeof QUICK_ACTIONS }) {
   const router = useRouter();
   const [visible, setVisible] = useState(false);
   const [animating, setAnimating] = useState(false);
@@ -96,7 +99,7 @@ function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
 
           {/* Actions */}
           <div className="px-2 pb-2 space-y-0.5">
-            {QUICK_ACTIONS.map((action, i) => {
+            {actions.map((action, i) => {
               const Icon = action.icon;
               return (
                 <button
@@ -139,11 +142,16 @@ function FabPopup({ open, onClose }: { open: boolean; onClose: () => void }) {
 export function BottomNav() {
   const pathname = usePathname();
   const [fabOpen, setFabOpen] = useState(false);
+  const { settings } = useAppSettings();
+
+  const visibleActions = QUICK_ACTIONS.filter(
+    (action) => settings.isAdmin || settings.featureFlags[action.feature]
+  );
 
   return (
     <>
       {/* FAB button */}
-      {!fabOpen && (
+      {!fabOpen && visibleActions.length > 0 && (
         <button
           onClick={() => setFabOpen(true)}
           className="fixed z-50 right-4 rounded-full bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-900 shadow-lg shadow-black/40 flex items-center justify-center gap-2 px-4 active:scale-95 transition-transform bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] h-12 w-auto md:bottom-6 md:h-10 animate-fab-pulse overflow-hidden fab-shimmer"
@@ -154,7 +162,7 @@ export function BottomNav() {
       )}
 
       {/* FAB Popup */}
-      <FabPopup open={fabOpen} onClose={() => setFabOpen(false)} />
+      <FabPopup open={fabOpen} onClose={() => setFabOpen(false)} actions={visibleActions} />
 
       <nav
         className="fixed inset-x-0 bottom-0 z-50 border-t backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 bg-background md:hidden"

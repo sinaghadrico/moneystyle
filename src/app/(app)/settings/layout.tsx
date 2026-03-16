@@ -4,19 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Settings2, ArrowLeftRight, Plug, Wrench } from "lucide-react";
-import { SettingsContextProvider, useSettingsContext } from "@/components/settings/settings-context";
+import { Loader2, Settings2, ArrowLeftRight, Plug, Wrench, ToggleLeft } from "lucide-react";
+import {
+  SettingsContextProvider,
+  useSettingsContext,
+} from "@/components/settings/settings-context";
 
 const SETTINGS_TABS = [
   { href: "/settings", label: "General", icon: Settings2 },
   { href: "/settings/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/settings/integrations", label: "Integrations", icon: Plug },
+  { href: "/settings/features", label: "Features", icon: ToggleLeft, adminOnly: true },
   { href: "/settings/advanced", label: "Advanced", icon: Wrench },
-] as const;
+];
 
 function SettingsLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { loading, saving, handleSave } = useSettingsContext();
+  const { loading, saving, handleSave, isAdmin } = useSettingsContext();
 
   if (loading) {
     return (
@@ -42,7 +46,7 @@ function SettingsLayoutInner({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
-        {SETTINGS_TABS.map((tab) => {
+        {SETTINGS_TABS.filter((tab) => !("adminOnly" in tab) || isAdmin).map((tab) => {
           const Icon = tab.icon;
           const isActive =
             tab.href === "/settings"
@@ -70,7 +74,11 @@ function SettingsLayoutInner({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default function SettingsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <SettingsContextProvider>
       <SettingsLayoutInner>{children}</SettingsLayoutInner>

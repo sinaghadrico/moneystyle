@@ -15,23 +15,30 @@ import {
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { WrappedButton } from "./wrapped-button";
 import { UserMenu } from "@/components/auth/user-menu";
+import { useAppSettings } from "@/components/settings/settings-provider";
+import type { FeatureKey } from "@/lib/feature-flags";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/wealth", label: "Wealth Pilot", icon: Rocket },
-  { href: "/chat", label: "Money Chat", icon: MessageCircle },
-  { href: "/lifestyle", label: "Lifestyle", icon: Palette },
+  { href: "/wealth", label: "Wealth Pilot", icon: Rocket, feature: "wealthPilot" as FeatureKey },
+  { href: "/chat", label: "Money Chat", icon: MessageCircle, feature: "chat" as FeatureKey },
+  { href: "/lifestyle", label: "Lifestyle", icon: Palette, feature: "lifestyle" as FeatureKey },
   { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
   const pathname = usePathname();
+  const { settings } = useAppSettings();
+
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.feature || settings.isAdmin || settings.featureFlags[item.feature]
+  );
 
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
+      {visibleItems.map((item) => {
         const Icon = item.icon;
         const isActive =
           item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);

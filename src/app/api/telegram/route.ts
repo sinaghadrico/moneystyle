@@ -76,6 +76,7 @@ async function handleTelegram(
   chatId: number,
   settings: {
     currency: string;
+    defaultAccountId: string | null;
     telegramBotToken: string | null;
   },
   userId: string,

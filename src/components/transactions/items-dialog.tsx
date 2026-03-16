@@ -16,6 +16,7 @@ import {
   saveTransactionItems,
 } from "@/actions/transactions";
 import { parseReceiptFromUpload } from "@/actions/ai";
+import { useFeatureFlag } from "@/components/settings/settings-provider";
 import type { TransactionWithCategory } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Trash2, Loader2, Upload, Sparkles, X, ImageIcon } from "lucide-react";
@@ -49,6 +50,7 @@ export function ItemsDialog({
   onSaved: () => void;
 }) {
   const txAmount = transaction.amount ?? 0;
+  const receiptScannerEnabled = useFeatureFlag("receiptScanner");
   const [rows, setRows] = useState<ItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -279,7 +281,7 @@ export function ItemsDialog({
               )}
             </div>
 
-            {imageFiles.length > 0 && (
+            {imageFiles.length > 0 && receiptScannerEnabled && (
               <Button
                 variant="default"
                 size="sm"

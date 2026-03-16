@@ -141,6 +141,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.name = user.name;
         token.picture = user.image;
+        token.role = (user as { role?: string }).role ?? "user";
+      }
+      // Refresh role from DB on every token refresh
+      if (token.id && !user) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        token.role = dbUser?.role ?? "user";
       }
       // Allow client-side session updates (e.g. after profile edit)
       if (trigger === "update" && session) {
@@ -154,6 +163,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.name = token.name as string | null;
         session.user.image = token.picture as string | null;
+        (session.user as { role?: string }).role = token.role as string ?? "user";
       }
       return session;
     },

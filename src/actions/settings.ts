@@ -52,7 +52,33 @@ export async function getSettings() {
     });
   }
 
-  return row;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+
+  // Feature flags are global — always read from admin's settings
+  let globalFlags = row.featureFlags;
+  if (user?.role !== "admin") {
+    const adminUser = await prisma.user.findFirst({
+      where: { role: "admin" },
+      select: { id: true },
+    });
+    if (adminUser) {
+      const adminSettings = await prisma.appSettings.findUnique({
+        where: { userId: adminUser.id },
+        select: { featureFlags: true },
+      });
+      if (adminSettings) {
+        globalFlags = adminSettings.featureFlags;
+      }
+    }
+  }
+
+  const plain = JSON.parse(JSON.stringify(row));
+  plain.userRole = user?.role ?? "user";
+  plain.featureFlags = globalFlags;
+  return plain;
 }
 
 export async function updateSettings(
@@ -64,10 +90,16 @@ export async function updateSettings(
     return { error: parsed.error.issues.map((i) => i.message).join(", ") };
   }
 
+  const { featureFlags, ...rest } = parsed.data;
+  const dbData = {
+    ...rest,
+    ...(featureFlags !== undefined ? { featureFlags: featureFlags as Record<string, boolean> } : {}),
+  };
+
   await prisma.appSettings.upsert({
     where: { userId },
-    create: { ...parsed.data, userId },
-    update: { ...parsed.data },
+    create: { ...dbData, userId },
+    update: dbData,
   });
 
   revalidatePath("/settings");

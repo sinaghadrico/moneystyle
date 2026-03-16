@@ -10,6 +10,7 @@ import {
 } from "@/actions/settings";
 import { getAccountsList } from "@/actions/transactions";
 import { useAppSettings } from "@/components/settings/settings-provider";
+import { type FeatureFlags, DEFAULT_FEATURE_FLAGS, parseFeatureFlags } from "@/lib/feature-flags";
 
 export type Settings = {
   currency: string;
@@ -30,6 +31,7 @@ export type Settings = {
   notifyMonthlyReport: boolean;
   notifyWebTransaction: boolean;
   notifySmsTransaction: boolean;
+  featureFlags: FeatureFlags;
 };
 
 type AccountOption = { id: string; name: string };
@@ -46,6 +48,7 @@ type SettingsContextValue = {
   handleExport: (format: "csv" | "json") => Promise<void>;
   exportingCsv: boolean;
   exportingJson: boolean;
+  isAdmin: boolean;
 };
 
 const SettingsCtx = createContext<SettingsContextValue>(null!);
@@ -57,6 +60,7 @@ export function useSettingsContext() {
 export function SettingsContextProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [accounts, setAccounts] = useState<AccountOption[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingTelegram, setTestingTelegram] = useState(false);
@@ -86,7 +90,9 @@ export function SettingsContextProvider({ children }: { children: React.ReactNod
       notifyMonthlyReport: s.notifyMonthlyReport,
       notifyWebTransaction: s.notifyWebTransaction,
       notifySmsTransaction: s.notifySmsTransaction,
+      featureFlags: parseFeatureFlags(s.featureFlags),
     });
+    setIsAdmin(s.userRole === "admin");
     setAccounts(a.map((acc) => ({ id: acc.id, name: acc.name })));
     setLoading(false);
   }, []);
@@ -148,6 +154,7 @@ export function SettingsContextProvider({ children }: { children: React.ReactNod
         update, handleSave,
         handleTestTelegram, testingTelegram,
         handleExport, exportingCsv, exportingJson,
+        isAdmin,
       }}
     >
       {children}

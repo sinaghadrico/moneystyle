@@ -32,6 +32,7 @@ import {
   Wrench,
   MessageSquare,
   Bell,
+  ToggleLeft,
 } from "lucide-react";
 import {
   getSettings,
@@ -46,6 +47,12 @@ import { CurrencyManagementSection } from "@/components/settings/currency-manage
 import { AiPromptsSection } from "@/components/settings/ai-prompts-section";
 import { NotificationTemplatesSection } from "@/components/settings/notification-templates-section";
 import { CurrencySelect } from "@/components/ui/currency-select";
+import { FeatureFlagsSection } from "@/components/settings/feature-flags-section";
+import {
+  type FeatureFlags,
+  DEFAULT_FEATURE_FLAGS,
+  parseFeatureFlags,
+} from "@/lib/feature-flags";
 
 type Settings = {
   currency: string;
@@ -66,6 +73,7 @@ type Settings = {
   notifyMonthlyReport: boolean;
   notifyWebTransaction: boolean;
   notifySmsTransaction: boolean;
+  featureFlags: FeatureFlags;
 };
 
 type Account = { id: string; name: string };
@@ -74,10 +82,11 @@ const SETTINGS_TABS = [
   { key: "general", label: "General", icon: Settings2 },
   { key: "transactions", label: "Transactions", icon: ArrowLeftRight },
   { key: "integrations", label: "Integrations", icon: Plug },
+  { key: "features", label: "Features", icon: ToggleLeft, adminOnly: true },
   { key: "advanced", label: "Advanced", icon: Wrench },
-] as const;
+];
 
-type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
+type SettingsTab = string;
 
 const INTEGRATION_SECTIONS = [
   { key: "telegram", label: "Telegram", icon: Send },
@@ -93,13 +102,15 @@ export function SettingsContent() {
     useState<IntegrationSection>("telegram");
   const [settings, setSettings] = useState<Settings | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingTelegram, setTestingTelegram] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
   const [exportingJson, setExportingJson] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { refresh: refreshAppSettings } = useAppSettings();
+  const { refresh: refreshAppSettings, settings: appSettings } =
+    useAppSettings();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -108,8 +119,10 @@ export function SettingsContent() {
       currency: s.currency,
       defaultPageSize: s.defaultPageSize,
       defaultAccountId: s.defaultAccountId,
-      defaultTransactionType: s.defaultTransactionType as Settings["defaultTransactionType"],
-      defaultDashboardPeriod: s.defaultDashboardPeriod as Settings["defaultDashboardPeriod"],
+      defaultTransactionType:
+        s.defaultTransactionType as Settings["defaultTransactionType"],
+      defaultDashboardPeriod:
+        s.defaultDashboardPeriod as Settings["defaultDashboardPeriod"],
       autoCategorize: s.autoCategorize,
       telegramEnabled: s.telegramEnabled,
       telegramBotToken: s.telegramBotToken,
@@ -123,7 +136,9 @@ export function SettingsContent() {
       notifyMonthlyReport: s.notifyMonthlyReport,
       notifyWebTransaction: s.notifyWebTransaction,
       notifySmsTransaction: s.notifySmsTransaction,
+      featureFlags: parseFeatureFlags(s.featureFlags),
     });
+    setIsAdmin(s.userRole === "admin");
     setAccounts(a.map((acc) => ({ id: acc.id, name: acc.name })));
     setLoading(false);
   }, []);
@@ -212,7 +227,7 @@ export function SettingsContent() {
 
       {/* Tab navigation */}
       <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
-        {SETTINGS_TABS.map((tab) => {
+        {SETTINGS_TABS.filter((tab) => !tab.adminOnly || isAdmin).map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
           return (
@@ -270,7 +285,12 @@ export function SettingsContent() {
                 <Label htmlFor="dashboardPeriod">Dashboard Period</Label>
                 <Select
                   value={settings.defaultDashboardPeriod}
-                  onValueChange={(v) => update({ defaultDashboardPeriod: v as Settings["defaultDashboardPeriod"] })}
+                  onValueChange={(v) =>
+                    update({
+                      defaultDashboardPeriod:
+                        v as Settings["defaultDashboardPeriod"],
+                    })
+                  }
                 >
                   <SelectTrigger id="dashboardPeriod" className="w-full">
                     <SelectValue />
@@ -348,7 +368,12 @@ export function SettingsContent() {
                 <Label htmlFor="txType">Default Transaction Type</Label>
                 <Select
                   value={settings.defaultTransactionType}
-                  onValueChange={(v) => update({ defaultTransactionType: v as Settings["defaultTransactionType"] })}
+                  onValueChange={(v) =>
+                    update({
+                      defaultTransactionType:
+                        v as Settings["defaultTransactionType"],
+                    })
+                  }
                 >
                   <SelectTrigger id="txType" className="w-full">
                     <SelectValue />
@@ -429,141 +454,151 @@ export function SettingsContent() {
           {/* Telegram */}
           {integrationSection === "telegram" && (
             <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Send className="h-4 w-4" />
-                  Telegram
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="telegramEnabled">Enable Telegram</Label>
-                  <Switch
-                    id="telegramEnabled"
-                    checked={settings.telegramEnabled}
-                    onCheckedChange={(v) => update({ telegramEnabled: v })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="botToken">Bot Token</Label>
-                  <Input
-                    id="botToken"
-                    type="password"
-                    value={settings.telegramBotToken ?? ""}
-                    onChange={(e) =>
-                      update({ telegramBotToken: e.target.value || null })
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Send className="h-4 w-4" />
+                    Telegram
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="telegramEnabled">Enable Telegram</Label>
+                    <Switch
+                      id="telegramEnabled"
+                      checked={settings.telegramEnabled}
+                      onCheckedChange={(v) => update({ telegramEnabled: v })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="botToken">Bot Token</Label>
+                    <Input
+                      id="botToken"
+                      type="password"
+                      value={settings.telegramBotToken ?? ""}
+                      onChange={(e) =>
+                        update({ telegramBotToken: e.target.value || null })
+                      }
+                      placeholder="123456:ABC-DEF..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="webhookSecret">Webhook Secret</Label>
+                    <Input
+                      id="webhookSecret"
+                      type="password"
+                      value={settings.telegramWebhookSecret ?? ""}
+                      onChange={(e) =>
+                        update({
+                          telegramWebhookSecret: e.target.value || null,
+                        })
+                      }
+                      placeholder="Optional secret"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="chatId">Chat ID</Label>
+                    <Input
+                      id="chatId"
+                      value={settings.telegramChatId ?? ""}
+                      onChange={(e) =>
+                        update({ telegramChatId: e.target.value || null })
+                      }
+                      placeholder="-1001234567890"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestTelegram}
+                    disabled={
+                      testingTelegram ||
+                      !settings.telegramBotToken ||
+                      !settings.telegramChatId
                     }
-                    placeholder="123456:ABC-DEF..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="webhookSecret">Webhook Secret</Label>
-                  <Input
-                    id="webhookSecret"
-                    type="password"
-                    value={settings.telegramWebhookSecret ?? ""}
-                    onChange={(e) =>
-                      update({ telegramWebhookSecret: e.target.value || null })
-                    }
-                    placeholder="Optional secret"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="chatId">Chat ID</Label>
-                  <Input
-                    id="chatId"
-                    value={settings.telegramChatId ?? ""}
-                    onChange={(e) =>
-                      update({ telegramChatId: e.target.value || null })
-                    }
-                    placeholder="-1001234567890"
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTestTelegram}
-                  disabled={
-                    testingTelegram ||
-                    !settings.telegramBotToken ||
-                    !settings.telegramChatId
-                  }
-                >
-                  {testingTelegram && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Test Connection
-                </Button>
-              </CardContent>
-            </Card>
+                  >
+                    {testingTelegram && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Test Connection
+                  </Button>
+                </CardContent>
+              </Card>
 
-            {/* Notification Toggles */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Bell className="h-4 w-4" />
-                  Notifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-xs text-muted-foreground">
-                  Choose which notifications are sent via Telegram.
-                </p>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="notifyPaymentReminders" className="text-sm">
-                    Payment Reminders
-                  </Label>
-                  <Switch
-                    id="notifyPaymentReminders"
-                    checked={settings.notifyPaymentReminders}
-                    onCheckedChange={(v) => update({ notifyPaymentReminders: v })}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="notifyWeekendPlan" className="text-sm">
-                    Weekend Plan Reminder
-                  </Label>
-                  <Switch
-                    id="notifyWeekendPlan"
-                    checked={settings.notifyWeekendPlan}
-                    onCheckedChange={(v) => update({ notifyWeekendPlan: v })}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="notifyMonthlyReport" className="text-sm">
-                    Monthly Report
-                  </Label>
-                  <Switch
-                    id="notifyMonthlyReport"
-                    checked={settings.notifyMonthlyReport}
-                    onCheckedChange={(v) => update({ notifyMonthlyReport: v })}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="notifyWebTransaction" className="text-sm">
-                    Web Transaction Alerts
-                  </Label>
-                  <Switch
-                    id="notifyWebTransaction"
-                    checked={settings.notifyWebTransaction}
-                    onCheckedChange={(v) => update({ notifyWebTransaction: v })}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="notifySmsTransaction" className="text-sm">
-                    SMS Transaction Alerts
-                  </Label>
-                  <Switch
-                    id="notifySmsTransaction"
-                    checked={settings.notifySmsTransaction}
-                    onCheckedChange={(v) => update({ notifySmsTransaction: v })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              {/* Notification Toggles */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Bell className="h-4 w-4" />
+                    Notifications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Choose which notifications are sent via Telegram.
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="notifyPaymentReminders" className="text-sm">
+                      Payment Reminders
+                    </Label>
+                    <Switch
+                      id="notifyPaymentReminders"
+                      checked={settings.notifyPaymentReminders}
+                      onCheckedChange={(v) =>
+                        update({ notifyPaymentReminders: v })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="notifyWeekendPlan" className="text-sm">
+                      Weekend Plan Reminder
+                    </Label>
+                    <Switch
+                      id="notifyWeekendPlan"
+                      checked={settings.notifyWeekendPlan}
+                      onCheckedChange={(v) => update({ notifyWeekendPlan: v })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="notifyMonthlyReport" className="text-sm">
+                      Monthly Report
+                    </Label>
+                    <Switch
+                      id="notifyMonthlyReport"
+                      checked={settings.notifyMonthlyReport}
+                      onCheckedChange={(v) =>
+                        update({ notifyMonthlyReport: v })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="notifyWebTransaction" className="text-sm">
+                      Web Transaction Alerts
+                    </Label>
+                    <Switch
+                      id="notifyWebTransaction"
+                      checked={settings.notifyWebTransaction}
+                      onCheckedChange={(v) =>
+                        update({ notifyWebTransaction: v })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="notifySmsTransaction" className="text-sm">
+                      SMS Transaction Alerts
+                    </Label>
+                    <Switch
+                      id="notifySmsTransaction"
+                      checked={settings.notifySmsTransaction}
+                      onCheckedChange={(v) =>
+                        update({ notifySmsTransaction: v })
+                      }
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-            <NotificationTemplatesSection />
+              <NotificationTemplatesSection />
             </div>
           )}
 
@@ -600,8 +635,12 @@ export function SettingsContent() {
                   </div>
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <p>
-                      Used for receipt parsing, meal planning, weekend planning, money advice, and more.
-                      If left blank, falls back to the <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">OPENAI_API_KEY</code> env var.
+                      Used for receipt parsing, meal planning, weekend planning,
+                      money advice, and more. If left blank, falls back to the{" "}
+                      <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
+                        OPENAI_API_KEY
+                      </code>{" "}
+                      env var.
                     </p>
                     <details className="cursor-pointer">
                       <summary className="font-medium text-foreground/70 hover:text-foreground">
@@ -621,10 +660,17 @@ export function SettingsContent() {
                         </li>
                         <li>Sign in or create an account</li>
                         <li>Click &quot;Create new secret key&quot;</li>
-                        <li>Copy the key (starts with <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">sk-</code>) and paste above</li>
+                        <li>
+                          Copy the key (starts with{" "}
+                          <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
+                            sk-
+                          </code>
+                          ) and paste above
+                        </li>
                       </ol>
                       <p className="mt-1">
-                        You need a paid account with credits. Receipt parsing costs ~$0.01 per image.
+                        You need a paid account with credits. Receipt parsing
+                        costs ~$0.01 per image.
                       </p>
                     </details>
                   </div>
@@ -638,6 +684,14 @@ export function SettingsContent() {
           {/* SMS */}
           {integrationSection === "sms" && <SmsPatternsSection />}
         </div>
+      )}
+
+      {/* Features tab */}
+      {activeTab === "features" && (
+        <FeatureFlagsSection
+          flags={settings.featureFlags}
+          onChange={(flags) => update({ featureFlags: flags })}
+        />
       )}
 
       {/* Advanced tab */}

@@ -3,22 +3,28 @@
 import { usePathname } from "next/navigation";
 import NextLink from "next/link";
 import { List, Merge, SlidersHorizontal, TrendingUp } from "lucide-react";
+import { useAppSettings } from "@/components/settings/settings-provider";
+import type { FeatureKey } from "@/lib/feature-flags";
 
-const TABS = [
+const TABS: { key: string; href: string; label: string; icon: typeof List; feature?: FeatureKey }[] = [
   { key: "list", href: "/transactions", label: "List", icon: List },
-  { key: "merge", href: "/transactions/merge", label: "Merge", icon: Merge },
+  { key: "merge", href: "/transactions/merge", label: "Merge", icon: Merge, feature: "transactionMerge" },
   { key: "manage", href: "/transactions/manage", label: "Manage", icon: SlidersHorizontal },
-  { key: "prices", href: "/transactions/prices", label: "Prices", icon: TrendingUp },
-] as const;
+  { key: "prices", href: "/transactions/prices", label: "Prices", icon: TrendingUp, feature: "priceAnalysis" },
+];
 
 export function TransactionsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { settings } = useAppSettings();
+
+  const visibleTabs = TABS.filter(
+    (tab) => !tab.feature || settings.isAdmin || settings.featureFlags[tab.feature]
+  );
 
   return (
     <div className="space-y-6">
-      {/* Tab switcher */}
       <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
-        {TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive =
             tab.key === "list"

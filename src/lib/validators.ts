@@ -310,5 +310,6 @@ export const settingsUpdateSchema = z.object({
   notifyMonthlyReport: z.boolean().optional(),
   notifyWebTransaction: z.boolean().optional(),
   notifySmsTransaction: z.boolean().optional(),
+  featureFlags: z.record(z.string(), z.boolean()).optional(),
 });
 export type SettingsUpdateInput = z.infer<typeof settingsUpdateSchema>;

@@ -47,6 +47,7 @@ async function handleSms(
   request: NextRequest,
   settings: {
     currency: string;
+    defaultAccountId: string | null;
     telegramChatId: string | null;
     telegramBotToken: string | null;
     notifySmsTransaction: boolean;

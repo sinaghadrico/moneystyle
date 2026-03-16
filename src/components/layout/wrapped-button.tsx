@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { Trophy } from "lucide-react";
 import { SpendingWrapped } from "@/components/dashboard/spending-wrapped";
+import { useFeatureFlag } from "@/components/settings/settings-provider";
 
 export function WrappedButton() {
   const [open, setOpen] = useState(false);
+  const enabled = useFeatureFlag("spendingWrapped");
+
+  if (!enabled) return null;
 
   return (
     <>

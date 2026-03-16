@@ -8,46 +8,35 @@ import {
   ShoppingCart,
   Scissors,
 } from "lucide-react";
+import { useAppSettings } from "@/components/settings/settings-provider";
+import type { FeatureKey } from "@/lib/feature-flags";
 
-const TABS = [
-  {
-    key: "advice",
-    label: "Advice",
-    icon: Sparkles,
-    route: "/lifestyle/advice",
-  },
-  {
-    key: "negotiate",
-    label: "Negotiate",
-    icon: Scissors,
-    route: "/lifestyle/negotiate",
-  },
-  {
-    key: "weekend",
-    label: "Weekend",
-    icon: CalendarHeart,
-    route: "/lifestyle/weekend",
-  },
-  { key: "meals", label: "Meals", icon: ChefHat, route: "/lifestyle/meals" },
-  {
-    key: "shopping",
-    label: "Shopping",
-    icon: ShoppingCart,
-    route: "/lifestyle/shopping",
-  },
-] as const;
+const TABS: { key: string; label: string; icon: typeof Sparkles; route: string; feature: FeatureKey }[] = [
+  { key: "advice", label: "Advice", icon: Sparkles, route: "/lifestyle/advice", feature: "moneyAdvice" },
+  { key: "negotiate", label: "Negotiate", icon: Scissors, route: "/lifestyle/negotiate", feature: "billNegotiator" },
+  { key: "weekend", label: "Weekend", icon: CalendarHeart, route: "/lifestyle/weekend", feature: "weekendPlanner" },
+  { key: "meals", label: "Meals", icon: ChefHat, route: "/lifestyle/meals", feature: "mealPlanner" },
+  { key: "shopping", label: "Shopping", icon: ShoppingCart, route: "/lifestyle/shopping", feature: "shoppingLists" },
+];
 
 export function LifestyleTabs() {
   const router = useRouter();
   const pathname = usePathname();
+  const { settings } = useAppSettings();
+
+  const visibleTabs = TABS.filter(
+    (tab) => settings.isAdmin || settings.featureFlags[tab.feature]
+  );
+
+  if (visibleTabs.length === 0) return null;
 
   return (
     <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
-      {TABS.map((tab) => {
+      {visibleTabs.map((tab) => {
         const Icon = tab.icon;
         const isActive =
           pathname === tab.route ||
-          (pathname === "/lifestyle" && tab.key === "advice");
+          (pathname === "/lifestyle" && tab.key === visibleTabs[0]?.key);
         return (
           <button
             key={tab.key}

@@ -31,10 +31,10 @@ import type { FeatureKey } from "@/lib/feature-flags";
 const QUICK_ACTIONS = [
   { href: "/chat", label: "Money Chat", icon: MessageCircle, color: "text-violet-500", bg: "bg-violet-500/10", feature: "chat" as FeatureKey },
   { href: "/wealth", label: "Wealth Pilot", icon: Rocket, color: "text-emerald-500", bg: "bg-emerald-500/10", feature: "wealthPilot" as FeatureKey },
-  { href: "/lifestyle/advice", label: "Money Advice", icon: Brain, color: "text-amber-500", bg: "bg-amber-500/10", feature: "lifestyle" as FeatureKey },
-  { href: "/lifestyle/weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10", feature: "lifestyle" as FeatureKey },
-  { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10", feature: "lifestyle" as FeatureKey },
-  { href: "/lifestyle/shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10", feature: "lifestyle" as FeatureKey },
+  { href: "/lifestyle/advice", label: "Money Advice", icon: Brain, color: "text-amber-500", bg: "bg-amber-500/10", feature: "moneyAdvice" as FeatureKey },
+  { href: "/lifestyle/weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10", feature: "weekendPlanner" as FeatureKey },
+  { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10", feature: "mealPlanner" as FeatureKey },
+  { href: "/lifestyle/shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10", feature: "shoppingLists" as FeatureKey },
 ];
 
 function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => void; actions: typeof QUICK_ACTIONS }) {

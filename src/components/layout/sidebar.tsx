@@ -18,12 +18,14 @@ import { UserMenu } from "@/components/auth/user-menu";
 import { useAppSettings } from "@/components/settings/settings-provider";
 import type { FeatureKey } from "@/lib/feature-flags";
 
+const LIFESTYLE_FEATURES: FeatureKey[] = ["moneyAdvice", "billNegotiator", "weekendPlanner", "mealPlanner", "shoppingLists"];
+
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/wealth", label: "Wealth Pilot", icon: Rocket, feature: "wealthPilot" as FeatureKey },
   { href: "/chat", label: "Money Chat", icon: MessageCircle, feature: "chat" as FeatureKey },
-  { href: "/lifestyle", label: "Lifestyle", icon: Palette, feature: "lifestyle" as FeatureKey },
+  { href: "/lifestyle", label: "Lifestyle", icon: Palette, feature: "_lifestyle" as FeatureKey },
   { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -32,9 +34,14 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
   const pathname = usePathname();
   const { settings } = useAppSettings();
 
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.feature || settings.isAdmin || settings.featureFlags[item.feature]
-  );
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (!item.feature) return true;
+    if (settings.isAdmin) return true;
+    if (item.feature === ("_lifestyle" as FeatureKey)) {
+      return LIFESTYLE_FEATURES.some((f) => settings.featureFlags[f]);
+    }
+    return settings.featureFlags[item.feature];
+  });
 
   return (
     <nav className="flex flex-col gap-1">

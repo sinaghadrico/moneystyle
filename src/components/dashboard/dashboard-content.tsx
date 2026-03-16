@@ -50,10 +50,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAppSettings } from "@/components/settings/settings-provider";
+import { useAppSettings, useFeatureFlag } from "@/components/settings/settings-provider";
 
 export function DashboardContent() {
   const { settings } = useAppSettings();
+  const showPrediction = useFeatureFlag("dashPrediction");
+  const showBudgets = useFeatureFlag("dashBudgets");
+  const showSavings = useFeatureFlag("dashSavings");
+  const showDebts = useFeatureFlag("dashDebts");
+  const showCategoryChart = useFeatureFlag("dashCategoryChart");
+  const showHeatmap = useFeatureFlag("dashHeatmap");
+  const showCharts = useFeatureFlag("dashCharts");
   const [period, setPeriod] = useState<PeriodFilter>(settings.defaultDashboardPeriod as PeriodFilter);
   const [accountId, setAccountId] = useState<string>("");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -163,19 +170,21 @@ export function DashboardContent() {
         <>
           <StatsCards stats={stats} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {prediction && <PredictionCard prediction={prediction} />}
-            {budgets.length > 0 && <BudgetProgressCard data={budgets} />}
-            <SavingsCard data={savings} onRefresh={() => loadData(period, accountId)} />
-            <DebtsCard data={debts} />
+            {showPrediction && prediction && <PredictionCard prediction={prediction} />}
+            {showBudgets && budgets.length > 0 && <BudgetProgressCard data={budgets} />}
+            {showSavings && <SavingsCard data={savings} onRefresh={() => loadData(period, accountId)} />}
+            {showDebts && <DebtsCard data={debts} />}
           </div>
-          <MonthlyCategoryChart data={monthlyCat} categories={catMeta} />
-          <SpendingHeatmap data={dailySpend} />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <MonthlyBarChart data={monthly} />
-            <CategoryDonut data={categories} />
-            <TopMerchantsChart data={merchants} />
-            <MonthlyTrendChart data={monthly} />
-          </div>
+          {showCategoryChart && <MonthlyCategoryChart data={monthlyCat} categories={catMeta} />}
+          {showHeatmap && <SpendingHeatmap data={dailySpend} />}
+          {showCharts && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <MonthlyBarChart data={monthly} />
+              <CategoryDonut data={categories} />
+              <TopMerchantsChart data={merchants} />
+              <MonthlyTrendChart data={monthly} />
+            </div>
+          )}
         </>
       )}
 

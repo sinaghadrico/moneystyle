@@ -80,8 +80,14 @@ export function BulkImportDialog({
   onSuccess: () => void;
 }) {
   const { settings } = useAppSettings();
+  const csvEnabled = settings.isAdmin || settings.featureFlags.importCsv;
+  const aiEnabled = settings.isAdmin || settings.featureFlags.importAi;
+  const telegramEnabled = settings.isAdmin || settings.featureFlags.importTelegram;
+  const availableModes = (["csv", "ai", "telegram"] as Mode[]).filter((m) =>
+    m === "csv" ? csvEnabled : m === "ai" ? aiEnabled : telegramEnabled
+  );
   const [step, setStep] = useState<Step>("upload");
-  const [mode, setMode] = useState<Mode>("csv");
+  const [mode, setMode] = useState<Mode>(availableModes[0] || "csv");
   const [loading, setLoading] = useState(false);
   const [accountId, setAccountId] = useState(
     settings.defaultAccountId || accounts[0]?.id || "",
@@ -635,33 +641,39 @@ export function BulkImportDialog({
         {step === "upload" && (
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Button
-                variant={mode === "csv" ? "default" : "outline"}
-                className="flex-1"
-                size="sm"
-                onClick={() => setMode("csv")}
-              >
-                <FileSpreadsheet className="mr-1 h-4 w-4" />
-                CSV
-              </Button>
-              <Button
-                variant={mode === "ai" ? "default" : "outline"}
-                className="flex-1"
-                size="sm"
-                onClick={() => setMode("ai")}
-              >
-                <Sparkles className="mr-1 h-4 w-4" />
-                AI
-              </Button>
-              <Button
-                variant={mode === "telegram" ? "default" : "outline"}
-                className="flex-1"
-                size="sm"
-                onClick={() => setMode("telegram")}
-              >
-                <MessageCircle className="mr-1 h-4 w-4" />
-                Telegram
-              </Button>
+              {csvEnabled && (
+                <Button
+                  variant={mode === "csv" ? "default" : "outline"}
+                  className="flex-1"
+                  size="sm"
+                  onClick={() => setMode("csv")}
+                >
+                  <FileSpreadsheet className="mr-1 h-4 w-4" />
+                  CSV
+                </Button>
+              )}
+              {aiEnabled && (
+                <Button
+                  variant={mode === "ai" ? "default" : "outline"}
+                  className="flex-1"
+                  size="sm"
+                  onClick={() => setMode("ai")}
+                >
+                  <Sparkles className="mr-1 h-4 w-4" />
+                  AI
+                </Button>
+              )}
+              {telegramEnabled && (
+                <Button
+                  variant={mode === "telegram" ? "default" : "outline"}
+                  className="flex-1"
+                  size="sm"
+                  onClick={() => setMode("telegram")}
+                >
+                  <MessageCircle className="mr-1 h-4 w-4" />
+                  Telegram
+                </Button>
+              )}
             </div>
 
             {(mode === "ai" || mode === "telegram") && !settings.aiEnabled && (

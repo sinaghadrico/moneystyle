@@ -136,6 +136,15 @@ export function TransactionsContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { settings, ready: settingsReady } = useAppSettings();
+  const ff = settings.featureFlags;
+  const isAdm = settings.isAdmin;
+  const importEnabled = isAdm || ff.importCsv || ff.importAi || ff.importTelegram;
+  const canAdd = isAdm || ff.txAdd;
+  const canEdit = isAdm || ff.txEdit;
+  const canDelete = isAdm || ff.txDelete;
+  const canSplit = isAdm || ff.txSplit;
+  const canItems = isAdm || ff.txItems;
+  const canConfirm = isAdm || ff.txConfirm;
 
   // Read initial state from URL
   const urlPage = Number(searchParams.get("page")) || 1;
@@ -428,7 +437,7 @@ export function TransactionsContent({
             );
           })()}
           {/* Desktop: action buttons */}
-          {selected.size >= 1 && (
+          {canDelete && selected.size >= 1 && (
             <Button
               variant="destructive"
               className="hidden sm:flex"
@@ -438,13 +447,13 @@ export function TransactionsContent({
               Delete {selected.size}
             </Button>
           )}
-          {selected.size >= 2 && (
+          {(isAdm || ff.transactionMerge) && selected.size >= 2 && (
             <Button className="hidden sm:flex" onClick={() => setShowMerge(true)}>
               <Merge className="mr-1.5 h-4 w-4" />
               Merge {selected.size} Selected
             </Button>
           )}
-          {showUnconfirmed && selected.size > 0 && (
+          {canConfirm && showUnconfirmed && selected.size > 0 && (
             <Button
               className="hidden sm:flex"
               onClick={() => setConfirmSelectedDialog(true)}
@@ -458,14 +467,18 @@ export function TransactionsContent({
               Confirm {selected.size}
             </Button>
           )}
-          <Button variant="outline" className="hidden sm:flex" onClick={() => setShowImport(true)}>
-            <Upload className="mr-1 h-4 w-4" />
-            Import
-          </Button>
-          <Button className="hidden sm:flex" onClick={() => setShowAdd(true)}>
-            <Plus className="mr-1 h-4 w-4" />
-            Add Transaction
-          </Button>
+          {importEnabled && (
+            <Button variant="outline" className="hidden sm:flex" onClick={() => setShowImport(true)}>
+              <Upload className="mr-1 h-4 w-4" />
+              Import
+            </Button>
+          )}
+          {canAdd && (
+            <Button className="hidden sm:flex" onClick={() => setShowAdd(true)}>
+              <Plus className="mr-1 h-4 w-4" />
+              Add Transaction
+            </Button>
+          )}
         </div>
       </div>
 
@@ -500,7 +513,7 @@ export function TransactionsContent({
             Showing unconfirmed transactions
           </div>
           <div className="flex items-center gap-2">
-            {result && result.data.length > 0 && (
+            {canConfirm && result && result.data.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
@@ -681,19 +694,23 @@ export function TransactionsContent({
                 actionWidth={tx.amount != null && tx.amount > 0 ? 280 : 210}
                 actions={
                   <div className="flex h-full items-stretch">
-                    <button
-                      className="flex w-[70px] items-center justify-center bg-blue-500 text-white"
-                      onClick={() => setEditTx(tx)}
-                    >
-                      <Pencil className="h-5 w-5" />
-                    </button>
-                    <button
-                      className="flex w-[70px] items-center justify-center bg-violet-500 text-white"
-                      onClick={() => setItemsTx(tx)}
-                    >
-                      <List className="h-5 w-5" />
-                    </button>
-                    {tx.amount != null && tx.amount > 0 && (
+                    {canEdit && (
+                      <button
+                        className="flex w-[70px] items-center justify-center bg-blue-500 text-white"
+                        onClick={() => setEditTx(tx)}
+                      >
+                        <Pencil className="h-5 w-5" />
+                      </button>
+                    )}
+                    {canItems && (
+                      <button
+                        className="flex w-[70px] items-center justify-center bg-violet-500 text-white"
+                        onClick={() => setItemsTx(tx)}
+                      >
+                        <List className="h-5 w-5" />
+                      </button>
+                    )}
+                    {canSplit && tx.amount != null && tx.amount > 0 && (
                       <button
                         className="flex w-[70px] items-center justify-center bg-amber-500 text-white"
                         onClick={() => setSplitTx(tx)}
@@ -701,12 +718,14 @@ export function TransactionsContent({
                         <Split className="h-5 w-5" />
                       </button>
                     )}
-                    <button
-                      className="flex w-[70px] items-center justify-center bg-red-500 text-white"
-                      onClick={() => setDeleteIds([tx.id])}
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                    {canDelete && (
+                      <button
+                        className="flex w-[70px] items-center justify-center bg-red-500 text-white"
+                        onClick={() => setDeleteIds([tx.id])}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    )}
                   </div>
                 }
               >
@@ -1011,29 +1030,33 @@ export function TransactionsContent({
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-0.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => setEditTx(tx)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 relative"
-                          title="Line items"
-                          onClick={() => setItemsTx(tx)}
-                        >
-                          <List className="h-3 w-3" />
-                          {(tx.lineItemCount ?? 0) > 0 && (
-                            <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-500 text-[9px] text-white">
-                              {tx.lineItemCount}
-                            </span>
-                          )}
-                        </Button>
-                        {tx.amount != null && tx.amount > 0 && (
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setEditTx(tx)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {canItems && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 relative"
+                            title="Line items"
+                            onClick={() => setItemsTx(tx)}
+                          >
+                            <List className="h-3 w-3" />
+                            {(tx.lineItemCount ?? 0) > 0 && (
+                              <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-500 text-[9px] text-white">
+                                {tx.lineItemCount}
+                              </span>
+                            )}
+                          </Button>
+                        )}
+                        {canSplit && tx.amount != null && tx.amount > 0 && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1044,14 +1067,16 @@ export function TransactionsContent({
                             <Split className="h-3 w-3" />
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteIds([tx.id])}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => setDeleteIds([tx.id])}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -1095,7 +1120,8 @@ export function TransactionsContent({
       {(() => {
         const anyOpen = showAdd || showImport || !!deleteIds.length || showMerge || filterDrawerOpen || !!editTx || !!splitTx || !!itemsTx || viewMedia.length > 0 || confirmAllDialog || confirmSelectedDialog;
         if (anyOpen) return null;
-        if (selected.size === 0) return (
+        const showFab = canAdd || importEnabled;
+        if (selected.size === 0) return showFab ? (
           <div className="fixed right-4 z-[51] flex flex-col items-end gap-2 md:hidden" style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 16px + 3rem + 8px)" }}>
             {fabOpen && (
               <>
@@ -1103,20 +1129,24 @@ export function TransactionsContent({
                   className="fixed inset-0 z-[-1]"
                   onClick={() => setFabOpen(false)}
                 />
-                <button
-                  className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
-                  onClick={() => { setFabOpen(false); setShowImport(true); }}
-                >
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm font-medium">Import</span>
-                </button>
-                <button
-                  className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
-                  onClick={() => { setFabOpen(false); setShowAdd(true); }}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="text-sm font-medium">Add Transaction</span>
-                </button>
+                {importEnabled && (
+                  <button
+                    className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
+                    onClick={() => { setFabOpen(false); setShowImport(true); }}
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span className="text-sm font-medium">Import</span>
+                  </button>
+                )}
+                {canAdd && (
+                  <button
+                    className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
+                    onClick={() => { setFabOpen(false); setShowAdd(true); }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="text-sm font-medium">Add Transaction</span>
+                  </button>
+                )}
               </>
             )}
             <button
@@ -1127,7 +1157,7 @@ export function TransactionsContent({
               <Plus className="h-6 w-6" />
             </button>
           </div>
-        );
+        ) : null;
         return (
         <div className="fixed left-3 right-3 z-[55] flex flex-col items-end gap-2 md:hidden" style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom) + 8px)" }}>
           {fabOpen && (
@@ -1136,20 +1166,24 @@ export function TransactionsContent({
                 className="fixed inset-0 z-[-1] bg-black/20"
                 onClick={() => setFabOpen(false)}
               />
-              <button
-                className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2.5 shadow-lg border active:scale-95"
-                onClick={() => { setFabOpen(false); setShowImport(true); }}
-              >
-                <Upload className="h-4 w-4" />
-                <span className="text-sm font-medium">Import</span>
-              </button>
-              <button
-                className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2.5 shadow-lg border active:scale-95"
-                onClick={() => { setFabOpen(false); setShowAdd(true); }}
-              >
-                <Plus className="h-4 w-4" />
-                <span className="text-sm font-medium">Add Transaction</span>
-              </button>
+              {importEnabled && (
+                <button
+                  className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2.5 shadow-lg border active:scale-95"
+                  onClick={() => { setFabOpen(false); setShowImport(true); }}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm font-medium">Import</span>
+                </button>
+              )}
+              {canAdd && (
+                <button
+                  className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2.5 shadow-lg border active:scale-95"
+                  onClick={() => { setFabOpen(false); setShowAdd(true); }}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="text-sm font-medium">Add Transaction</span>
+                </button>
+              )}
             </>
           )}
           {!fabOpen && (
@@ -1163,7 +1197,7 @@ export function TransactionsContent({
           <div className="relative flex w-full items-center rounded-2xl bg-primary px-3 py-2.5 shadow-xl">
             <span className="absolute -top-5 left-3 rounded-t-lg rounded-b-none bg-primary text-primary-foreground text-[11px] font-semibold px-3 pt-1.5 pb-2 leading-none">{selected.size} items selected</span>
             <div className="flex flex-1 items-center gap-1.5">
-              {showUnconfirmed && (
+              {canConfirm && showUnconfirmed && (
                 <button
                   className="flex items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-sm font-medium text-white active:scale-95"
                   onClick={() => setConfirmSelectedDialog(true)}
@@ -1173,7 +1207,7 @@ export function TransactionsContent({
                   Confirm
                 </button>
               )}
-              {selected.size >= 2 && (
+              {(isAdm || ff.transactionMerge) && selected.size >= 2 && (
                 <button
                   className="flex items-center gap-1.5 rounded-full bg-primary-foreground/20 px-3 py-1.5 text-sm font-medium text-primary-foreground active:scale-95"
                   onClick={() => setShowMerge(true)}
@@ -1182,13 +1216,15 @@ export function TransactionsContent({
                   Merge
                 </button>
               )}
-              <button
-                className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-sm font-medium text-white active:scale-95"
-                onClick={() => setDeleteIds([...selected])}
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </button>
+              {canDelete && (
+                <button
+                  className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-sm font-medium text-white active:scale-95"
+                  onClick={() => setDeleteIds([...selected])}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
+              )}
             </div>
             <button
               className="flex shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 p-1.5 text-primary-foreground active:scale-95 ml-1.5"

@@ -49,10 +49,44 @@ model User {
   shoppingLists         ShoppingList[]
   householdMembers      HouseholdMember[]
   sentInvites           HouseholdInvite[]
+  blogPosts             BlogPost[]
   appSettings           AppSettings?
   userPreference        UserPreference?
 
   @@map("users")
+}
+
+model BlogPost {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  title         String
+  excerpt       String?
+  content       String
+  coverImage    String?
+  status        String    @default("draft")
+  tags          String[]
+  readingTime   Int       @default(5)
+  seoTitle      String?
+  seoDescription String?
+  publishedAt   DateTime?
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+  @@index([authorId])
+  @@map("blog_posts")
+}
+
+model BlogAiMemory {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("blog_ai_memory")
 }
 
 model Household {

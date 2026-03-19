@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
 import { getAllSlugs } from "@/lib/feature-data";
+import { prisma } from "@/lib/db";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://moneystyle.app";
   const now = new Date();
 
@@ -10,6 +13,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: "monthly" as const,
     priority: 0.7,
+  }));
+
+  // Blog posts
+  const blogPosts = await prisma.blogPost.findMany({
+    where: { status: "published" },
+    select: { slug: true, updatedAt: true },
+    orderBy: { publishedAt: "desc" },
+  });
+
+  const blogPages = blogPosts.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: post.updatedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
   }));
 
   return [
@@ -25,6 +42,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.8,
     },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    ...blogPages,
     {
       url: `${baseUrl}/changelog`,
       lastModified: now,

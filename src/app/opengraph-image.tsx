@@ -36,11 +36,19 @@ export default function OGImage() {
               justifyContent: "center",
               width: "56px",
               height: "56px",
-              borderRadius: "14px",
-              background: "linear-gradient(135deg, #10b981, #14b8a6)",
             }}
           >
-            <span style={{ color: "white", fontSize: "28px", fontWeight: 800 }}>M</span>
+            <svg viewBox="0 0 512 512" width="56" height="56">
+              <defs>
+                <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#14b8a6" />
+                </linearGradient>
+              </defs>
+              <rect width="512" height="512" rx="112" fill="url(#bg)" />
+              <path d="M128 368 L128 176 L216 288 L256 208 L296 288 L384 144 L384 368" stroke="white" strokeWidth="44" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              <circle cx="384" cy="144" r="22" fill="white" />
+            </svg>
           </div>
           <span style={{ color: "white", fontSize: "36px", fontWeight: 700 }}>
             MoneyStyle

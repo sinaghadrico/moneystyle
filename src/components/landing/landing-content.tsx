@@ -11,6 +11,7 @@ import { signInAsDemo } from "@/actions/auth";
 import { useInView } from "@/hooks/use-in-view";
 import { useTelegramAutoAuth } from "@/hooks/use-telegram-auto-auth";
 import { LogoMark } from "@/components/ui/logo";
+import { LatestPostsSection } from "@/components/landing/latest-posts-client";
 import {
   ArrowRight,
   Loader2,
@@ -1063,6 +1064,9 @@ export function LandingContent() {
         </div>
       </section>
 
+      {/* ── Blog Posts ── */}
+      <LatestPostsSection />
+
       {/* ── AI Section ── */}
       <section className="border-y bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
@@ -1225,6 +1229,8 @@ export function LandingContent() {
               <span>&copy; 2026 MoneyStyle</span>
               <span className="text-muted-foreground/40">·</span>
               <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+              <span className="text-muted-foreground/40">·</span>
+              <Link href="/blog" className="hover:text-foreground transition-colors">Blog</Link>
               <span className="text-muted-foreground/40">·</span>
               <Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link>
               <span className="text-muted-foreground/40">·</span>

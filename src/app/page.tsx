@@ -75,7 +75,7 @@ const jsonLd = [
     url: "https://moneystyle.app/",
     logo: "https://moneystyle.app/logo.png",
     sameAs: [
-      "https://twitter.com/moneystyleapp",
+      "https://x.com/moneystyleapp",
       "https://www.linkedin.com/company/moneystyle",
     ],
     contactPoint: {

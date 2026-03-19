@@ -142,6 +142,33 @@ const jsonLd = [
       },
     ],
   },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "MoneyStyle",
+    url: "https://moneystyle.app/",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://moneystyle.app/features/{search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: [
+      { "@type": "SiteNavigationElement", name: "Features", url: "https://moneystyle.app/#features" },
+      { "@type": "SiteNavigationElement", name: "Pricing", url: "https://moneystyle.app/pricing" },
+      { "@type": "SiteNavigationElement", name: "About", url: "https://moneystyle.app/about" },
+      { "@type": "SiteNavigationElement", name: "API Docs", url: "https://moneystyle.app/docs/api" },
+      { "@type": "SiteNavigationElement", name: "Smart Dashboard", url: "https://moneystyle.app/features/smart-dashboard" },
+      { "@type": "SiteNavigationElement", name: "Receipt Scanner", url: "https://moneystyle.app/features/receipt-scanner" },
+      { "@type": "SiteNavigationElement", name: "Budget Management", url: "https://moneystyle.app/features/budget-management" },
+      { "@type": "SiteNavigationElement", name: "Investment Tracking", url: "https://moneystyle.app/features/investment-tracking" },
+      { "@type": "SiteNavigationElement", name: "Subscription Detection", url: "https://moneystyle.app/features/subscription-detection" },
+      { "@type": "SiteNavigationElement", name: "Sign Up Free", url: "https://moneystyle.app/auth/register" },
+    ],
+  },
 ];
 
 export default function LandingPage() {

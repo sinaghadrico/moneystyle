@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FinancialOverviewCard } from "@/components/profile/financial-overview-card";
+import { FinancialTipsSection } from "@/components/profile/financial-tips-section";
 import { getFinancialOverview } from "@/actions/profile";
 import type { FinancialOverview } from "@/lib/types";
 
@@ -29,5 +30,10 @@ export default function ProfileOverviewPage() {
     return <p className="text-sm text-muted-foreground">No data available.</p>;
   }
 
-  return <FinancialOverviewCard overview={overview} />;
+  return (
+    <div className="space-y-6">
+      <FinancialOverviewCard overview={overview} />
+      <FinancialTipsSection />
+    </div>
+  );
 }

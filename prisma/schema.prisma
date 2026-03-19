@@ -47,10 +47,54 @@ model User {
   wealthPlans           WealthPlan[]
   weekendPlans          WeekendPlan[]
   shoppingLists         ShoppingList[]
+  householdMembers      HouseholdMember[]
+  sentInvites           HouseholdInvite[]
   appSettings           AppSettings?
   userPreference        UserPreference?
 
   @@map("users")
+}
+
+model Household {
+  id        String              @id @default(cuid())
+  name      String
+  members   HouseholdMember[]
+  invites   HouseholdInvite[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@map("households")
+}
+
+model HouseholdMember {
+  id          String    @id @default(cuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String    @default("member")
+  joinedAt    DateTime  @default(now())
+
+  @@unique([householdId, userId])
+  @@index([userId])
+  @@map("household_members")
+}
+
+model HouseholdInvite {
+  id          String    @id @default(cuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  email       String
+  token       String    @unique @default(cuid())
+  status      String    @default("pending")
+  invitedById String
+  invitedBy   User      @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  @@index([token])
+  @@index([householdId])
+  @@map("household_invites")
 }
 
 model OAuthAccount {

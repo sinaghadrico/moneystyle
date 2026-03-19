@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import NextLink from "next/link";
-import { BarChart3, TrendingUp, CreditCard, Target, CalendarDays, Repeat } from "lucide-react";
+import { BarChart3, TrendingUp, CreditCard, Target, CalendarDays, Repeat, Users } from "lucide-react";
 
 const FINANCE_TABS = [
   { key: "overview", href: "/profile", label: "Overview", icon: BarChart3 },
@@ -11,6 +11,7 @@ const FINANCE_TABS = [
   { key: "subscriptions", href: "/profile/subscriptions", label: "Subscriptions", icon: Repeat },
   { key: "cashflow", href: "/profile/cashflow", label: "Cashflow", icon: CalendarDays },
   { key: "goals", href: "/profile/goals", label: "Goals", icon: Target },
+  { key: "household", href: "/profile/household", label: "Household", icon: Users },
 ] as const;
 
 export default function ProfileFinanceLayout({ children }: { children: React.ReactNode }) {

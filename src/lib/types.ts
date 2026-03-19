@@ -517,6 +517,45 @@ export type DetectedSubscription = {
   categoryName: string | null;
 };
 
+// Household types
+
+export type HouseholdData = {
+  id: string;
+  name: string;
+  members: HouseholdMemberData[];
+  pendingInvites: HouseholdInviteData[];
+};
+
+export type HouseholdMemberData = {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+  role: string;
+  joinedAt: string;
+};
+
+export type HouseholdInviteData = {
+  id: string;
+  email: string;
+  status: string;
+  createdAt: string;
+};
+
+export type HouseholdTransactionData = {
+  id: string;
+  date: string;
+  amount: number;
+  currency: string;
+  type: string;
+  merchant: string | null;
+  description: string | null;
+  categoryName: string | null;
+  accountName: string;
+  userName: string;
+};
+
 // Cashflow Calendar types
 
 export type CashflowEvent = {

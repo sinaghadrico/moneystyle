@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "MoneyStyle — Know Where Every Dollar Goes",
   description:
-    "AI-powered personal finance tracker. Scan receipts, compare prices, manage budgets, and get personalized money advice. Free to start.",
+    "100% free personal finance tracker with 30 features. Track expenses, scan receipts, manage budgets, detect subscriptions, and track investments. AI features use your own OpenAI key.",
   alternates: {
     canonical: "https://moneystyle.app/",
   },
@@ -49,7 +49,7 @@ const jsonLd = [
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web, iOS, Android",
     description:
-      "AI-powered personal finance tracker. Scan receipts, compare prices, manage budgets, and get personalized money advice.",
+      "100% free personal finance tracker with 30 features. Track expenses, scan receipts, manage budgets, detect subscriptions, and track investments. AI features use your own OpenAI API key.",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -121,7 +121,7 @@ const jsonLd = [
         name: "Is MoneyStyle free to use?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes, MoneyStyle is free to start with no credit card required. Premium features are available via subscription.",
+          text: "Yes, MoneyStyle is 100% free. All 30 features — budgets, transactions, reserves, investments, subscriptions, and more — are completely free with no credit card required. AI-powered features like receipt scanning and money advice require an OpenAI API key, which you can set up yourself or have us configure for you.",
         },
       },
       {
@@ -130,6 +130,14 @@ const jsonLd = [
         acceptedAnswer: {
           "@type": "Answer",
           text: "Simply snap a photo of any receipt and MoneyStyle's AI automatically extracts the merchant, date, items, and total — categorizing the expense instantly.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How do AI features work in MoneyStyle?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "AI features like receipt scanning, money advice, meal planning, and money chat are powered by OpenAI. You bring your own API key (costs about $0.01 per use) and set it in Settings. If you prefer, you can message us and we'll set up the API key for you. All non-AI features (budgets, transactions, investments, subscriptions, etc.) are completely free with no API key needed.",
         },
       },
     ],

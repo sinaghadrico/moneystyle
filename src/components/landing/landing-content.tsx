@@ -133,7 +133,7 @@ const STEPS = [
     num: "1",
     title: "Create your free account",
     description:
-      "Sign up in 10 seconds. No credit card required. Start using MoneyStyle immediately.",
+      "Sign up in 10 seconds. No credit card, no subscription. All 30 features are yours — completely free.",
   },
   {
     num: "2",
@@ -143,9 +143,9 @@ const STEPS = [
   },
   {
     num: "3",
-    title: "AI gets smarter with you",
+    title: "Want AI? Bring your own key",
     description:
-      "As your data grows, AI unlocks price comparisons, spending predictions, meal plans, and personalized financial advice.",
+      "Set your own OpenAI API key in Settings to unlock receipt scanning, money advice, and more. Or message us — we'll set it up for you.",
   },
 ];
 
@@ -442,8 +442,8 @@ const TRUST_POINTS = [
   },
   {
     icon: Sparkles,
-    title: "Free to Start",
-    description: "Generous free tier. No credit card. Upgrade only when you need more.",
+    title: "100% Free — No Catch",
+    description: "All 30 features are free. AI features use your own OpenAI key — or we can set it up for you.",
   },
 ];
 
@@ -536,7 +536,7 @@ export function LandingContent() {
               >
                 <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm text-muted-foreground mb-6">
                   <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  Free to start &middot; AI-powered &middot; No credit card
+                  100% Free &middot; Bring your own AI key &middot; No credit card
                 </div>
               </div>
               <h1
@@ -550,10 +550,11 @@ export function LandingContent() {
               <p
                 className={`mt-6 text-lg text-muted-foreground sm:text-xl max-w-lg transition-all duration-700 delay-200 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
               >
-                MoneyStyle is the AI-powered personal finance tracker that shows
-                you exactly where every dollar goes — and helps you keep more
-                of it. Smart receipt scanning, budget management, price
-                comparison, and personalized money advice. Free to start.
+                MoneyStyle is a completely free personal finance tracker that
+                shows you exactly where every dollar goes. All 30 features
+                are free — forever. Want AI powers like receipt scanning and
+                money advice? Just bring your own OpenAI API key, or let us
+                set it up for you.
               </p>
               <div
                 className={`mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition-all duration-700 delay-300 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
@@ -1169,9 +1170,9 @@ export function LandingContent() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground text-lg">
               Join <strong className="text-foreground">10,000+ users</strong>{" "}
-              who track their spending with MoneyStyle — rated{" "}
-              <strong className="text-foreground">4.8/5</strong> by early
-              adopters. Sign up free and start tracking today.
+              who track their spending with MoneyStyle. Every feature is free
+              — no subscriptions, no hidden fees. AI features use your own
+              OpenAI key, or we can set it up for you.
             </p>
             {isLoggedIn ? (
               <Button asChild size="lg" className="mt-8 text-base">
@@ -1200,12 +1201,12 @@ export function LandingContent() {
                   </Button>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">
-                  Free forever for basics.{" "}
+                  Free forever. AI features need an OpenAI key —{" "}
                   <Link
                     href="/pricing"
                     className="underline underline-offset-4 hover:text-foreground transition-colors"
                   >
-                    See plans
+                    learn more
                   </Link>
                 </p>
               </>

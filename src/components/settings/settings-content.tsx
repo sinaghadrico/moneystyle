@@ -39,6 +39,8 @@ import {
   updateSettings,
   testTelegramConnection,
   exportTransactions,
+  generateDeveloperApiKey,
+  revokeApiKey,
 } from "@/actions/settings";
 import { getAccountsList } from "@/actions/transactions";
 import { useAppSettings } from "@/components/settings/settings-provider";
@@ -92,6 +94,7 @@ const INTEGRATION_SECTIONS = [
   { key: "telegram", label: "Telegram", icon: Send },
   { key: "ai", label: "AI", icon: Brain },
   { key: "sms", label: "SMS", icon: MessageSquare },
+  { key: "api", label: "API", icon: Database },
 ] as const;
 
 type IntegrationSection = (typeof INTEGRATION_SECTIONS)[number]["key"];
@@ -683,6 +686,72 @@ export function SettingsContent() {
 
           {/* SMS */}
           {integrationSection === "sms" && <SmsPatternsSection />}
+
+          {/* API */}
+          {integrationSection === "api" && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Database className="h-4 w-4" />
+                  Developer API
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Use the API to programmatically access your transactions, categories, and accounts.
+                  See <a href="/docs/api" className="underline underline-offset-2 hover:text-foreground">API Documentation</a>.
+                </p>
+                <div className="space-y-2">
+                  <Label>API Key</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      readOnly
+                      type="password"
+                      value={appSettings?.developerApiKey ?? ""}
+                      placeholder="No API key generated"
+                      className="font-mono text-xs"
+                    />
+                    {appSettings?.developerApiKey ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 text-destructive"
+                        onClick={async () => {
+                          await revokeApiKey();
+                          toast.success("API key revoked");
+                          await refreshAppSettings();
+                        }}
+                      >
+                        Revoke
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={async () => {
+                          const result = await generateDeveloperApiKey();
+                          if (result.success) {
+                            await navigator.clipboard.writeText(result.apiKey);
+                            toast.success("API key generated and copied to clipboard");
+                            await refreshAppSettings();
+                          }
+                        }}
+                      >
+                        Generate
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground/70">Base URL</p>
+                  <code className="block rounded bg-muted px-2 py-1 font-mono text-[11px]">
+                    {typeof window !== "undefined" ? window.location.origin : ""}/api/v1
+                  </code>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 

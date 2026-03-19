@@ -14,6 +14,7 @@ type AppSettings = {
   autoCategorize: boolean;
   aiEnabled: boolean;
   hasOpenaiKey: boolean;
+  developerApiKey: string | null;
   featureFlags: FeatureFlags;
   isAdmin: boolean;
 };
@@ -27,6 +28,7 @@ const DEFAULTS: AppSettings = {
   autoCategorize: true,
   aiEnabled: false,
   hasOpenaiKey: false,
+  developerApiKey: null,
   featureFlags: DEFAULT_FEATURE_FLAGS,
   isAdmin: false,
 };
@@ -63,6 +65,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       autoCategorize: s.autoCategorize,
       aiEnabled: s.aiEnabled,
       hasOpenaiKey: !!s.openaiApiKey,
+      developerApiKey: s.developerApiKey ?? null,
       featureFlags: parseFeatureFlags(s.featureFlags),
       isAdmin: s.userRole === "admin",
     });

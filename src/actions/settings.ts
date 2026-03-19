@@ -106,6 +106,32 @@ export async function updateSettings(
   return { success: true };
 }
 
+export async function generateDeveloperApiKey() {
+  const userId = await requireAuth();
+  const key = `ms_${Array.from(crypto.getRandomValues(new Uint8Array(24)))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")}`;
+
+  await prisma.appSettings.upsert({
+    where: { userId },
+    create: { userId, developerApiKey: key },
+    update: { developerApiKey: key },
+  });
+
+  revalidatePath("/settings");
+  return { success: true, apiKey: key };
+}
+
+export async function revokeApiKey() {
+  const userId = await requireAuth();
+  await prisma.appSettings.update({
+    where: { userId },
+    data: { developerApiKey: null },
+  });
+  revalidatePath("/settings");
+  return { success: true };
+}
+
 export async function testTelegramConnection(
   botToken: string,
   chatId: string,

@@ -697,6 +697,7 @@ model AppSettings {
   notifyMonthlyReport    Boolean  @default(true)
   notifyWebTransaction   Boolean  @default(true)
   notifySmsTransaction   Boolean  @default(true)
+  developerApiKey        String?
   featureFlags           Json     @default("{}")
   userId                 String   @unique
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)

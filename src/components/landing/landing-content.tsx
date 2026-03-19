@@ -1226,6 +1226,8 @@ export function LandingContent() {
               <span className="text-muted-foreground/40">·</span>
               <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
               <span className="text-muted-foreground/40">·</span>
+              <Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link>
+              <span className="text-muted-foreground/40">·</span>
               <Link href="/docs/api" className="hover:text-foreground transition-colors">API Docs</Link>
             </div>
             <div className="flex items-center gap-3">

@@ -180,9 +180,12 @@ export const reserveSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   amount: z.coerce.number().positive("Amount must be positive"),
   currency: z.string().min(1).max(5).default("AED"),
-  type: z.enum(["cash", "gold", "crypto", "family", "other"]),
+  type: z.enum(["cash", "gold", "crypto", "stock", "etf", "bond", "family", "other"]),
   location: z.string().min(1, "Location is required").max(200),
   note: z.string().max(500).nullable().optional(),
+  ticker: z.string().max(20).nullable().optional(),
+  quantity: z.coerce.number().positive().nullable().optional(),
+  purchasePrice: z.coerce.number().positive().nullable().optional(),
 });
 
 export const reserveUpdateSchema = reserveSchema.partial();

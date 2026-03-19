@@ -425,6 +425,9 @@ export type ReserveData = {
   type: string;
   location: string;
   note: string | null;
+  ticker: string | null;
+  quantity: number | null;
+  purchasePrice: number | null;
   lastRecordedAt: string | null;
 };
 

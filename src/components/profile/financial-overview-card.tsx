@@ -15,6 +15,9 @@ const TYPE_LABELS: Record<string, string> = {
   cash: "Cash",
   gold: "Gold",
   crypto: "Crypto",
+  stock: "Stock",
+  etf: "ETF",
+  bond: "Bond",
   family: "Family",
   other: "Other",
 };

@@ -407,18 +407,21 @@ model IncomeDeposit {
 }
 
 model Reserve {
-  id        String             @id @default(cuid())
-  name      String
-  amount    Decimal            @db.Decimal(12, 2)
-  currency  String             @default("AED")
-  type      String
-  location  String
-  note      String?
-  userId    String
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  snapshots ReserveSnapshot[]
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  id            String             @id @default(cuid())
+  name          String
+  amount        Decimal            @db.Decimal(12, 2)
+  currency      String             @default("AED")
+  type          String
+  location      String
+  note          String?
+  ticker        String?
+  quantity      Decimal?           @db.Decimal(12, 6)
+  purchasePrice Decimal?           @db.Decimal(12, 2)
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshots     ReserveSnapshot[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@index([userId])
   @@map("reserves")

@@ -27,9 +27,14 @@ const RESERVE_TYPES = [
   { value: "cash", label: "Cash" },
   { value: "gold", label: "Gold" },
   { value: "crypto", label: "Crypto" },
+  { value: "stock", label: "Stock" },
+  { value: "etf", label: "ETF" },
+  { value: "bond", label: "Bond" },
   { value: "family", label: "Family" },
   { value: "other", label: "Other" },
 ];
+
+const INVESTMENT_TYPES = ["stock", "etf", "bond"];
 
 export function ReserveDialog({
   reserve,
@@ -49,20 +54,28 @@ export function ReserveDialog({
   const [type, setType] = useState(reserve?.type ?? "cash");
   const [location, setLocation] = useState(reserve?.location ?? "");
   const [note, setNote] = useState(reserve?.note ?? "");
+  const [ticker, setTicker] = useState(reserve?.ticker ?? "");
+  const [quantity, setQuantity] = useState(reserve?.quantity?.toString() ?? "");
+  const [purchasePrice, setPurchasePrice] = useState(reserve?.purchasePrice?.toString() ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const isInvestment = INVESTMENT_TYPES.includes(type);
 
   const handleSave = async () => {
     setError("");
     setSaving(true);
 
-    const data = {
+    const data: Record<string, unknown> = {
       name: name.trim(),
       amount: parseFloat(amount),
       currency,
       type,
       location: location.trim(),
       note: note.trim() || null,
+      ticker: isInvestment && ticker.trim() ? ticker.trim().toUpperCase() : null,
+      quantity: isInvestment && quantity ? parseFloat(quantity) : null,
+      purchasePrice: isInvestment && purchasePrice ? parseFloat(purchasePrice) : null,
     };
 
     const result = isEdit
@@ -81,7 +94,7 @@ export function ReserveDialog({
         );
       }
     } else {
-      toast.success(isEdit ? "✅ Reserve updated" : "✅ Reserve added");
+      toast.success(isEdit ? "Reserve updated" : "Reserve added");
       onOpenChange(false);
       onSuccess();
     }
@@ -102,24 +115,8 @@ export function ReserveDialog({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Cash, Gold Coins"
+              placeholder={isInvestment ? "e.g. Apple Inc, S&P 500 ETF" : "e.g. Cash, Gold Coins"}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label>Amount</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Currency</Label>
-              <CurrencySelect value={currency} onValueChange={setCurrency} />
-            </div>
           </div>
           <div className="grid gap-2">
             <Label>Type</Label>
@@ -136,12 +133,63 @@ export function ReserveDialog({
               </SelectContent>
             </Select>
           </div>
+          {isInvestment && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Ticker Symbol</Label>
+                  <Input
+                    value={ticker}
+                    onChange={(e) => setTicker(e.target.value)}
+                    placeholder="e.g. AAPL, VOO"
+                    className="uppercase"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Quantity (Shares)</Label>
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Purchase Price (per share)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+            </>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label>{isInvestment ? "Total Value" : "Amount"}</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Currency</Label>
+              <CurrencySelect value={currency} onValueChange={setCurrency} />
+            </div>
+          </div>
           <div className="grid gap-2">
             <Label>Location</Label>
             <Input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Safe at home, Binance"
+              placeholder={isInvestment ? "e.g. Robinhood, Interactive Brokers" : "e.g. Safe at home, Binance"}
             />
           </div>
           <div className="grid gap-2">

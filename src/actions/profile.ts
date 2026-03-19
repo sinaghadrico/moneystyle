@@ -220,6 +220,9 @@ export async function getReserves(): Promise<ReserveData[]> {
     type: r.type,
     location: r.location,
     note: r.note,
+    ticker: r.ticker,
+    quantity: r.quantity ? Number(r.quantity) : null,
+    purchasePrice: r.purchasePrice ? Number(r.purchasePrice) : null,
     lastRecordedAt: r.snapshots[0]?.recordedAt?.toISOString() ?? null,
   }));
 }
@@ -323,6 +326,64 @@ export async function getReserveHistory(
     note: r.note,
     recordedAt: r.recordedAt.toISOString(),
   }));
+}
+
+export async function fetchStockPrice(ticker: string): Promise<{ price: number; currency: string } | null> {
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`,
+      { next: { revalidate: 300 } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta?.regularMarketPrice) return null;
+    return {
+      price: meta.regularMarketPrice,
+      currency: (meta.currency ?? "USD").toUpperCase(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function refreshInvestmentPrices() {
+  const userId = await requireAuth();
+  const investments = await prisma.reserve.findMany({
+    where: { userId, type: { in: ["stock", "etf", "bond"] }, ticker: { not: null } },
+  });
+
+  const results: { id: string; name: string; oldAmount: number; newAmount: number }[] = [];
+
+  for (const inv of investments) {
+    if (!inv.ticker || !inv.quantity) continue;
+    const quote = await fetchStockPrice(inv.ticker);
+    if (!quote) continue;
+
+    const newAmount = quote.price * Number(inv.quantity);
+    const oldAmount = Number(inv.amount);
+
+    if (Math.abs(newAmount - oldAmount) < 0.01) continue;
+
+    await prisma.$transaction([
+      prisma.reserve.update({
+        where: { id: inv.id, userId },
+        data: { amount: newAmount, currency: quote.currency },
+      }),
+      prisma.reserveSnapshot.create({
+        data: {
+          reserveId: inv.id,
+          amount: newAmount,
+          note: `Price update: ${inv.ticker} @ ${quote.price}`,
+        },
+      }),
+    ]);
+
+    results.push({ id: inv.id, name: inv.name, oldAmount, newAmount });
+  }
+
+  revalidatePath("/profile");
+  return { success: true, updated: results.length, results };
 }
 
 // ── Installments ──

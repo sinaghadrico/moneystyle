@@ -315,6 +315,7 @@ export default function OGImage() {
                 </div>
                 <div
                   style={{
+                    display: "flex",
                     height: "5px",
                     borderRadius: "3px",
                     background: "rgba(255,255,255,0.06)",

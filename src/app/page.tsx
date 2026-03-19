@@ -88,7 +88,7 @@ const jsonLd = [
       name: "Sina Ghadri",
       jobTitle: "Founder & CEO",
       url: "https://moneystyle.app/about",
-      sameAs: ["https://www.linkedin.com/in/sina_ghadri"],
+      sameAs: ["https://www.linkedin.com/in/sina-ghadri"],
     },
   },
   {
@@ -97,7 +97,7 @@ const jsonLd = [
     name: "Sina Ghadri",
     jobTitle: "Founder & CEO, MoneyStyle",
     url: "https://moneystyle.app/about",
-    sameAs: ["https://www.linkedin.com/in/sina_ghadri"],
+    sameAs: ["https://www.linkedin.com/in/sina-ghadri"],
     worksFor: {
       "@type": "Organization",
       name: "MoneyStyle",

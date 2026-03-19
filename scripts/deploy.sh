@@ -16,6 +16,9 @@ ssh -i "$REMOTE_KEY" "$REMOTE_USER@$REMOTE_HOST" "cd ~/revenue && git pull"
 echo "==> Rebuilding & restarting containers..."
 ssh -i "$REMOTE_KEY" "$REMOTE_USER@$REMOTE_HOST" "cd ~/revenue && docker compose -f docker-compose.prod.yml up -d --build"
 
+echo "==> Running database migrations..."
+ssh -i "$REMOTE_KEY" "$REMOTE_USER@$REMOTE_HOST" "cd ~/revenue && docker compose -f docker-compose.prod.yml exec app npx prisma migrate deploy"
+
 echo ""
 echo "============================================"
 echo "  Deployed successfully!"

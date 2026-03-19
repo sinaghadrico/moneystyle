@@ -36,6 +36,7 @@ import type {
   BillNegotiatorResult,
   BillNegotiatorRecommendation,
   BillNegotiatorHistoryItem,
+  DetectedSubscription,
 } from "@/lib/types";
 
 // ── Income Sources ──
@@ -384,6 +385,146 @@ export async function refreshInvestmentPrices() {
 
   revalidatePath("/profile");
   return { success: true, updated: results.length, results };
+}
+
+// ── Subscription Detection ──
+
+export async function detectSubscriptions(): Promise<DetectedSubscription[]> {
+  const userId = await requireAuth();
+  const [settings, rates] = await Promise.all([
+    prisma.appSettings.findFirst({ where: { userId } }),
+    getCurrencyRates(),
+  ]);
+  const primaryCurrency = settings?.currency ?? "AED";
+
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      date: { gte: sixMonthsAgo },
+      type: "expense",
+      merchant: { not: null },
+      mergedIntoId: null,
+      confirmed: true,
+    },
+    select: {
+      merchant: true,
+      amount: true,
+      currency: true,
+      date: true,
+      category: { select: { name: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  // Group by merchant
+  const merchantMap = new Map<
+    string,
+    { amounts: number[]; dates: Date[]; currency: string; categoryName: string | null }
+  >();
+
+  for (const tx of transactions) {
+    const name = tx.merchant?.trim().toLowerCase();
+    if (!name || !tx.amount) continue;
+
+    const entry = merchantMap.get(name) ?? {
+      amounts: [],
+      dates: [],
+      currency: tx.currency,
+      categoryName: tx.category?.name ?? null,
+    };
+    entry.amounts.push(
+      convertAmount(Math.abs(Number(tx.amount)), tx.currency, primaryCurrency, rates)
+    );
+    entry.dates.push(tx.date);
+    merchantMap.set(name, entry);
+  }
+
+  const subscriptions: DetectedSubscription[] = [];
+
+  for (const [merchant, data] of merchantMap.entries()) {
+    if (data.amounts.length < 2) continue;
+
+    // Check amount consistency (std deviation / mean < 30%)
+    const mean = data.amounts.reduce((a, b) => a + b, 0) / data.amounts.length;
+    const variance =
+      data.amounts.reduce((sum, val) => sum + (val - mean) ** 2, 0) / data.amounts.length;
+    const stdDev = Math.sqrt(variance);
+    const amountConsistency = mean > 0 ? 1 - stdDev / mean : 0;
+
+    if (amountConsistency < 0.7) continue; // Too variable
+
+    // Check interval consistency
+    const intervals: number[] = [];
+    for (let i = 1; i < data.dates.length; i++) {
+      const days = Math.round(
+        (data.dates[i].getTime() - data.dates[i - 1].getTime()) / (1000 * 60 * 60 * 24)
+      );
+      intervals.push(days);
+    }
+
+    if (intervals.length === 0) continue;
+
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+
+    // Determine frequency
+    let frequency: "weekly" | "monthly" | "yearly";
+    let intervalConsistency: number;
+
+    if (avgInterval <= 10) {
+      frequency = "weekly";
+      const idealInterval = 7;
+      intervalConsistency =
+        1 -
+        intervals.reduce((sum, i) => sum + Math.abs(i - idealInterval), 0) /
+          (intervals.length * idealInterval);
+    } else if (avgInterval <= 45) {
+      frequency = "monthly";
+      const idealInterval = 30;
+      intervalConsistency =
+        1 -
+        intervals.reduce((sum, i) => sum + Math.abs(i - idealInterval), 0) /
+          (intervals.length * idealInterval);
+    } else if (avgInterval <= 400) {
+      frequency = "yearly";
+      const idealInterval = 365;
+      intervalConsistency =
+        1 -
+        intervals.reduce((sum, i) => sum + Math.abs(i - idealInterval), 0) /
+          (intervals.length * idealInterval);
+    } else {
+      continue; // Too irregular
+    }
+
+    if (intervalConsistency < 0.5) continue;
+
+    // Calculate confidence score (0-100)
+    const confidence = Math.round(
+      Math.max(0, Math.min(100, (amountConsistency * 50 + intervalConsistency * 50)))
+    );
+
+    if (confidence < 50) continue;
+
+    // Use original merchant casing from first transaction
+    const originalName =
+      transactions.find((t) => t.merchant?.trim().toLowerCase() === merchant)?.merchant ?? merchant;
+
+    subscriptions.push({
+      merchant: originalName,
+      amount: Math.round(mean * 100) / 100,
+      currency: primaryCurrency,
+      frequency,
+      confidence,
+      occurrences: data.amounts.length,
+      lastDate: data.dates[data.dates.length - 1].toISOString(),
+      firstDate: data.dates[0].toISOString(),
+      categoryName: data.categoryName,
+    });
+  }
+
+  return subscriptions.sort((a, b) => b.amount - a.amount);
 }
 
 // ── Installments ──

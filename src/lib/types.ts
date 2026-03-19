@@ -503,6 +503,20 @@ export type FinancialOverview = {
   }[];
 };
 
+// Subscription Detection types
+
+export type DetectedSubscription = {
+  merchant: string;
+  amount: number;
+  currency: string;
+  frequency: "monthly" | "weekly" | "yearly";
+  confidence: number;
+  occurrences: number;
+  lastDate: string;
+  firstDate: string;
+  categoryName: string | null;
+};
+
 // Cashflow Calendar types
 
 export type CashflowEvent = {

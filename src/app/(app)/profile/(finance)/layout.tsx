@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import NextLink from "next/link";
-import { BarChart3, TrendingUp, CreditCard, Target, CalendarDays } from "lucide-react";
+import { BarChart3, TrendingUp, CreditCard, Target, CalendarDays, Repeat } from "lucide-react";
 
 const FINANCE_TABS = [
   { key: "overview", href: "/profile", label: "Overview", icon: BarChart3 },
   { key: "income", href: "/profile/income", label: "Income & Saving", icon: TrendingUp },
   { key: "payments", href: "/profile/payments", label: "Payments", icon: CreditCard },
+  { key: "subscriptions", href: "/profile/subscriptions", label: "Subscriptions", icon: Repeat },
   { key: "cashflow", href: "/profile/cashflow", label: "Cashflow", icon: CalendarDays },
   { key: "goals", href: "/profile/goals", label: "Goals", icon: Target },
 ] as const;

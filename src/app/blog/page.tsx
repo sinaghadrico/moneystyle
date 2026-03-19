@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
 import { getBlogPosts } from "@/actions/blog";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Blog",
   description:

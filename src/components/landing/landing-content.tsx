@@ -742,7 +742,7 @@ export function LandingContent() {
                 money goes, they naturally make better decisions.&rdquo;
               </p>
               <footer className="mt-4 text-sm font-medium">
-                — MoneyStyle Team
+                — Sina Ghadri, Founder &amp; CEO of MoneyStyle
               </footer>
             </blockquote>
             <p className="mt-6 text-center text-xs text-muted-foreground">

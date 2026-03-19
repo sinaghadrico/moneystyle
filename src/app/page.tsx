@@ -78,6 +78,26 @@ const jsonLd = [
       contactType: "customer support",
       email: "support@moneystyle.app",
     },
+    founder: {
+      "@type": "Person",
+      name: "Sina Ghadri",
+      jobTitle: "Founder & CEO",
+      url: "https://moneystyle.app/about",
+      sameAs: ["https://www.linkedin.com/in/sina_ghadri"],
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Sina Ghadri",
+    jobTitle: "Founder & CEO, MoneyStyle",
+    url: "https://moneystyle.app/about",
+    sameAs: ["https://www.linkedin.com/in/sina_ghadri"],
+    worksFor: {
+      "@type": "Organization",
+      name: "MoneyStyle",
+      url: "https://moneystyle.app/",
+    },
   },
   {
     "@context": "https://schema.org",

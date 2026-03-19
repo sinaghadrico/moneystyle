@@ -21,8 +21,11 @@ export async function generateMetadata({
   const description = feature.tagline;
 
   return {
-    title: `${feature.title} — MoneyStyle`,
+    title: feature.title,
     description,
+    alternates: {
+      canonical: `https://moneystyle.app/features/${slug}`,
+    },
     openGraph: {
       title: `${feature.title} — MoneyStyle`,
       description,

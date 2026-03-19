@@ -30,9 +30,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://moneystyle.app"
   ),
-  title: "MoneyStyle - Smart Finance Tracker",
+  title: {
+    default: "MoneyStyle — Free Personal Finance Tracker",
+    template: "%s — MoneyStyle",
+  },
   description:
-    "AI-powered personal finance app with receipt scanning, bill negotiation, wealth insights, and smart budgeting to help you take control of your money.",
+    "100% free personal finance tracker with 30 features. Track expenses, manage budgets, scan receipts, detect subscriptions, and track investments. AI features use your own OpenAI key.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

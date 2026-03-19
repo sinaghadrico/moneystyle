@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "API Documentation",
+  description: "MoneyStyle REST API documentation. Programmatic access to transactions, categories, and accounts with Bearer token authentication.",
+  alternates: {
+    canonical: "https://moneystyle.app/docs/api",
+  },
+};
+
 export default function ApiDocsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 pb-20">

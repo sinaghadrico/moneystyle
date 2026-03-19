@@ -1,5 +1,11 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
+
+export const metadata: Metadata = {
+  title: "Sign In",
+  description: "Sign in to MoneyStyle — the free personal finance tracker with 30 features.",
+};
 
 export default function LoginPage() {
   return (

@@ -498,6 +498,7 @@ export function LandingContent() {
               size="icon"
               className="h-8 w-8"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              aria-label="Toggle theme"
             >
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
@@ -511,7 +512,7 @@ export function LandingContent() {
               </Button>
             ) : !isTelegramMiniApp ? (
               <Button asChild size="sm">
-                <Link href="/auth/login">
+                <Link href="/auth/register">
                   Get Started
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
@@ -523,7 +524,7 @@ export function LandingContent() {
 
       {/* ── Hero ── */}
       <section ref={hero.ref} className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 -z-10" aria-hidden="true">
           <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/3 h-[600px] w-[600px] rounded-full bg-emerald-500/8 blur-3xl" />
           <div className="absolute right-0 top-1/3 h-[400px] w-[400px] rounded-full bg-teal-500/8 blur-3xl" />
         </div>
@@ -534,8 +535,8 @@ export function LandingContent() {
               <div
                 className={`transition-all duration-700 ${hero.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
               >
-                <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm text-muted-foreground mb-6">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm text-foreground/70 mb-6">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                   100% Free &middot; Bring your own AI key &middot; No credit card
                 </div>
               </div>
@@ -584,7 +585,7 @@ export function LandingContent() {
                 )}
                 {!isLoggedIn && !isTelegramMiniApp && (
                   <Button asChild size="lg" className="text-base">
-                    <Link href="/auth/login">
+                    <Link href="/auth/register">
                       Get Started Free
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
@@ -622,8 +623,8 @@ export function LandingContent() {
                         </p>
                         <p className="text-lg font-bold">$2,847</p>
                       </div>
-                      <div className="rounded-lg bg-emerald-500/10 px-2 py-1">
-                        <p className="text-[10px] font-semibold text-emerald-500">
+                      <div className="rounded-lg bg-emerald-500/15 px-2 py-1">
+                        <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                           -12%
                         </p>
                       </div>
@@ -1206,7 +1207,7 @@ export function LandingContent() {
                     href="/pricing"
                     className="underline underline-offset-4 hover:text-foreground transition-colors"
                   >
-                    learn more
+                    see pricing details
                   </Link>
                 </p>
               </>

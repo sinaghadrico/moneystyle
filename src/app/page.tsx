@@ -10,9 +10,9 @@ export const metadata: Metadata = {
     canonical: "https://moneystyle.app/",
   },
   openGraph: {
-    title: "MoneyStyle — Know Where Every Dollar Goes",
+    title: "MoneyStyle — Free Personal Finance Tracker",
     description:
-      "AI-powered finance tracking. Scan receipts, compare prices, manage budgets. Free to start.",
+      "100% free. 30 features. Track expenses, scan receipts, manage budgets, detect subscriptions. AI features use your own OpenAI key.",
     type: "website",
     siteName: "MoneyStyle",
     images: [
@@ -20,21 +20,21 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "MoneyStyle — AI-powered personal finance tracker",
+        alt: "MoneyStyle — Free Personal Finance Tracker with 30 Features",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MoneyStyle — Know Where Every Dollar Goes",
+    title: "MoneyStyle — Free Personal Finance Tracker",
     description:
-      "AI-powered finance tracking. Scan receipts, compare prices, manage budgets. Free to start.",
+      "100% free. 30 features. Track expenses, scan receipts, manage budgets, detect subscriptions. AI features use your own OpenAI key.",
     images: [
       {
         url: "/twitter-image",
         width: 1200,
         height: 630,
-        alt: "MoneyStyle — AI-powered personal finance tracker",
+        alt: "MoneyStyle — Free Personal Finance Tracker with 30 Features",
       },
     ],
   },

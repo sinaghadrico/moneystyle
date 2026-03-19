@@ -9,11 +9,13 @@ const publicPaths = [
   "/auth/telegram-miniapp",
   "/offline",
   "/pricing",
+  "/docs/api",
   "/opengraph-image",
   "/twitter-image",
   "/api/auth",
   "/api/cron",
   "/api/sms",
+  "/features",
   "/api/telegram",
 ];
 

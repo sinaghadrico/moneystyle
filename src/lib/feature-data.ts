@@ -1232,6 +1232,522 @@ export const FEATURES: FeatureConfig[] = [
       resultValue: "23 this mo.",
     },
   },
+  {
+    slug: "bulk-import",
+    title: "Bulk Import",
+    headline: "Import Months of",
+    headlineAccent: "Data Instantly",
+    tagline: "Import bank CSV statements or Telegram chat exports to bulk-create hundreds of transactions in seconds.",
+    badge: "Bulk Import",
+    color: "slate-500",
+    hex: "#64748b",
+    hexSecondary: "#94a3b8",
+    steps: [
+      { title: "Upload Your File", description: "Upload a CSV from your bank or export a Telegram chat history file.", items: [{ label: "Format", value: "CSV / Telegram" }, { label: "Banks", value: "Any bank" }, { label: "Columns", value: "Auto-detected" }, { label: "Upload", value: "Drag & drop", highlight: true }] },
+      { title: "AI Parses Everything", description: "AI reads your file, detects the format, and extracts date, amount, merchant, and description for each row.", items: [{ label: "Rows detected", value: "247" }, { label: "Parsed", value: "245 / 247" }, { label: "Categories", value: "Auto-assigned" }, { label: "Accuracy", value: "99.2%", highlight: true }] },
+      { title: "Review & Confirm", description: "Preview all parsed transactions before importing. Edit any that need fixing, then import with one click.", items: [{ label: "Ready to import", value: "245" }, { label: "Duplicates", value: "3 skipped" }, { label: "New merchants", value: "12" }, { label: "Import", value: "One click", highlight: true }] },
+    ],
+    benefits: [
+      { title: "Any Bank CSV", description: "Works with any bank's CSV export format." },
+      { title: "Telegram Export", description: "Import transactions from Telegram chat history." },
+      { title: "AI Parsing", description: "Automatically detects columns and formats." },
+      { title: "Duplicate Detection", description: "Skips transactions that already exist." },
+    ],
+    ogPhone: { title: "Import", items: ["File: bank_march.csv", "Rows: 247", "Parsed: 245", "Categories: Auto", "Duplicates: 3"], resultLabel: "Imported", resultValue: "245 txns" },
+  },
+  {
+    slug: "account-management",
+    title: "Account Management",
+    headline: "All Your Accounts,",
+    headlineAccent: "One Place",
+    tagline: "Manage multiple accounts — bank, wallet, crypto exchange, cash — each with its own color and icon for easy identification.",
+    badge: "Account Management",
+    color: "zinc-500",
+    hex: "#71717a",
+    hexSecondary: "#a1a1aa",
+    steps: [
+      { title: "Create Accounts", description: "Add all your financial accounts — checking, savings, cash wallet, crypto exchange, and more.", items: [{ label: "Chase Checking", value: "Bank" }, { label: "Cash Wallet", value: "Cash" }, { label: "Binance", value: "Exchange" }, { label: "Total", value: "6 accounts", highlight: true }] },
+      { title: "Customize Each", description: "Give each account its own color and icon so you can identify them at a glance in transactions.", items: [{ label: "Color", value: "Blue" }, { label: "Icon", value: "Bank" }, { label: "Type", value: "Checking" }, { label: "Personalized", value: "100%", highlight: true }] },
+      { title: "Track Per Account", description: "See transaction totals and counts per account. Know exactly where your money sits.", items: [{ label: "Chase", value: "$4,520" }, { label: "Cash", value: "$350" }, { label: "Binance", value: "$2,100" }, { label: "Total", value: "$6,970", highlight: true }] },
+    ],
+    benefits: [
+      { title: "Multiple Types", description: "Bank, wallet, crypto, exchange, cash, and custom." },
+      { title: "Color Coded", description: "Each account has its own color for quick identification." },
+      { title: "Per-Account Stats", description: "Transaction counts and totals per account." },
+      { title: "Default Account", description: "Set a default for quick transaction entry." },
+    ],
+    ogPhone: { title: "Accounts", items: ["Chase: $4,520", "Savings: $8,200", "Cash: $350", "Binance: $2,100", "PayPal: $425"], resultLabel: "Total", resultValue: "$15,595" },
+  },
+  {
+    slug: "spending-wrapped",
+    title: "Spending Wrapped",
+    headline: "Your Year in",
+    headlineAccent: "Money",
+    tagline: "Your annual spending recap — top categories, biggest single expense, favorite merchant, monthly trends, and fun stats in a beautiful slide format.",
+    badge: "Spending Wrapped",
+    color: "amber-400",
+    hex: "#fbbf24",
+    hexSecondary: "#f59e0b",
+    steps: [
+      { title: "Your Top Categories", description: "See where most of your money went this year — groceries, dining, transport, or something unexpected?", items: [{ label: "#1 Groceries", value: "$4,200" }, { label: "#2 Dining", value: "$2,800" }, { label: "#3 Transport", value: "$1,650" }, { label: "Total spent", value: "$14,500", highlight: true }] },
+      { title: "Fun Stats", description: "Discover your biggest single expense, your most-visited merchant, and your highest-spending day.", items: [{ label: "Biggest expense", value: "$890 (Laptop)" }, { label: "Top merchant", value: "FreshMart" }, { label: "Peak day", value: "Black Friday" }, { label: "Transactions", value: "847", highlight: true }] },
+      { title: "Monthly Trends", description: "See how your spending changed month by month. Spot seasonal patterns and compare to the previous year.", items: [{ label: "Lowest month", value: "Feb: $980" }, { label: "Highest month", value: "Dec: $2,100" }, { label: "Average", value: "$1,208/mo" }, { label: "Trend", value: "Improving!", highlight: true }] },
+    ],
+    benefits: [
+      { title: "Beautiful Slides", description: "Share-worthy annual recap in a slide format." },
+      { title: "Top Categories", description: "See where your money really goes." },
+      { title: "Fun Insights", description: "Biggest expense, favorite merchant, and more." },
+      { title: "Year Comparison", description: "Compare this year to last year." },
+    ],
+    ogPhone: { title: "2026 Wrapped", items: ["Total: $14,500", "#1: Groceries", "847 transactions", "Top: FreshMart", "Biggest: $890"], resultLabel: "Your Year", resultValue: "In Review" },
+  },
+  {
+    slug: "bill-negotiator",
+    title: "Bill Negotiator",
+    headline: "Cut Your Bills,",
+    headlineAccent: "Keep Your Money",
+    tagline: "AI analyzes your bills and recurring expenses to find subscriptions to cancel, duplicate charges, and overpriced services — with specific savings recommendations.",
+    badge: "Bill Negotiator",
+    color: "rose-500",
+    hex: "#f43f5e",
+    hexSecondary: "#fb7185",
+    steps: [
+      { title: "AI Scans Your Bills", description: "MoneyStyle analyzes your recurring transactions, bills, and installments to find savings opportunities.", items: [{ label: "Bills scanned", value: "12" }, { label: "Subscriptions", value: "8" }, { label: "Installments", value: "3" }, { label: "Analyzing...", value: "AI", highlight: true }] },
+      { title: "Get Recommendations", description: "AI identifies duplicate charges, unused subscriptions, and services where you could negotiate a lower rate.", items: [{ label: "Cancel gym", value: "Save $50/mo" }, { label: "Switch internet", value: "Save $20/mo" }, { label: "Duplicate charge", value: "Save $9.99/mo" }, { label: "Total savings", value: "$79.99/mo", highlight: true }] },
+      { title: "Take Action", description: "Each recommendation includes specific steps to take — cancel links, negotiation scripts, and alternative suggestions.", items: [{ label: "Monthly savings", value: "$79.99" }, { label: "Yearly savings", value: "$959.88" }, { label: "Actions", value: "3 recommendations" }, { label: "Difficulty", value: "Easy", highlight: true }] },
+    ],
+    benefits: [
+      { title: "AI Analysis", description: "Finds savings you'd never spot manually." },
+      { title: "Specific Actions", description: "Each tip tells you exactly what to do." },
+      { title: "Monthly Savings", description: "See potential savings per month and year." },
+      { title: "No Commission", description: "Unlike Rocket Money, we don't take a cut." },
+    ],
+    ogPhone: { title: "Savings Found", items: ["Cancel gym: $50", "Switch ISP: $20", "Duplicate: $9.99", "Downgrade plan: $15", "Unused app: $4.99"], resultLabel: "You Could Save", resultValue: "$99.99/mo" },
+  },
+  {
+    slug: "cashflow-calendar",
+    title: "Cashflow Calendar",
+    headline: "See Your Money,",
+    headlineAccent: "Day by Day",
+    tagline: "Monthly calendar showing income deposits, bill due dates, and daily expenses with a projected balance chart so you always know what's coming.",
+    badge: "Cashflow Calendar",
+    color: "indigo-500",
+    hex: "#6366f1",
+    hexSecondary: "#818cf8",
+    steps: [
+      { title: "Calendar View", description: "See every financial event on a monthly calendar — income on deposit days, bills on due dates, expenses on transaction dates.", items: [{ label: "Mar 1", value: "Salary: $4,200" }, { label: "Mar 5", value: "Rent: -$1,200" }, { label: "Mar 10", value: "Internet: -$60" }, { label: "Mar 15", value: "Car payment: -$350", highlight: true }] },
+      { title: "Daily Breakdown", description: "Tap any day to see all income, expenses, and bills for that date. Know exactly what happened.", items: [{ label: "Income", value: "$4,200" }, { label: "Bills", value: "-$1,610" }, { label: "Expenses", value: "-$85" }, { label: "Net", value: "+$2,505", highlight: true }] },
+      { title: "Balance Projection", description: "See your projected balance for the rest of the month based on upcoming bills and expected income.", items: [{ label: "Current balance", value: "$3,200" }, { label: "Upcoming bills", value: "-$890" }, { label: "Expected income", value: "+$0" }, { label: "Month-end", value: "$2,310", highlight: true }] },
+    ],
+    benefits: [
+      { title: "Visual Calendar", description: "See your entire financial month at a glance." },
+      { title: "Income + Bills", description: "Both income and bills shown on their due dates." },
+      { title: "Balance Forecast", description: "Know your projected balance before month-end." },
+      { title: "No Surprises", description: "Never be caught off guard by a bill again." },
+    ],
+    ogPhone: { title: "March 2026", items: ["1st: Salary +$4,200", "5th: Rent -$1,200", "10th: Internet -$60", "15th: Car -$350", "20th: Insurance -$180"], resultLabel: "Month-end", resultValue: "$2,310" },
+  },
+  {
+    slug: "money-chat",
+    title: "Money Chat",
+    headline: "Ask Your Money",
+    headlineAccent: "Anything",
+    tagline: "Chat with your finances in natural language. Ask questions like 'how much did I spend on food last month?' and get instant, accurate answers from your own data.",
+    badge: "Money Chat",
+    color: "violet-500",
+    hex: "#8b5cf6",
+    hexSecondary: "#a78bfa",
+    steps: [
+      { title: "Ask a Question", description: "Type any financial question in plain English. No special syntax needed — just ask like you'd ask a friend.", items: [{ label: "You", value: "How much on food?" }, { label: "Context", value: "Your transactions" }, { label: "Language", value: "Natural" }, { label: "Speed", value: "Instant", highlight: true }] },
+      { title: "Get Accurate Answers", description: "AI analyzes your actual transaction data and gives you specific, number-backed answers.", items: [{ label: "Food last month", value: "$485" }, { label: "vs. previous", value: "+12%" }, { label: "Top merchant", value: "FreshMart" }, { label: "Data source", value: "Your txns", highlight: true }] },
+      { title: "Follow Up", description: "Continue the conversation — ask follow-ups, drill down into categories, compare months, or ask for advice.", items: [{ label: "You", value: "Compare to January" }, { label: "AI", value: "Jan was $420" }, { label: "Difference", value: "+$65 (+15%)" }, { label: "Sessions saved", value: "Yes", highlight: true }] },
+    ],
+    benefits: [
+      { title: "Natural Language", description: "Just type your question — no complex UI needed." },
+      { title: "Your Real Data", description: "Answers come from your actual transactions." },
+      { title: "Conversation Memory", description: "Chat sessions are saved for future reference." },
+      { title: "Any Question", description: "Spending, trends, comparisons, predictions, and more." },
+    ],
+    ogPhone: { title: "Money Chat", items: ["Q: Food spending?", "A: $485 this month", "Q: vs last month?", "A: +12% increase", "Q: Top merchant?"], resultLabel: "A:", resultValue: "FreshMart" },
+  },
+  {
+    slug: "wealth-pilot",
+    title: "Wealth Pilot",
+    headline: "Grow Your Wealth,",
+    headlineAccent: "Step by Step",
+    tagline: "AI-powered wealth growth plan with a personalized wealth score, exact investment amounts, recommended platforms, and timelines tailored to your actual financial situation.",
+    badge: "Wealth Pilot",
+    color: "emerald-500",
+    hex: "#10b981",
+    hexSecondary: "#34d399",
+    steps: [
+      { title: "Wealth Score", description: "Get a personalized wealth score (0-100) based on your income, expenses, savings, reserves, and debt situation.", items: [{ label: "Income", value: "85/100" }, { label: "Savings", value: "60/100" }, { label: "Reserves", value: "70/100" }, { label: "Overall", value: "72/100", highlight: true }] },
+      { title: "Action Plan", description: "AI creates a step-by-step plan — exact amounts to invest, which platforms to use, and when to take each step.", items: [{ label: "Step 1", value: "Emergency fund" }, { label: "Step 2", value: "Index fund $500/mo" }, { label: "Step 3", value: "Real estate fund" }, { label: "Timeline", value: "12 months", highlight: true }] },
+      { title: "Projections", description: "See where you'll be in 1, 5, and 10 years if you follow the plan. Visualize your wealth growth.", items: [{ label: "1 year", value: "$18,000" }, { label: "5 years", value: "$95,000" }, { label: "10 years", value: "$245,000" }, { label: "Growth", value: "Compound", highlight: true }] },
+    ],
+    benefits: [
+      { title: "Wealth Score", description: "Know exactly where you stand financially." },
+      { title: "Personalized Plan", description: "Actions based on YOUR income and expenses." },
+      { title: "Specific Amounts", description: "Not vague advice — exact dollar amounts." },
+      { title: "Long-term Projections", description: "See your financial future with compound growth." },
+    ],
+    ogPhone: { title: "Wealth Pilot", items: ["Score: 72/100", "Monthly surplus: $800", "Step 1: Emergency fund", "Step 2: Index fund", "Step 3: Real estate"], resultLabel: "10-year goal", resultValue: "$245,000" },
+  },
+  {
+    slug: "investment-tracking",
+    title: "Investment Tracking",
+    headline: "Your Portfolio,",
+    headlineAccent: "Live & Clear",
+    tagline:
+      "Track stocks, ETFs, and bonds with live prices from Yahoo Finance. See real-time gain/loss, cost basis, and portfolio performance alongside your other reserves.",
+    badge: "Investment Tracking",
+    color: "indigo-500",
+    hex: "#6366f1",
+    hexSecondary: "#818cf8",
+    steps: [
+      {
+        title: "Add Your Investments",
+        description:
+          "Select Stock, ETF, or Bond as the reserve type. Enter the ticker symbol, quantity, and purchase price.",
+        items: [
+          { label: "Type", value: "Stock" },
+          { label: "Ticker", value: "AAPL" },
+          { label: "Shares", value: "10" },
+          { label: "Buy Price", value: "$150.00" },
+        ],
+      },
+      {
+        title: "Live Price Updates",
+        description:
+          "Hit Refresh Prices and MoneyStyle fetches the latest price from Yahoo Finance. Your portfolio value updates instantly.",
+        items: [
+          { label: "AAPL", value: "$198.50" },
+          { label: "VOO", value: "$512.30" },
+          { label: "MSFT", value: "$425.80" },
+          { label: "Updated", value: "Just now", highlight: true },
+        ],
+      },
+      {
+        title: "Track Gain & Loss",
+        description:
+          "See exactly how much you've gained or lost on each investment — both in absolute terms and percentage.",
+        items: [
+          { label: "Cost Basis", value: "$1,500" },
+          { label: "Current Value", value: "$1,985" },
+          { label: "Gain", value: "+$485", highlight: true },
+          { label: "Return", value: "+32.3%" },
+        ],
+      },
+    ],
+    benefits: [
+      {
+        title: "Live Prices",
+        description: "Real-time data from Yahoo Finance for stocks, ETFs, and bonds.",
+      },
+      {
+        title: "Gain/Loss Tracking",
+        description: "See profit or loss with percentage for every investment.",
+      },
+      {
+        title: "Unified Net Worth",
+        description: "Investments + cash + gold + crypto — all in one view.",
+      },
+      {
+        title: "Historical Snapshots",
+        description: "Track how your portfolio value changes over time.",
+      },
+    ],
+    ogPhone: {
+      title: "Portfolio",
+      items: ["AAPL: $1,985", "VOO: $5,123", "MSFT: $4,258", "BTC: $2,100", "Gold: $3,500"],
+      resultLabel: "Total Net Worth",
+      resultValue: "$16,966",
+    },
+  },
+  {
+    slug: "subscription-detection",
+    title: "Subscription Detection",
+    headline: "Find Every",
+    headlineAccent: "Recurring Charge",
+    tagline:
+      "AI automatically scans your transactions to detect subscriptions and recurring payments. See your total monthly subscription cost and spot charges you forgot about.",
+    badge: "Subscription Detection",
+    color: "fuchsia-500",
+    hex: "#d946ef",
+    hexSecondary: "#e879f9",
+    steps: [
+      {
+        title: "Auto-Scan Transactions",
+        description:
+          "MoneyStyle analyzes 6 months of your transaction history, looking for patterns — same merchant, similar amount, regular interval.",
+        items: [
+          { label: "Transactions scanned", value: "847" },
+          { label: "Patterns found", value: "12" },
+          { label: "Time range", value: "6 months" },
+          { label: "Detection", value: "Automatic", highlight: true },
+        ],
+      },
+      {
+        title: "See All Subscriptions",
+        description:
+          "Every detected subscription shows the merchant, amount, frequency (weekly/monthly/yearly), and a confidence score.",
+        items: [
+          { label: "Netflix", value: "$15.99/mo" },
+          { label: "Spotify", value: "$9.99/mo" },
+          { label: "iCloud", value: "$2.99/mo" },
+          { label: "Gym", value: "$49.99/mo", highlight: true },
+        ],
+      },
+      {
+        title: "Know Your Total",
+        description:
+          "See your total monthly and yearly subscription spend. Are you paying more than you thought?",
+        items: [
+          { label: "Monthly total", value: "$86.96" },
+          { label: "Yearly total", value: "$1,043.52" },
+          { label: "Subscriptions", value: "8 active" },
+          { label: "Review needed?", value: "3 charges", highlight: true },
+        ],
+      },
+    ],
+    benefits: [
+      {
+        title: "Automatic Detection",
+        description: "No manual entry — AI finds recurring patterns in your spending.",
+      },
+      {
+        title: "Confidence Scoring",
+        description: "Each subscription gets a confidence score so you know what's real.",
+      },
+      {
+        title: "Monthly Totals",
+        description: "See exactly how much subscriptions cost you per month and year.",
+      },
+      {
+        title: "Spot Hidden Charges",
+        description: "Find subscriptions you forgot about or no longer use.",
+      },
+    ],
+    ogPhone: {
+      title: "Subscriptions",
+      items: ["Netflix: $15.99", "Spotify: $9.99", "iCloud: $2.99", "Gym: $49.99", "Adobe: $54.99"],
+      resultLabel: "Monthly Total",
+      resultValue: "$133.95",
+    },
+  },
+  {
+    slug: "household-sharing",
+    title: "Household Sharing",
+    headline: "Family Finances,",
+    headlineAccent: "Together",
+    tagline:
+      "Create a household, invite your partner or family members, and view everyone's spending in one shared dashboard. Know exactly where the household money goes.",
+    badge: "Household Sharing",
+    color: "pink-500",
+    hex: "#ec4899",
+    hexSecondary: "#f472b6",
+    steps: [
+      {
+        title: "Create Your Household",
+        description:
+          "Give your household a name — 'Our Family', 'Home Budget', or anything you like. You become the owner.",
+        items: [
+          { label: "Name", value: "Our Family" },
+          { label: "Role", value: "Owner" },
+          { label: "Members", value: "1" },
+          { label: "Created", value: "Just now", highlight: true },
+        ],
+      },
+      {
+        title: "Invite Members",
+        description:
+          "Invite your partner, spouse, or family members by email. They accept the invite and join your household.",
+        items: [
+          { label: "Invite sent", value: "partner@email.com" },
+          { label: "Status", value: "Pending..." },
+          { label: "Expires", value: "7 days" },
+          { label: "Max members", value: "Unlimited", highlight: true },
+        ],
+      },
+      {
+        title: "Shared Transactions",
+        description:
+          "See all household members' transactions in one view. Each transaction shows who spent it.",
+        items: [
+          { label: "Sina", value: "Groceries $85" },
+          { label: "Partner", value: "Gas $45" },
+          { label: "Sina", value: "Restaurant $62" },
+          { label: "Total this month", value: "$2,847", highlight: true },
+        ],
+      },
+    ],
+    benefits: [
+      {
+        title: "Unlimited Members",
+        description: "Invite as many family members as you need — no limits.",
+      },
+      {
+        title: "Shared View",
+        description: "See everyone's spending in one place with attribution.",
+      },
+      {
+        title: "Individual Data Safe",
+        description: "Each member keeps their own account — sharing is opt-in.",
+      },
+      {
+        title: "Owner Controls",
+        description: "The owner can invite, remove members, and manage the household.",
+      },
+    ],
+    ogPhone: {
+      title: "Our Family",
+      items: ["Sina: $1,245", "Partner: $892", "Groceries: $342", "Dining: $185", "Transport: $128"],
+      resultLabel: "Household Total",
+      resultValue: "$2,137",
+    },
+  },
+  {
+    slug: "developer-api",
+    title: "Developer API",
+    headline: "Build With",
+    headlineAccent: "MoneyStyle",
+    tagline:
+      "Full REST API for transactions, categories, and accounts. Automate your financial workflows, build custom dashboards, or integrate with Zapier and n8n.",
+    badge: "Developer API",
+    color: "gray-500",
+    hex: "#6b7280",
+    hexSecondary: "#9ca3af",
+    steps: [
+      {
+        title: "Generate API Key",
+        description:
+          "Go to Settings → Integrations → API and generate your personal API key. It starts with 'ms_' and is unique to your account.",
+        items: [
+          { label: "Key format", value: "ms_abc123..." },
+          { label: "Auth", value: "Bearer token" },
+          { label: "Rate limit", value: "Unlimited" },
+          { label: "Generate", value: "One click", highlight: true },
+        ],
+      },
+      {
+        title: "Make API Calls",
+        description:
+          "Use standard REST endpoints to list, create, update, and delete transactions, categories, and accounts.",
+        items: [
+          { label: "GET", value: "/api/v1/transactions" },
+          { label: "POST", value: "/api/v1/transactions" },
+          { label: "PATCH", value: "/api/v1/transactions/:id" },
+          { label: "DELETE", value: "/api/v1/transactions/:id", highlight: true },
+        ],
+      },
+      {
+        title: "Build Automations",
+        description:
+          "Connect MoneyStyle to Zapier, n8n, or your own scripts. Auto-log expenses from bank emails, sync with spreadsheets, or build custom dashboards.",
+        items: [
+          { label: "Zapier", value: "Webhook trigger" },
+          { label: "n8n", value: "HTTP node" },
+          { label: "Custom script", value: "Python, JS, etc." },
+          { label: "Docs", value: "/docs/api", highlight: true },
+        ],
+      },
+    ],
+    benefits: [
+      {
+        title: "Full CRUD",
+        description: "Create, read, update, and delete transactions, categories, and accounts.",
+      },
+      {
+        title: "Filtering & Pagination",
+        description: "Filter by date, type, category, merchant, amount — with pagination.",
+      },
+      {
+        title: "Secure",
+        description: "Per-user API keys with Bearer token authentication.",
+      },
+      {
+        title: "Well Documented",
+        description: "Complete API documentation with examples at /docs/api.",
+      },
+    ],
+    ogPhone: {
+      title: "API Response",
+      items: ["GET /transactions", "200 OK", "total: 142", "page: 1", "pageSize: 20"],
+      resultLabel: "Endpoints",
+      resultValue: "15 routes",
+    },
+  },
+  {
+    slug: "financial-tips",
+    title: "Financial Tips",
+    headline: "Smart Tips,",
+    headlineAccent: "Real Data",
+    tagline:
+      "Personalized financial tips based on your actual spending, income, and savings — not generic advice. Budget warnings, savings rate, emergency fund status, and achievement milestones.",
+    badge: "Financial Tips",
+    color: "sky-500",
+    hex: "#0ea5e9",
+    hexSecondary: "#38bdf8",
+    steps: [
+      {
+        title: "Data-Driven Insights",
+        description:
+          "MoneyStyle analyzes your transactions, budgets, savings goals, and reserves to generate personalized tips.",
+        items: [
+          { label: "Transactions", value: "Analyzed" },
+          { label: "Budgets", value: "Checked" },
+          { label: "Savings", value: "Scored" },
+          { label: "Tips", value: "Personalized", highlight: true },
+        ],
+      },
+      {
+        title: "Actionable Warnings",
+        description:
+          "Get warnings when your budget is nearly full, when you're spending more than you earn, or when your emergency fund is low.",
+        items: [
+          { label: "Groceries budget", value: "85% used" },
+          { label: "Savings rate", value: "12%" },
+          { label: "Emergency fund", value: "1.5 months" },
+          { label: "Action needed", value: "3 items", highlight: true },
+        ],
+      },
+      {
+        title: "Celebrate Wins",
+        description:
+          "Hit milestones and get recognized — 100 transactions logged, savings goal reached, or saving 20%+ of income.",
+        items: [
+          { label: "Transactions", value: "500+ logged" },
+          { label: "Savings rate", value: "22%" },
+          { label: "Goal reached", value: "Vacation fund" },
+          { label: "Achievement", value: "Unlocked!", highlight: true },
+        ],
+      },
+    ],
+    benefits: [
+      {
+        title: "Personalized",
+        description: "Tips based on YOUR data, not generic financial advice.",
+      },
+      {
+        title: "Always Fresh",
+        description: "Tips update as your financial situation changes.",
+      },
+      {
+        title: "Actionable",
+        description: "Each tip tells you exactly what to do and why.",
+      },
+      {
+        title: "Motivating",
+        description: "Achievements and milestones keep you on track.",
+      },
+    ],
+    ogPhone: {
+      title: "Your Tips",
+      items: ["Saving 22% of income", "Top: Groceries $342", "Budget: 85% used", "Goal: 75% done", "Emergency: 1.5 mo"],
+      resultLabel: "Financial Score",
+      resultValue: "Great!",
+    },
+  },
 ];
 
 export function getFeature(slug: string): FeatureConfig | undefined {

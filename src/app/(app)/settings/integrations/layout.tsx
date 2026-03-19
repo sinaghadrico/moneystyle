@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import NextLink from "next/link";
-import { Brain, Send, MessageSquare } from "lucide-react";
+import { Brain, Send, MessageSquare, Code } from "lucide-react";
 
 const INTEGRATION_TABS = [
   { key: "ai", href: "/settings/integrations", label: "AI", icon: Brain },
   { key: "telegram", href: "/settings/integrations/telegram", label: "Telegram", icon: Send },
   { key: "sms", href: "/settings/integrations/sms", label: "SMS", icon: MessageSquare },
+  { key: "api", href: "/settings/integrations/api", label: "API", icon: Code },
 ] as const;
 
 export default function SettingsIntegrationsLayout({ children }: { children: React.ReactNode }) {

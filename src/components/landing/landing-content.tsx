@@ -47,6 +47,10 @@ import {
   Users,
   UtensilsCrossed,
   Wallet,
+  LineChart,
+  Eye,
+  Code,
+  GraduationCap,
 } from "lucide-react";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -202,7 +206,7 @@ const FEATURES: {
     icon: PiggyBank,
     title: "Reserves & Net Worth",
     description:
-      "Track cash, gold, crypto, and other reserves. Know your net worth at any time.",
+      "Track cash, gold, crypto, stocks, ETFs, bonds, and more. Know your net worth at any time.",
     color: "text-amber-500",
     bg: "bg-amber-500/10",
     href: "/features/reserves",
@@ -322,6 +326,7 @@ const FEATURES: {
       "Import bank CSV statements or Telegram chat exports to bulk-create transactions instantly.",
     color: "text-slate-500",
     bg: "bg-slate-500/10",
+    href: "/features/bulk-import",
   },
   {
     icon: Wallet,
@@ -330,6 +335,7 @@ const FEATURES: {
       "Manage multiple accounts — bank, wallet, exchange, cash — each with its own color and icon.",
     color: "text-zinc-500",
     bg: "bg-zinc-500/10",
+    href: "/features/account-management",
   },
   {
     icon: Trophy,
@@ -338,6 +344,7 @@ const FEATURES: {
       "Your annual spending recap — top categories, biggest expense, favorite merchant, and trends.",
     color: "text-amber-400",
     bg: "bg-amber-400/10",
+    href: "/features/spending-wrapped",
   },
   {
     icon: Scissors,
@@ -346,6 +353,7 @@ const FEATURES: {
       "AI analyzes your bills and recurring expenses to find subscriptions to cancel and costs to reduce.",
     color: "text-rose-500",
     bg: "bg-rose-500/10",
+    href: "/features/bill-negotiator",
   },
   {
     icon: CalendarDays,
@@ -354,6 +362,7 @@ const FEATURES: {
       "Monthly calendar showing income, bills, and expenses day by day with projected balance chart.",
     color: "text-indigo-500",
     bg: "bg-indigo-500/10",
+    href: "/features/cashflow-calendar",
   },
   {
     icon: MessageCircle,
@@ -362,6 +371,7 @@ const FEATURES: {
       "Chat with your finances — ask questions like \"how much did I spend on food?\" and get instant answers.",
     color: "text-violet-500",
     bg: "bg-violet-500/10",
+    href: "/features/money-chat",
   },
   {
     icon: Rocket,
@@ -370,6 +380,52 @@ const FEATURES: {
       "AI-powered wealth growth plan with exact amounts, platforms, and timelines tailored to your finances.",
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
+    href: "/features/wealth-pilot",
+  },
+  {
+    icon: LineChart,
+    title: "Investment Tracking",
+    description:
+      "Track stocks, ETFs, and bonds with live prices from Yahoo Finance. See gain/loss and portfolio performance.",
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+    href: "/features/investment-tracking",
+  },
+  {
+    icon: Eye,
+    title: "Subscription Detection",
+    description:
+      "AI auto-detects recurring payments from your transactions — Netflix, Spotify, gym — with monthly totals.",
+    color: "text-fuchsia-500",
+    bg: "bg-fuchsia-500/10",
+    href: "/features/subscription-detection",
+  },
+  {
+    icon: Users,
+    title: "Household Sharing",
+    description:
+      "Create a household, invite your partner or family, and see everyone's spending in one place.",
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
+    href: "/features/household-sharing",
+  },
+  {
+    icon: Code,
+    title: "Developer API",
+    description:
+      "Full REST API for transactions, categories, and accounts. Build automations and custom integrations.",
+    color: "text-gray-500",
+    bg: "bg-gray-500/10",
+    href: "/features/developer-api",
+  },
+  {
+    icon: GraduationCap,
+    title: "Financial Tips",
+    description:
+      "Personalized tips based on your real data — budget warnings, savings rate, emergency fund status, and more.",
+    color: "text-sky-500",
+    bg: "bg-sky-500/10",
+    href: "/features/financial-tips",
   },
 ];
 
@@ -926,6 +982,9 @@ export function LandingContent() {
                   ["AI Money Advice", true, false, "Limited"],
                   ["Multi-Currency", true, "Manual", "Limited"],
                   ["Budget Alerts", true, false, true],
+                  ["Investment Tracking", true, false, false],
+                  ["Subscription Detection", true, false, false],
+                  ["Developer API", true, false, false],
                   ["Free to Start", true, true, "Varies"],
                 ].map(([feature, ms, sheet, basic], i) => (
                   <tr key={i} className="border-b last:border-0">
@@ -956,7 +1015,7 @@ export function LandingContent() {
             className={`text-center mb-12 transition-all duration-700 ${features.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
           >
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              25 features. One app.
+              30 features. One app.
             </h2>
             <p className="mt-3 text-muted-foreground text-lg">
               Everything you need to manage your money — and then some.
@@ -1158,10 +1217,17 @@ export function LandingContent() {
       {/* ── Footer ── */}
       <footer className="border-t">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <LogoMark className="h-4 w-4" />
               <span>MoneyStyle</span>
+              <span className="text-muted-foreground/40">·</span>
+              <Link
+                href="/docs/api"
+                className="hover:text-foreground transition-colors"
+              >
+                API Docs
+              </Link>
             </div>
             <p>AI-powered personal finance tracker</p>
           </div>

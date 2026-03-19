@@ -61,6 +61,11 @@ const jsonLd = [
       "Price Comparison",
       "Savings Goals",
       "Multi-Currency Support",
+      "Investment Tracking",
+      "Subscription Detection",
+      "Household Sharing",
+      "Developer API",
+      "Financial Tips",
     ],
   },
   {

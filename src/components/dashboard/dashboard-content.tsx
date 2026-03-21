@@ -23,11 +23,15 @@ import { getAccountsList } from "@/actions/transactions";
 import { getBudgetProgress, type BudgetProgress } from "@/actions/budgets";
 import { getSavingsProgress } from "@/actions/savings";
 import { getDebtSummary } from "@/actions/persons";
+import { getNetWorthData } from "@/actions/net-worth";
+import type { NetWorthData } from "@/actions/net-worth";
 import { BudgetProgressCard } from "./budget-progress";
 import { PredictionCard } from "./prediction-card";
 import { SavingsCard } from "./savings-card";
 import { DebtsCard } from "./debts-card";
+import { NetWorthCard } from "./net-worth-card";
 import { SpendingHeatmap } from "./spending-heatmap";
+import { QuickActions } from "./quick-actions";
 import type {
   DashboardStats,
   MonthlyData,
@@ -75,6 +79,7 @@ export function DashboardContent() {
   const [debts, setDebts] = useState<DebtSummary[]>([]);
   const [prediction, setPrediction] = useState<ExpensePrediction | null>(null);
   const [dailySpend, setDailySpend] = useState<DailySpend[]>([]);
+  const [netWorth, setNetWorth] = useState<NetWorthData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,7 +89,7 @@ export function DashboardContent() {
   const loadData = useCallback(async (p: PeriodFilter, accId: string) => {
     setLoading(true);
     const aid = accId || undefined;
-    const [s, m, c, t, mc, bp, sp, pred, d, ds] = await Promise.all([
+    const [s, m, c, t, mc, bp, sp, pred, d, ds, nw] = await Promise.all([
       getDashboardStats(p, aid),
       getMonthlyData(p, aid),
       getCategoryBreakdown(p, aid),
@@ -95,6 +100,7 @@ export function DashboardContent() {
       getExpensePrediction(),
       getDebtSummary(),
       getDailySpendData(),
+      getNetWorthData(),
     ]);
     setStats(s);
     setMonthly(m);
@@ -107,6 +113,7 @@ export function DashboardContent() {
     setPrediction(pred);
     setDebts(d);
     setDailySpend(ds);
+    setNetWorth(nw);
     setLoading(false);
   }, []);
 
@@ -128,8 +135,8 @@ export function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold tracking-tight truncate">📊 Dashboard</h2>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <h2 className="text-2xl font-bold tracking-tight">📊 Dashboard</h2>
         <div className="flex items-center gap-2 shrink-0">
           {accounts.length > 1 && (
             <Select
@@ -153,6 +160,10 @@ export function DashboardContent() {
         </div>
       </div>
 
+      <div className="md:hidden">
+        <QuickActions />
+      </div>
+
       {loading || !stats ? (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -169,6 +180,7 @@ export function DashboardContent() {
       ) : (
         <>
           <StatsCards stats={stats} />
+          {netWorth && <NetWorthCard data={netWorth} />}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {showPrediction && prediction && <PredictionCard prediction={prediction} />}
             {showBudgets && budgets.length > 0 && <BudgetProgressCard data={budgets} />}

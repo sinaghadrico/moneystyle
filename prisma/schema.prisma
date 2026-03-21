@@ -51,6 +51,8 @@ model User {
   householdMembers      HouseholdMember[]
   sentInvites           HouseholdInvite[]
   blogPosts             BlogPost[]
+  challenges            Challenge[]
+  badges                Badge[]
   appSettings           AppSettings?
   userPreference        UserPreference?
 
@@ -754,4 +756,38 @@ model Currency {
   updatedAt DateTime @updatedAt
 
   @@map("currencies")
+}
+
+model Challenge {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "no-spend-day", "no-spend-weekend", "save-target", "streak-logging", "under-budget"
+  title       String
+  description String
+  targetValue Decimal? @db.Decimal(12, 2) // target amount for save-target
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("active") // "active", "completed", "failed"
+  progress    Int      @default(0) // percentage 0-100
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("challenges")
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "first-transaction", "week-streak", "month-streak", "budget-master", "saver", "no-spend-hero"
+  name        String
+  description String
+  icon        String   // emoji
+  earnedAt    DateTime @default(now())
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@map("badges")
 }

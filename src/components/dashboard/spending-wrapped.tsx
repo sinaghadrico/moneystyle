@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, X } from "lucide-react";
 import { getWrappedData } from "@/actions/wrapped";
 import type { WrappedData } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ import { FavoriteMerchantSlide } from "./wrapped-slides/favorite-merchant-slide"
 import { SpendingPatternSlide } from "./wrapped-slides/spending-pattern-slide";
 import { FunFactsSlide } from "./wrapped-slides/fun-facts-slide";
 import { SummarySlide } from "./wrapped-slides/summary-slide";
+import { WrappedShareCards } from "./wrapped-share-cards";
 
 type Props = {
   open: boolean;
@@ -49,6 +50,7 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
   const [data, setData] = useState<WrappedData | null>(null);
   const [loading, setLoading] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [showShareCards, setShowShareCards] = useState(false);
 
   const loadData = useCallback(async (m: string) => {
     setLoading(true);
@@ -157,7 +159,15 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
       }
     }, 30);
     return () => clearInterval(tick);
-  }, [open, loading, isEmpty, slideIndex, totalSlides, onOpenChange, SLIDE_DURATION]);
+  }, [
+    open,
+    loading,
+    isEmpty,
+    slideIndex,
+    totalSlides,
+    onOpenChange,
+    SLIDE_DURATION,
+  ]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -204,7 +214,12 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
                 <div
                   className="h-full rounded-full bg-white"
                   style={{
-                    width: i < slideIndex ? "100%" : i === slideIndex ? `${progress * 100}%` : "0%",
+                    width:
+                      i < slideIndex
+                        ? "100%"
+                        : i === slideIndex
+                          ? `${progress * 100}%`
+                          : "0%",
                     transition: i === slideIndex ? "none" : "width 300ms",
                   }}
                 />
@@ -227,14 +242,27 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
               ))}
             </SelectContent>
           </Select>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {data && data.transactionCount > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                onClick={() => setShowShareCards(true)}
+                title="Share cards"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Slide area */}
@@ -302,6 +330,14 @@ export function SpendingWrapped({ open, onOpenChange }: Props) {
           )}
         </div>
       </div>
+
+      {/* Share cards overlay */}
+      {showShareCards && data && data.transactionCount > 0 && (
+        <WrappedShareCards
+          data={data}
+          onClose={() => setShowShareCards(false)}
+        />
+      )}
     </div>
   );
 }

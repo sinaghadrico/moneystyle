@@ -11,6 +11,7 @@ import {
   Palette,
   MessageCircle,
   Rocket,
+  Trophy,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { WrappedButton } from "./wrapped-button";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/wealth", label: "Wealth Pilot", icon: Rocket, feature: "wealthPilot" as FeatureKey },
   { href: "/chat", label: "Money Chat", icon: MessageCircle, feature: "chat" as FeatureKey },
   { href: "/lifestyle", label: "Lifestyle", icon: Palette, feature: "_lifestyle" as FeatureKey },
+  { href: "/challenges", label: "Challenges", icon: Trophy },
   { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

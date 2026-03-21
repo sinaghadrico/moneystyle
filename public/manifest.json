@@ -1,10 +1,12 @@
 {
   "name": "MoneyStyle - Finance Tracker",
   "short_name": "MoneyStyle",
+  "description": "100% free personal finance tracker with AI features",
   "display": "standalone",
   "start_url": "/",
   "theme_color": "#09090b",
   "background_color": "#09090b",
+  "categories": ["finance", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-192.svg",
@@ -22,5 +24,36 @@
       "type": "image/svg+xml",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Expense",
+      "short_name": "Expense",
+      "description": "Quick add a new expense",
+      "url": "/transactions?action=add&type=expense",
+      "icons": [{ "src": "/icons/shortcut-expense.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Add Income",
+      "short_name": "Income",
+      "description": "Quick add a new income",
+      "url": "/transactions?action=add&type=income",
+      "icons": [{ "src": "/icons/shortcut-income.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your financial dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/shortcut-dashboard.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Scan Receipt",
+      "short_name": "Scan",
+      "description": "Scan a receipt",
+      "url": "/transactions?action=add&scan=true",
+      "icons": [{ "src": "/icons/shortcut-scan.svg", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": []
 }

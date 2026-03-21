@@ -20,10 +20,11 @@
 9. [Listing Sites](#9-listing-sites)
 10. [Telegram & MENA Market](#10-telegram--mena-market)
 11. [YouTube](#11-youtube)
-12. [Paid Channels](#12-paid-channels)
-13. [Ready-to-Use Copy](#13-ready-to-use-copy)
-14. [Weekly Schedule](#14-weekly-schedule)
-15. [KPIs & Tracking](#15-kpis--tracking)
+12. [Auto-Promote Platforms](#12-auto-promote-platforms-submit-once-they-promote-for-you)
+13. [Paid Channels](#13-paid-channels)
+14. [Ready-to-Use Copy](#14-ready-to-use-copy)
+15. [Weekly Schedule](#15-weekly-schedule)
+16. [KPIs & Tracking](#16-kpis--tracking)
 
 ---
 
@@ -522,7 +523,112 @@ Cover: Architecture, Server Actions, AI integration, Google Maps
 
 ---
 
-## 12. Paid Channels
+## 12. Auto-Promote Platforms (Submit Once, They Promote For You)
+
+These platforms promote your product to their audience — you just submit and they do the rest.
+
+### 🔴 Highest Impact (Submit First)
+
+| # | Platform | URL | Audience | Cost | What They Do |
+|---|----------|-----|----------|------|-------------|
+| 1 | **Product Hunt** | producthunt.com | 1M+ users | Free | Featured on homepage, newsletter, badge |
+| 2 | **AlternativeTo** | alternativeto.net | High SEO traffic | Free | Shows MoneyStyle when users search YNAB/Mint |
+| 3 | **There's An AI For That** | theresanaiforthat.com | 5M monthly visitors | Free | Listed in AI tools directory |
+| 4 | **Futurepedia** | futurepedia.io | 3M+ monthly | Free | AI tools newsletter + listing |
+| 5 | **SaaSHub** | saashub.com | High SEO | Free | Listed alongside competitors |
+
+### 🟠 Newsletters & Media (They Write About You)
+
+| # | Platform | URL | Subscribers | Cost | How |
+|---|----------|-----|------------|------|-----|
+| 6 | **Ben's Bites** | bensbites.com/submit | 500K+ | Free | Submit form → they feature AI tools |
+| 7 | **TLDR Newsletter** | tldr.tech/submit | 1M+ | Free | Submit form → featured in daily email |
+| 8 | **Console.dev** | console.dev | 50K+ devs | Free | Submit → weekly developer tools roundup |
+| 9 | **Uneed** | uneed.best | 30K+ | Free | Submit → vote system like Product Hunt |
+| 10 | **BetaList** | betalist.com | 60K+ | Free (2 week queue) or $129 instant | Email blast to early adopter subscribers |
+
+### 🟡 Directories (Submit Once, Permanent Listing)
+
+| # | Platform | URL | Cost | Notes |
+|---|----------|-----|------|-------|
+| 11 | **AppSumo Marketplace** | appsumo.com/partners | Free | Can run lifetime deals |
+| 12 | **GetApp** | getapp.com | Free | Gartner-owned, high trust |
+| 13 | **G2** | g2.com | Free | Enterprise review platform |
+| 14 | **Capterra** | capterra.com | Free | High SEO for "best X software" |
+| 15 | **ToolPilot** | toolpilot.ai | Free | AI tools directory |
+| 16 | **TopAI.tools** | topai.tools | Free | AI tools directory |
+| 17 | **AI Tool Directory** | aitoolsdirectory.com | Free | Curated AI tools |
+| 18 | **StartupBase** | startupbase.io | Free | Startup directory |
+| 19 | **Launching Next** | launchingnext.com | Free | Startup launch platform |
+| 20 | **MicroLaunch** | microlaunch.net | Free | Indie maker launches |
+| 21 | **Fazier** | fazier.com | Free | Product launch platform |
+
+### Submit Info Template (Copy-Paste for All Platforms)
+
+```
+Name: MoneyStyle
+URL: https://moneystyle.app
+Tagline: 100% free AI-powered personal finance tracker with 30+ features
+Category: Personal Finance / Budgeting / AI Tools
+
+Description (short):
+Free personal finance tracker with AI receipt scanning, voice transactions,
+Google Maps spending, budget rollover, household sharing, and 25+ more features.
+No subscriptions, no ads.
+
+Description (long):
+MoneyStyle is a 100% free personal finance tracker that gives you premium
+features without the premium price. While apps like YNAB ($180/yr) and
+Monarch ($100/yr) lock features behind subscriptions, MoneyStyle offers
+30+ features completely free:
+
+- AI Receipt Scanning (GPT-4 Vision)
+- Voice Transactions (Whisper + GPT-4)
+- Spending on Google Maps
+- Budget Tracking with Rollover
+- Savings Goals with Animated Jar View
+- Financial Challenges & Gamification
+- Household Sharing with Leaderboard
+- Telegram Bot Integration
+- Travel Mode for Trip Expenses
+- Developer REST API
+- And 20+ more features
+
+AI features use your own OpenAI API key (~$0.01 per action).
+Built with Next.js 16, TypeScript, PostgreSQL, and GPT-4.
+
+Pricing: Free
+Platforms: Web (PWA)
+Alternatives to: YNAB, Mint, Monarch Money, Copilot Money, Rocket Money, Lunch Money
+Tags: personal finance, budgeting, expense tracker, AI, receipt scanning, free
+Founder: Sina Ghadri
+```
+
+### Submission Checklist
+
+- [ ] Product Hunt — submit (wait for best Tuesday/Wednesday)
+- [ ] AlternativeTo — list as alternative to YNAB, Mint, Monarch
+- [ ] There's An AI For That — submit via form
+- [ ] Futurepedia — submit via form
+- [ ] SaaSHub — submit via form
+- [ ] Ben's Bites — submit via bensbites.com/submit
+- [ ] TLDR — submit via tldr.tech/submit
+- [ ] Console.dev — submit via website
+- [ ] Uneed — submit and ask friends to upvote
+- [ ] BetaList — submit (free queue or paid instant)
+- [ ] GetApp — create vendor profile
+- [ ] G2 — create product listing
+- [ ] Capterra — create vendor profile
+- [ ] ToolPilot — submit via form
+- [ ] TopAI.tools — submit via form
+- [ ] StartupBase — submit via form
+- [ ] Launching Next — submit via form
+- [ ] MicroLaunch — submit via form
+- [ ] Fazier — submit via form
+
+---
+
+## 13. Paid Channels
 
 ### Google Ads (Start Week 2)
 
@@ -559,7 +665,7 @@ Copy: Same as Reddit post template above
 
 ---
 
-## 13. Ready-to-Use Copy
+## 14. Ready-to-Use Copy
 
 ### One-Liners
 ```
@@ -600,7 +706,7 @@ The business model is simple: AI features use your own OpenAI key at ~$0.01 per 
 
 ---
 
-## 14. Weekly Schedule
+## 15. Weekly Schedule
 
 ### Week 1: Launch
 | Day | Action |
@@ -643,7 +749,7 @@ The business model is simple: AI features use your own OpenAI key at ~$0.01 per 
 
 ---
 
-## 15. KPIs & Tracking
+## 16. KPIs & Tracking
 
 ### Metrics to Track Weekly
 

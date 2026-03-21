@@ -30,8 +30,18 @@
 20. [Onboarding Wizard](#20-onboarding-wizard)
 21. [Competitor Comparison Pages](#21-competitor-comparison-pages)
 22. [For Couples Page](#22-for-couples-page)
-23. [Development Guide](#23-development-guide)
-24. [Glossary](#24-glossary)
+23. [Money Map & Google Maps](#23-money-map--google-maps)
+24. [Voice Transaction](#24-voice-transaction)
+25. [Money Mood](#25-money-mood)
+26. [Merchant Intelligence](#26-merchant-intelligence)
+27. [Travel Mode](#27-travel-mode)
+28. [Financial Challenges & Gamification](#28-financial-challenges--gamification)
+29. [Savings Jar](#29-savings-jar)
+30. [Price Watch](#30-price-watch)
+31. [Net Worth Dashboard](#31-net-worth-dashboard)
+32. [Household Leaderboard](#32-household-leaderboard)
+33. [Development Guide](#33-development-guide)
+34. [Glossary](#34-glossary)
 
 ---
 
@@ -456,6 +466,10 @@ src/
 │   │   │   ├── features/
 │   │   │   └── advanced/
 │   │   ├── onboarding/           # Onboarding wizard (4-step)
+│   │   ├── money-map/            # Money Map (Google Maps)
+│   │   ├── merchants/            # Merchant Intelligence
+│   │   ├── challenges/           # Financial Challenges & Badges
+│   │   ├── travel/               # Travel Mode
 │   │   └── blog/admin/           # Blog CMS (admin)
 │   │
 │   ├── (public)/                 # Public routes
@@ -482,10 +496,11 @@ src/
 │       ├── telegram/
 │       ├── sms/
 │       ├── parse-receipt/
+│       ├── voice-transaction/    # Whisper + GPT-4 voice parsing
 │       └── cron/
 │
-├── actions/                      # 28 Server Action files
-├── components/                   # 145+ React components
+├── actions/                      # 32 Server Action files
+├── components/                   # 160+ React components
 │   ├── ui/                       # Base UI (shadcn)
 │   ├── dashboard/                # Dashboard widgets
 │   ├── transactions/             # Transaction components
@@ -497,10 +512,14 @@ src/
 │   ├── auth/                     # Auth components
 │   ├── onboarding/               # Onboarding wizard + redirect
 │   ├── comparisons/              # Competitor comparison pages
+│   ├── money-map/                # Money Map with Google Maps
+│   ├── merchants/                # Merchant Intelligence
+│   ├── challenges/               # Challenges & Badges
+│   ├── travel/                   # Travel Mode
 │   └── ...                       # Other feature components
 │
 ├── hooks/                        # 6 Custom React hooks
-└── lib/                          # 28 Utility files
+└── lib/                          # 30 Utility files
     ├── auth.ts                   # NextAuth config
     ├── db.ts                     # Prisma client
     ├── storage.ts                # MinIO/S3 abstraction
@@ -652,18 +671,25 @@ mindmap
       Spending Heatmap
       Category Breakdown
       Budget Progress + Rollover
-      Savings Goals
+      Net Worth Card
+      Savings Goals + Jar View
       Debt Overview
       AI Predictions
+      Money Mood Stats
+      Price Watch Alerts
+      Quick Actions (Mobile)
     Transactions
       Add / Edit / Delete
       Split Expenses
       Receipt Scanning
       CSV Import
       AI Import
+      Voice Transaction (AI)
       Merge Duplicates
       Tags & Filters
       Price Analysis
+      Location + GPS
+      Mood Tracking
     Profile
       Income Sources
       Monthly Cashflow
@@ -673,6 +699,7 @@ mindmap
       Savings Goals
       Reserves (Cash/Gold/Crypto)
       Household Sharing
+      Household Leaderboard
     Lifestyle
       Weekend Planner (AI)
       Meal Planner (AI)
@@ -686,6 +713,25 @@ mindmap
     Money Chat
       Conversational AI
       Financial Q&A
+    Money Map
+      Google Maps Integration
+      Location Bubbles
+      GPS Auto-Capture
+      Places Search
+    Merchants
+      Merchant Profiles
+      Visit Frequency
+      Spending Trends
+      AI Insights
+    Travel Mode
+      Trip Management
+      Auto-Tag Transactions
+      Trip Summary
+    Challenges
+      Financial Challenges
+      Streak Tracking
+      Badge System
+      Leaderboard
     Integrations
       Telegram Bot
       SMS Auto-Import
@@ -703,6 +749,7 @@ mindmap
     Marketing
       Comparison Pages vs Competitors
       For Couples Page
+      Shareable Wrapped Cards
 ```
 
 ### Feature Maturity Matrix
@@ -730,6 +777,22 @@ mindmap
 | Onboarding Wizard | Production | No | Yes |
 | Comparison/SEO Pages | Production | No | N/A |
 | For Couples Page | Production | No | N/A |
+| Net Worth Dashboard | Production | No | Yes |
+| Financial Challenges | Production | No | Yes |
+| Badge System | Production | No | Yes |
+| Shareable Wrapped Cards | Production | No | Yes |
+| PWA Shortcuts | Production | No | Yes |
+| Quick Actions | Production | No | Mobile-only |
+| Money Map (Google Maps) | Production | No | Yes |
+| Location Picker | Production | No | Yes |
+| GPS Capture | Production | No | Yes |
+| Voice Transaction | Production | Yes (Whisper + GPT-4) | Yes |
+| Money Mood | Production | No | Yes |
+| Price Watch | Production | No | Yes |
+| Merchant Intelligence | Production | No | Yes |
+| Household Leaderboard | Production | No | Yes |
+| Savings Jar | Production | No | Yes |
+| Travel Mode | Production | No | Yes |
 
 ---
 
@@ -1356,7 +1419,250 @@ Marketing page at `/for-couples` targeting couples and households who want to ma
 
 ---
 
-## 23. Development Guide
+## 23. Money Map & Google Maps
+
+Transactions with GPS coordinates are displayed on an interactive Google Map.
+
+### How It Works
+
+```mermaid
+graph LR
+    ADD[Add Transaction] --> GPS[📍 GPS Capture]
+    ADD --> SEARCH[🔍 Places Search]
+    GPS --> DB[(latitude, longitude, location)]
+    SEARCH --> DB
+    DB --> MAP[Money Map Page]
+    MAP --> PINS[Colored Pins on Google Maps]
+    MAP --> BUBBLES[Spending Bubbles]
+    MAP --> TIMELINE[Location Timeline]
+
+    style ADD fill:#dbeafe,stroke:#3b82f6
+    style MAP fill:#dcfce7,stroke:#22c55e
+```
+
+- **Location Picker**: Google Places Autocomplete search + tap-on-map + My Location button
+- **Pin Colors**: Green (low spend) → Yellow → Red (high spend), size proportional to amount
+- **InfoWindow**: Click pin to see location name, total spent, transaction count
+- **Requires**: `NEXT_PUBLIC_GOOGLE_MAPS_KEY` env var + Maps JavaScript API + Places API enabled
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/components/transactions/location-picker.tsx` | Map picker dialog with Places Autocomplete |
+| `src/components/money-map/money-map-content.tsx` | Full Money Map page with Google Maps + bubbles + timeline |
+| `src/app/(app)/money-map/page.tsx` | Route |
+
+---
+
+## 24. Voice Transaction
+
+Record voice → AI transcribes → parses into transaction → pre-fills Add Transaction form.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant MIC as MediaRecorder
+    participant W as Whisper API
+    participant GPT as GPT-4
+    participant FORM as Add Transaction Form
+
+    U->>MIC: 🎤 Record "50 dirhams coffee"
+    MIC->>W: Audio blob
+    W-->>GPT: "50 dirhams coffee"
+    GPT-->>FORM: {amount: 50, type: expense, category: Food, merchant: Coffee}
+    FORM-->>U: Pre-filled form → Confirm
+```
+
+- Checks for OpenAI API key before recording
+- Supports Persian + English
+- Pre-fills form, user reviews and confirms
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/components/transactions/voice-button.tsx` | Record button + state machine |
+| `src/app/api/voice-transaction/route.ts` | Whisper transcription + GPT-4 parsing |
+
+---
+
+## 25. Money Mood
+
+Tag transactions with mood emoji, see spending-by-mood insights.
+
+### Mood Types
+| Mood | Emoji | Color |
+|------|-------|-------|
+| Great | 😄 | Green |
+| Good | 🙂 | Emerald |
+| Okay | 😐 | Yellow |
+| Bad | 😟 | Orange |
+| Terrible | 😫 | Red |
+
+### Dashboard Insights
+- Average mood emoji for the month
+- "You spend 3x more when stressed"
+- Bar chart: mood distribution + spending per mood
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/components/transactions/mood-picker.tsx` | Emoji selector on each transaction |
+| `src/components/dashboard/mood-stats-card.tsx` | Dashboard mood analytics card |
+| Transaction model | `mood String?` field |
+
+---
+
+## 26. Merchant Intelligence
+
+Full merchant profiles with spending history, visit frequency, and AI insights.
+
+### Page: `/merchants`
+- Overview stats: unique merchants, most visited, highest spending
+- Merchant cards with sparkline trends (last 6 months)
+- Visit frequency badges: Weekly / Monthly / Occasional
+- Detail dialog: monthly bar chart, recent transactions, date range
+- AI insights: "You visit Carrefour every 4 days"
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/actions/merchants.ts` | Merchant profiles, trends, insights |
+| `src/components/merchants/merchants-content.tsx` | Full page UI |
+
+---
+
+## 27. Travel Mode
+
+Start a trip, auto-tag transactions, see trip spending summary.
+
+### Flow
+```mermaid
+graph LR
+    START[Start Trip<br/>Istanbul, TRY] --> TRACK[Transactions<br/>auto-tagged]
+    TRACK --> END[End Trip]
+    END --> SUMMARY[Trip Summary<br/>by category]
+
+    style START fill:#dbeafe,stroke:#3b82f6
+    style SUMMARY fill:#dcfce7,stroke:#22c55e
+```
+
+### Features
+- Create trip with name, currency, start date
+- Active trip banner on travel page
+- End trip → summary with category breakdown + daily spending
+- Trip history with past trip cards
+
+### Files
+| File | Purpose |
+|------|---------|
+| `prisma/schema.prisma` | Trip model + Transaction.tripId |
+| `src/actions/trips.ts` | Trip CRUD + summary |
+| `src/components/travel/travel-content.tsx` | Travel page UI |
+
+---
+
+## 28. Financial Challenges & Gamification
+
+Challenges, streaks, and badges to make finance fun.
+
+### Challenge Types
+| Type | Description | Duration |
+|------|-------------|----------|
+| No-Spend Day | Zero spending today | 1 day |
+| No-Spend Weekend | Zero spending this weekend | 2 days |
+| Save 500 | Save at least 500 this month | 30 days |
+| 7-Day Streak | Log transactions 7 days straight | 7 days |
+| Under Budget Week | Stay under budget all week | 7 days |
+
+### Badge Types
+| Badge | Icon | Requirement |
+|-------|------|------------|
+| First Step | 🎯 | First transaction |
+| Week Warrior | 🔥 | 7-day streak |
+| Monthly Master | ⚡ | 30-day streak |
+| Budget Boss | 👑 | Under budget full month |
+| Super Saver | 💎 | Saved more than spent |
+| No-Spend Hero | 🛡️ | 3 no-spend challenges completed |
+
+### Files
+| File | Purpose |
+|------|---------|
+| `prisma/schema.prisma` | Challenge + Badge models |
+| `src/lib/challenges-data.ts` | Constants (templates + definitions) |
+| `src/actions/challenges.ts` | CRUD + streak + badge logic |
+| `src/components/challenges/challenges-content.tsx` | Full page UI |
+
+---
+
+## 29. Savings Jar
+
+Animated SVG jar visualization for savings goals.
+
+- SVG jar shape with liquid fill based on progress %
+- CSS wave animation on liquid surface
+- Coin drop animation when depositing
+- Toggle between List View and Jar View in dashboard
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/components/profile/savings-jar.tsx` | Animated jar component |
+| `src/components/dashboard/savings-card.tsx` | Toggle list/jar view |
+
+---
+
+## 30. Price Watch
+
+Alerts when frequently purchased items change price significantly.
+
+- Detects items with >10% price change from average
+- Dashboard card with old → new price and % change badges
+- Red badges for increases, green for decreases
+- Links to full price analysis page
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/actions/price-watch.ts` | Price alerts + watched items |
+| `src/components/dashboard/price-watch-card.tsx` | Dashboard alert card |
+
+---
+
+## 31. Net Worth Dashboard
+
+Single card showing total net worth = assets - liabilities.
+
+- **Assets**: Account balances + Reserve values
+- **Liabilities**: Remaining installment amounts
+- Breakdown: Accounts (blue), Reserves (green), Liabilities (red)
+- TrendingUp/Down icon based on sign
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/actions/net-worth.ts` | Net worth calculation |
+| `src/components/dashboard/net-worth-card.tsx` | Dashboard card |
+
+---
+
+## 32. Household Leaderboard
+
+Competitive scoring between household members.
+
+- **Score**: Budget adherence (30%) + Savings rate (30%) + Streak (20%) + No-spend days (20%)
+- Podium display: 🥇🥈🥉 with avatars
+- Weekly winner banner
+- Stats table with all members
+
+### Files
+| File | Purpose |
+|------|---------|
+| `src/actions/leaderboard.ts` | Score calculation |
+| `src/components/profile/household-leaderboard.tsx` | Podium + table UI |
+
+---
+
+## 33. Development Guide
 
 ### Prerequisites
 
@@ -1434,7 +1740,7 @@ export async function createItem(data: z.infer<typeof schema>) {
 
 ---
 
-## 24. Glossary
+## 34. Glossary
 
 | Term | Definition |
 |------|-----------|
@@ -1456,6 +1762,18 @@ export async function createItem(data: z.infer<typeof schema>) {
 | **Budget Rollover** | Carrying unspent budget from previous month to current month |
 | **Onboarding Wizard** | 4-step setup guide shown to new users after first login |
 | **Comparison Page** | SEO landing page comparing MoneyStyle vs a competitor |
+| **Money Map** | Map visualization of spending by location using Google Maps |
+| **Voice Transaction** | Audio-to-transaction conversion using Whisper + GPT-4 |
+| **Money Mood** | Emotional tagging of transactions (great/good/okay/bad/terrible) |
+| **Merchant Intelligence** | Analytics dashboard for spending by merchant |
+| **Travel Mode** | Trip management with auto-tagged transactions |
+| **Savings Jar** | Animated SVG visualization of savings goal progress |
+| **Price Watch** | Alert system for significant price changes on purchased items |
+| **Net Worth** | Total assets (accounts + reserves) minus liabilities (installments) |
+| **Household Leaderboard** | Competitive scoring between household members |
+| **Location Picker** | Google Places Autocomplete + map tap for selecting transaction location |
+
+*Generated: March 2026 | MoneyStyle v2.0*
 
 ---
 

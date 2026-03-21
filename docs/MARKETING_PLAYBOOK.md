@@ -732,6 +732,49 @@ Landing: moneystyle.app
 - Use casual tone, not corporate
 - Best CPC: $0.30-0.80
 
+### Other Cheap Ad Platforms
+
+| Platform | CPC | Setup URL | Best For |
+|----------|-----|-----------|---------|
+| **Facebook/Instagram** | $0.10-0.30 | ads.meta.com | Cheapest CPC, broad awareness |
+| **Quora Ads** | $0.30-0.80 | quora.com/business | High-intent Q&A readers |
+| **Microsoft/Bing Ads** | $0.30-0.80 | ads.microsoft.com | Same as Google but 30-50% cheaper |
+| **Twitter/X Ads** | $0.25-0.50 | ads.x.com | Promote launch threads |
+| **Reddit Ads** | $0.20-0.50 | ads.reddit.com | Targeted subreddits |
+| **Google Ads** | $0.50-1.50 | ads.google.com | Highest intent but most expensive |
+
+### Recommended Low-Budget Plan ($3/day = $90/month)
+
+| Channel | Daily | Monthly | Clicks/Month | Why |
+|---------|-------|---------|-------------|-----|
+| Facebook/Instagram | $2 | ~$60 | 200-600 | Cheapest CPC, biggest reach |
+| Microsoft/Bing Ads | $1 | ~$30 | 30-75 | Google keywords without Google prices |
+| **Total** | **$3** | **~$90** | **230-675** | **~23-67 signups/month** |
+
+### Medium Budget Plan ($5/day = $150/month)
+
+| Channel | Daily | Monthly | Clicks/Month |
+|---------|-------|---------|-------------|
+| Facebook/Instagram | $2 | ~$60 | 200-600 |
+| Google Ads | $2 | ~$60 | 40-120 |
+| Bing Ads | $1 | ~$30 | 30-75 |
+| **Total** | **$5** | **~$150** | **270-795** |
+
+### Growth Budget Plan ($10/day = $300/month)
+
+| Channel | Daily | Monthly | Clicks/Month |
+|---------|-------|---------|-------------|
+| Facebook/Instagram | $4 | ~$120 | 400-1200 |
+| Google Ads | $3 | ~$90 | 60-200 |
+| Bing Ads | $2 | ~$60 | 60-150 |
+| Reddit Ads | $1 | ~$30 | 30-60 |
+| **Total** | **$10** | **~$300** | **550-1610** |
+
+### Key Insight
+Facebook/Instagram is **5x cheaper** per click than Google. Start there. Use Google only for high-intent keywords ("YNAB alternative free") where people are actively looking for a solution.
+
+All free submit platforms (Section 12) should be done **before** any paid ads — they bring traffic at $0.
+
 ---
 
 ## 14. Ready-to-Use Copy

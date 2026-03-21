@@ -17,6 +17,10 @@ import {
   ShoppingCart,
   MessageCircle,
   Rocket,
+  MapPin,
+  Plane,
+  Store,
+  Trophy,
 } from "lucide-react";
 
 const PRIMARY_NAV = [
@@ -35,6 +39,8 @@ const QUICK_ACTIONS = [
   { href: "/lifestyle/weekend", label: "Weekend Planner", icon: Calendar, color: "text-rose-500", bg: "bg-rose-500/10", feature: "weekendPlanner" as FeatureKey },
   { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10", feature: "mealPlanner" as FeatureKey },
   { href: "/lifestyle/shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10", feature: "shoppingLists" as FeatureKey },
+  { href: "/money-map", label: "Money Map", icon: MapPin, color: "text-teal-500", bg: "bg-teal-500/10" },
+  { href: "/travel", label: "Travel", icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10" },
 ];
 
 function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => void; actions: typeof QUICK_ACTIONS }) {
@@ -93,7 +99,7 @@ function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => vo
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-neutral-500" />
-              <span className="text-sm font-semibold">AI & Lifestyle</span>
+              <span className="text-sm font-semibold">More</span>
             </div>
           </div>
 
@@ -145,7 +151,7 @@ export function BottomNav() {
   const { settings } = useAppSettings();
 
   const visibleActions = QUICK_ACTIONS.filter(
-    (action) => settings.isAdmin || settings.featureFlags[action.feature]
+    (action) => !action.feature || settings.isAdmin || settings.featureFlags[action.feature]
   );
 
   return (
@@ -157,7 +163,7 @@ export function BottomNav() {
           className="fixed z-50 right-4 rounded-full bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-900 shadow-lg shadow-black/40 flex items-center justify-center gap-2 px-4 active:scale-95 transition-transform bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] h-12 w-auto md:bottom-6 md:h-10 animate-fab-pulse overflow-hidden fab-shimmer"
         >
           <Sparkles className="h-5 w-5 text-amber-400 md:h-4 md:w-4 animate-[spin_4s_linear_infinite]" />
-          <span className="text-sm font-medium text-white">AI & Lifestyle</span>
+          <span className="text-sm font-medium text-white">More</span>
         </button>
       )}
 

@@ -5,11 +5,12 @@ import NextLink from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Wallet, UserCircle, LogOut } from "lucide-react";
+import { Wallet, UserCircle, Trophy, LogOut } from "lucide-react";
 
 const TABS = [
   { key: "finance", href: "/profile", label: "Finance", icon: Wallet },
   { key: "personal", href: "/profile/personal", label: "Personal", icon: UserCircle },
+  { key: "challenges", href: "/profile/challenges", label: "Challenges", icon: Trophy },
 ] as const;
 
 export function ProfileLayout({ children }: { children: React.ReactNode }) {
@@ -49,7 +50,7 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
           const Icon = tab.icon;
           const isActive =
             tab.key === "finance"
-              ? !pathname.startsWith("/profile/personal")
+              ? !pathname.startsWith("/profile/personal") && !pathname.startsWith("/profile/challenges")
               : pathname.startsWith(tab.href);
           return (
             <NextLink

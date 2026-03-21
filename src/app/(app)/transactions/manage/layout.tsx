@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import NextLink from "next/link";
-import { Landmark, Users, Tags } from "lucide-react";
+import { Landmark, Users, Tags, Store } from "lucide-react";
 
 const MANAGE_TABS = [
   { key: "accounts", href: "/transactions/manage", label: "Accounts", icon: Landmark },
   { key: "persons", href: "/transactions/manage/persons", label: "Persons", icon: Users },
   { key: "categories", href: "/transactions/manage/categories", label: "Categories", icon: Tags },
+  { key: "merchants", href: "/transactions/manage/merchants", label: "Merchants", icon: Store },
 ] as const;
 
 export default function TransactionsManageLayout({ children }: { children: React.ReactNode }) {

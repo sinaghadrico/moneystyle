@@ -18,9 +18,10 @@ model User {
   hashedPassword String?
   image          String?
   emailVerified  DateTime?
-  role           String    @default("user")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  role                String    @default("user")
+  onboardingCompleted Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   accounts       OAuthAccount[]
   sessions       Session[]
@@ -195,13 +196,14 @@ model Category {
 }
 
 model Budget {
-  id             String   @id @default(cuid())
-  categoryId     String   @unique
-  category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  monthlyLimit   Decimal  @db.Decimal(12, 2)
-  alertThreshold Int      @default(80)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(cuid())
+  categoryId      String   @unique
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  monthlyLimit    Decimal  @db.Decimal(12, 2)
+  alertThreshold  Int      @default(80)
+  rolloverEnabled Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("budgets")
 }

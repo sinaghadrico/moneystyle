@@ -40,7 +40,7 @@ export function BudgetProgressCard({ data }: { data: BudgetProgress[] }) {
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         {data.map((b) => {
-          const remaining = b.monthlyLimit - b.spent;
+          const remaining = b.effectiveLimit - b.spent;
           return (
             <div
               key={b.categoryId}
@@ -59,6 +59,11 @@ export function BudgetProgressCard({ data }: { data: BudgetProgress[] }) {
               <p className="text-[10px] text-muted-foreground mb-1.5">
                 {remaining >= 0 ? `${formatCurrency(remaining)} left` : "Over budget!"}
               </p>
+              {b.rolloverEnabled && b.rolloverAmount !== 0 && (
+                <p className={`text-[10px] mb-1 ${b.rolloverAmount > 0 ? "text-emerald-500" : "text-red-400"}`}>
+                  {b.rolloverAmount > 0 ? "+" : ""}{formatCurrency(b.rolloverAmount)} rollover
+                </p>
+              )}
               <div className="h-1.5 w-full rounded-full bg-muted">
                 <div
                   className={`h-full rounded-full transition-all ${getBarColor(b.percentage, b.alertThreshold)}`}

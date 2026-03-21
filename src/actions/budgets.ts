@@ -23,6 +23,9 @@ export type BudgetProgress = {
   alertThreshold: number;
   spent: number;
   percentage: number;
+  rolloverEnabled: boolean;
+  rolloverAmount: number;
+  effectiveLimit: number;
 };
 
 /**
@@ -102,12 +105,26 @@ export async function getBudgetProgress(): Promise<BudgetProgress[]> {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
+  // Previous month range for rollover calculation
+  const prevStartOfMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevEndOfMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
   const results: BudgetProgress[] = [];
 
   for (const budget of budgets) {
     const spent = await getMySpentForCategory(userId, budget.categoryId, startOfMonth, endOfMonth);
     const limit = Number(budget.monthlyLimit);
-    const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+
+    let rolloverAmount = 0;
+    if (budget.rolloverEnabled) {
+      const prevSpent = await getMySpentForCategory(userId, budget.categoryId, prevStartOfMonth, prevEndOfMonth);
+      const prevRemaining = limit - prevSpent;
+      // Positive = underspent (add to this month), Negative = overspent (reduce this month)
+      rolloverAmount = Math.round(prevRemaining * 100) / 100;
+    }
+
+    const effectiveLimit = limit + rolloverAmount;
+    const percentage = effectiveLimit > 0 ? Math.round((spent / effectiveLimit) * 100) : 0;
 
     results.push({
       categoryId: budget.categoryId,
@@ -117,6 +134,9 @@ export async function getBudgetProgress(): Promise<BudgetProgress[]> {
       alertThreshold: budget.alertThreshold,
       spent,
       percentage,
+      rolloverEnabled: budget.rolloverEnabled,
+      rolloverAmount,
+      effectiveLimit,
     });
   }
 
@@ -141,11 +161,13 @@ export async function upsertBudget(data: Record<string, unknown>) {
     update: {
       monthlyLimit: values.monthlyLimit,
       alertThreshold: values.alertThreshold,
+      rolloverEnabled: values.rolloverEnabled,
     },
     create: {
       categoryId: values.categoryId,
       monthlyLimit: values.monthlyLimit,
       alertThreshold: values.alertThreshold,
+      rolloverEnabled: values.rolloverEnabled,
     },
   });
 

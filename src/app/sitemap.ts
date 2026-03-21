@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllSlugs } from "@/lib/feature-data";
+import { getAllComparisonSlugs } from "@/lib/comparison-data";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
     changeFrequency: "monthly" as const,
     priority: 0.7,
+  }));
+
+  const comparisonPages = getAllComparisonSlugs().map((slug) => ({
+    url: `${baseUrl}/vs/${slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
   }));
 
   // Blog posts
@@ -80,5 +88,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     },
     ...featurePages,
+    ...comparisonPages,
+    {
+      url: `${baseUrl}/for-couples`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
   ];
 }

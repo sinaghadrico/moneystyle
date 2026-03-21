@@ -21,6 +21,7 @@ type BudgetFormProps = {
   categoryName: string;
   existingLimit?: number;
   existingThreshold?: number;
+  existingRollover?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -31,6 +32,7 @@ export function BudgetFormDialog({
   categoryName,
   existingLimit,
   existingThreshold,
+  existingRollover,
   open,
   onOpenChange,
   onSuccess,
@@ -40,6 +42,7 @@ export function BudgetFormDialog({
   const [form, setForm] = useState({
     monthlyLimit: existingLimit?.toString() ?? "",
     alertThreshold: (existingThreshold ?? 80).toString(),
+    rolloverEnabled: existingRollover ?? false,
   });
 
   const handleSave = async () => {
@@ -48,6 +51,7 @@ export function BudgetFormDialog({
       categoryId,
       monthlyLimit: Number(form.monthlyLimit),
       alertThreshold: Number(form.alertThreshold),
+      rolloverEnabled: form.rolloverEnabled,
     });
     setSaving(false);
 
@@ -118,6 +122,18 @@ export function BudgetFormDialog({
           <p className="text-xs text-muted-foreground">
             You&apos;ll be warned when spending reaches this % of the limit
           </p>
+          <label className="flex items-center justify-between rounded-lg border px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors">
+            <div>
+              <p className="text-sm font-medium">Rollover</p>
+              <p className="text-xs text-muted-foreground">Carry unspent budget to next month</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={form.rolloverEnabled}
+              onChange={(e) => setForm({ ...form, rolloverEnabled: e.target.checked })}
+              className="h-4 w-4 rounded border-gray-300 accent-emerald-500"
+            />
+          </label>
         </div>
         <ResponsiveDialogFooter>
           <div className="flex w-full gap-2">

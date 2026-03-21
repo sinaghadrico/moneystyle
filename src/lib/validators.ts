@@ -63,6 +63,7 @@ export const budgetUpsertSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   monthlyLimit: z.coerce.number().positive("Limit must be positive"),
   alertThreshold: z.coerce.number().int().min(1).max(100).default(80),
+  rolloverEnabled: z.boolean().default(false),
 });
 
 export type BudgetUpsertInput = z.infer<typeof budgetUpsertSchema>;

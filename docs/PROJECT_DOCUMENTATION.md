@@ -26,8 +26,12 @@
 16. [PWA & Offline Support](#16-pwa--offline-support)
 17. [Analytics & SEO](#17-analytics--seo)
 18. [Feature Flags](#18-feature-flags)
-19. [Development Guide](#19-development-guide)
-20. [Glossary](#20-glossary)
+19. [Budget Rollover](#19-budget-rollover)
+20. [Onboarding Wizard](#20-onboarding-wizard)
+21. [Competitor Comparison Pages](#21-competitor-comparison-pages)
+22. [For Couples Page](#22-for-couples-page)
+23. [Development Guide](#23-development-guide)
+24. [Glossary](#24-glossary)
 
 ---
 
@@ -57,7 +61,7 @@
 
 ```mermaid
 graph LR
-    A[Sign Up] --> B[Setup Profile]
+    A[Sign Up] --> B[Onboarding Wizard]
     B --> C[Add Accounts]
     C --> D[Track Transactions]
     D --> E[Set Budgets & Goals]
@@ -65,8 +69,11 @@ graph LR
     F --> G[Plan Lifestyle]
 
     style A fill:#10b981,color:#fff
+    style B fill:#059669,color:#fff
     style G fill:#14b8a6,color:#fff
 ```
+
+> New users are guided through a 4-step onboarding wizard (goal selection, currency, first budget, completion) before reaching the dashboard.
 
 ### Core Modules
 
@@ -401,11 +408,11 @@ graph TB
 
 | Model | Fields | Purpose |
 |-------|--------|---------|
-| **User** | id, name, email, password, image, role, householdId | Core user identity |
+| **User** | id, name, email, password, image, role, onboardingCompleted, householdId | Core user identity |
 | **Transaction** | id, amount, type, date, description, accountId, categoryId, media[], isConfirmed | Financial record |
 | **Account** | id, name, type, balance, currency, color, icon | Bank/cash/investment |
 | **Category** | id, name, color, icon, type (expense/income) | Transaction grouping |
-| **Budget** | id, categoryId, amount, month, year | Monthly spending limit |
+| **Budget** | id, categoryId, monthlyLimit, alertThreshold, rolloverEnabled | Monthly spending limit with rollover support |
 | **IncomeSource** | id, name, type, amount, frequency, isActive | Salary, freelance, etc. |
 | **Bill** | id, name, amount, dueDay, frequency, autoPay | Recurring obligations |
 | **SavingsGoal** | id, name, targetAmount, currentAmount, deadline | Financial targets |
@@ -448,6 +455,7 @@ src/
 │   │   │   ├── transactions/
 │   │   │   ├── features/
 │   │   │   └── advanced/
+│   │   ├── onboarding/           # Onboarding wizard (4-step)
 │   │   └── blog/admin/           # Blog CMS (admin)
 │   │
 │   ├── (public)/                 # Public routes
@@ -457,6 +465,9 @@ src/
 │   │   ├── pricing/
 │   │   ├── features/[slug]/
 │   │   └── docs/api/
+│   │
+│   ├── vs/[competitor]/           # SEO comparison pages (YNAB, Monarch, etc.)
+│   ├── for-couples/               # "For Couples" marketing page
 │   │
 │   ├── auth/                     # Auth pages
 │   │   ├── login/
@@ -473,8 +484,8 @@ src/
 │       ├── parse-receipt/
 │       └── cron/
 │
-├── actions/                      # 27 Server Action files
-├── components/                   # 141 React components
+├── actions/                      # 28 Server Action files
+├── components/                   # 145+ React components
 │   ├── ui/                       # Base UI (shadcn)
 │   ├── dashboard/                # Dashboard widgets
 │   ├── transactions/             # Transaction components
@@ -484,16 +495,19 @@ src/
 │   ├── lifestyle/                # Lifestyle features
 │   ├── landing/                  # Landing page
 │   ├── auth/                     # Auth components
+│   ├── onboarding/               # Onboarding wizard + redirect
+│   ├── comparisons/              # Competitor comparison pages
 │   └── ...                       # Other feature components
 │
 ├── hooks/                        # 6 Custom React hooks
-└── lib/                          # 27 Utility files
+└── lib/                          # 28 Utility files
     ├── auth.ts                   # NextAuth config
     ├── db.ts                     # Prisma client
     ├── storage.ts                # MinIO/S3 abstraction
     ├── telegram.ts               # Telegram bot
     ├── ai-prompts.ts             # AI templates
     ├── feature-flags.ts          # Feature flag system
+    ├── comparison-data.ts        # Competitor comparison data (6 competitors)
     ├── validators.ts             # Zod schemas
     ├── sms-parser.ts             # SMS parsing
     ├── anomaly.ts                # Anomaly detection
@@ -580,9 +594,9 @@ sequenceDiagram
     NA->>DB: Link OAuth Account
     NA->>NA: Generate JWT
     NA-->>APP: Set Session Cookie
-    APP-->>U: Redirect to Dashboard
+    APP-->>U: Redirect to Onboarding (if new) or Dashboard
 
-    Note over NA,DB: First login triggers<br/>seedNewUser() →<br/>Default account + 15 categories
+    Note over NA,DB: First login triggers<br/>seedNewUser() →<br/>Default account + 15 categories<br/>Then onboarding wizard guides<br/>currency, goal & first budget setup
 ```
 
 ### Auth Providers
@@ -637,7 +651,7 @@ mindmap
       Income vs Expense Charts
       Spending Heatmap
       Category Breakdown
-      Budget Progress
+      Budget Progress + Rollover
       Savings Goals
       Debt Overview
       AI Predictions
@@ -681,6 +695,14 @@ mindmap
       Currency Selection
       Notification Templates
       AI Prompt Customization
+    Onboarding
+      4-Step Wizard
+      Goal Selection
+      Currency Setup
+      First Budget
+    Marketing
+      Comparison Pages vs Competitors
+      For Couples Page
 ```
 
 ### Feature Maturity Matrix
@@ -690,7 +712,7 @@ mindmap
 | Transaction CRUD | Production | No | Yes |
 | Receipt Scanning | Production | Yes (GPT-4V) | Yes |
 | Dashboard Charts | Production | No | Yes |
-| Budget Tracking | Production | No | Yes |
+| Budget Tracking + Rollover | Production | No | Yes |
 | Savings Goals | Production | No | Yes |
 | Weekend Planner | Production | Yes | Yes |
 | Meal Planner | Production | Yes | Yes |
@@ -704,6 +726,10 @@ mindmap
 | Public API v1 | Production | No | N/A |
 | Spending Wrapped | Production | No | Yes |
 | CSV Import | Production | No | Yes |
+| Budget Rollover | Production | No | Yes |
+| Onboarding Wizard | Production | No | Yes |
+| Comparison/SEO Pages | Production | No | N/A |
+| For Couples Page | Production | No | N/A |
 
 ---
 
@@ -1138,6 +1164,8 @@ graph TB
 - Auto-generated sitemap (`/sitemap.xml`)
 - Auto-generated robots.txt (`/robots.txt`)
 - Dynamic feature pages (`/features/[slug]`)
+- Competitor comparison pages (`/vs/ynab`, `/vs/monarch`, `/vs/copilot`, `/vs/rocket-money`, `/vs/lunch-money`, `/vs/mint`)
+- "For Couples" marketing page (`/for-couples`)
 - Blog with SEO-optimized posts
 
 ---
@@ -1178,7 +1206,157 @@ graph LR
 
 ---
 
-## 19. Development Guide
+## 19. Budget Rollover
+
+Budget Rollover allows unspent budget from the previous month to carry over to the current month — or reduces this month's limit if the user overspent.
+
+### How It Works
+
+```mermaid
+graph LR
+    PREV[Previous Month<br/>Limit: $500<br/>Spent: $350] --> CALC[Rollover<br/>+$150]
+    CALC --> CURRENT[Current Month<br/>Base: $500<br/>Effective: $650]
+
+    style PREV fill:#dbeafe,stroke:#3b82f6
+    style CALC fill:#dcfce7,stroke:#22c55e
+    style CURRENT fill:#f0fdf4,stroke:#10b981
+```
+
+### Calculation Logic
+
+```
+effectiveLimit = monthlyLimit + rolloverAmount
+rolloverAmount = monthlyLimit - previousMonthSpent
+
+If rolloverAmount > 0 → Underspent (extra budget this month)
+If rolloverAmount < 0 → Overspent (reduced budget this month)
+```
+
+### Files Involved
+
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added `rolloverEnabled` Boolean field to Budget model |
+| `src/lib/validators.ts` | Added `rolloverEnabled` to budget upsert schema |
+| `src/actions/budgets.ts` | Calculates previous month spending, returns `rolloverAmount` and `effectiveLimit` |
+| `src/components/budgets/budget-form-dialog.tsx` | Rollover toggle in budget form |
+| `src/components/dashboard/budget-progress.tsx` | Displays rollover amount (green/red) |
+
+### UI
+
+- **Budget Form:** Toggle "Rollover — Carry unspent budget to next month"
+- **Dashboard Widget:** Shows `+150 rollover` (green) or `-50 rollover` (red) below each budget card
+
+---
+
+## 20. Onboarding Wizard
+
+New users are guided through a 4-step onboarding wizard after their first login.
+
+### Onboarding Flow
+
+```mermaid
+graph LR
+    REGISTER[Sign Up] --> REDIRECT[Auto-Redirect<br/>to /onboarding]
+    REDIRECT --> S1[Step 1<br/>Welcome + Goal]
+    S1 --> S2[Step 2<br/>Currency]
+    S2 --> S3[Step 3<br/>First Budget]
+    S3 --> S4[Step 4<br/>All Set!]
+    S4 --> DASH[Dashboard]
+
+    style REGISTER fill:#dbeafe,stroke:#3b82f6
+    style S4 fill:#dcfce7,stroke:#22c55e
+    style DASH fill:#10b981,color:#fff
+```
+
+### Steps
+
+| Step | Title | Action |
+|------|-------|--------|
+| 1 | Welcome | Select goal: Track spending / Budget better / Save more / All |
+| 2 | Currency | Choose from 8 popular currencies (USD, EUR, GBP, AED, SAR, INR, CAD, AUD) |
+| 3 | First Budget | Set monthly limits for 4 common categories (Food, Groceries, Transport, Entertainment) |
+| 4 | Complete | Summary + "Go to Dashboard" button |
+
+### Detection Mechanism
+
+- `User.onboardingCompleted` Boolean field (default: `false`)
+- `OnboardingRedirect` client component checks status and redirects to `/onboarding` if incomplete
+- `completeOnboarding()` server action sets the flag to `true`
+- Loaded in app layout for all authenticated pages
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `prisma/schema.prisma` | `onboardingCompleted` field on User |
+| `src/actions/onboarding.ts` | `completeOnboarding()` + `getOnboardingStatus()` |
+| `src/app/(app)/onboarding/page.tsx` | Onboarding page route |
+| `src/components/onboarding/onboarding-wizard.tsx` | 4-step wizard UI |
+| `src/components/onboarding/onboarding-redirect.tsx` | Auto-redirect if not completed |
+| `src/app/(app)/layout.tsx` | Integrates onboarding check |
+
+---
+
+## 21. Competitor Comparison Pages
+
+SEO-optimized comparison pages at `/vs/[competitor]` that compare MoneyStyle against 6 major competitors.
+
+### Available Pages
+
+| URL | Competitor | Key Angle |
+|-----|-----------|-----------|
+| `/vs/ynab` | YNAB | Free alternative with AI + no zero-based budgeting required |
+| `/vs/monarch` | Monarch Money | Free + AI features + lifestyle planning |
+| `/vs/copilot` | Copilot Money | Cross-platform (not Apple-only) + AI + free |
+| `/vs/rocket-money` | Rocket Money | No commission on savings + more features |
+| `/vs/lunch-money` | Lunch Money | Native mobile + AI features + lifestyle |
+| `/vs/mint` | Mint (discontinued) | Modern free alternative for Mint refugees |
+
+### Page Structure
+
+```mermaid
+graph TB
+    HERO[Hero: MoneyStyle vs X] --> WHY[Why Switch<br/>3 Top Advantages]
+    WHY --> TABLE[Feature Comparison<br/>Table 12-15 rows]
+    TABLE --> MORE[More Advantages<br/>Cards Grid]
+    MORE --> PRICING[Pricing Comparison<br/>$0 vs $X/mo]
+    PRICING --> FAQ[FAQ Section<br/>3-4 Questions]
+    FAQ --> CTA[Call to Action<br/>Get Started Free]
+
+    style HERO fill:#10b981,color:#fff
+    style CTA fill:#14b8a6,color:#fff
+```
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/comparison-data.ts` | 6 competitor configs (advantages, feature matrix, FAQ) |
+| `src/app/vs/[competitor]/page.tsx` | Route with SEO metadata + static params |
+| `src/components/comparisons/comparison-landing.tsx` | Full comparison page UI |
+
+---
+
+## 22. For Couples Page
+
+Marketing page at `/for-couples` targeting couples and households who want to manage finances together.
+
+### Page Sections
+
+1. **Hero** — "Money, Together" with gradient accent
+2. **How It Works** — 3 steps: Create Household → Track Together → Grow Together
+3. **Features Grid** — 6 cards: Household Sharing, Split Expenses, Joint Budgets, Shared Savings, Individual Privacy, Money Chat for Two
+4. **Stats** — "Unlimited Members", "$0 Price", "Real-time Sync"
+5. **CTA** — "Start Managing Money Together"
+
+### File
+
+`src/app/for-couples/page.tsx` — Self-contained server component with metadata
+
+---
+
+## 23. Development Guide
 
 ### Prerequisites
 
@@ -1256,7 +1434,7 @@ export async function createItem(data: z.infer<typeof schema>) {
 
 ---
 
-## 20. Glossary
+## 24. Glossary
 
 | Term | Definition |
 |------|-----------|
@@ -1275,6 +1453,9 @@ export async function createItem(data: z.infer<typeof schema>) {
 | **Zod** | TypeScript-first schema validation library |
 | **JWT** | JSON Web Token — stateless authentication tokens |
 | **HMAC** | Hash-based Message Authentication Code |
+| **Budget Rollover** | Carrying unspent budget from previous month to current month |
+| **Onboarding Wizard** | 4-step setup guide shown to new users after first login |
+| **Comparison Page** | SEO landing page comparing MoneyStyle vs a competitor |
 
 ---
 

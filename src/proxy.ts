@@ -8,6 +8,8 @@ const publicPaths = [
   "/auth/error",
   "/auth/telegram-miniapp",
   "/offline",
+  "/vs",
+  "/for-couples",
   "/blog",
   "/pricing",
   "/docs/api",

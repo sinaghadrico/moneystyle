@@ -26,6 +26,8 @@ export const FEATURE_KEYS = [
   "txItems",
   "txConfirm",
   "spendingWrapped",
+  "moneyMap",
+  "dashPriceWatch",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
@@ -60,6 +62,8 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   txItems: true,
   txConfirm: true,
   spendingWrapped: true,
+  moneyMap: true,
+  dashPriceWatch: true,
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: string }> = {
@@ -90,6 +94,8 @@ export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: st
   txItems: { label: "Line Items", description: "View and manage transaction line items" },
   txConfirm: { label: "Confirm Transaction", description: "Confirm unconfirmed transactions" },
   spendingWrapped: { label: "Spending Wrapped", description: "Monthly/yearly spending summary with slides" },
+  moneyMap: { label: "Money Map", description: "Location-based spending visualization" },
+  dashPriceWatch: { label: "Price Watch", description: "Price alerts card on dashboard" },
 };
 
 export function parseFeatureFlags(raw: unknown): FeatureFlags {

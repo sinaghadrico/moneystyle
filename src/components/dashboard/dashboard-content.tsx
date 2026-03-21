@@ -25,6 +25,8 @@ import { getSavingsProgress } from "@/actions/savings";
 import { getDebtSummary } from "@/actions/persons";
 import { getNetWorthData } from "@/actions/net-worth";
 import type { NetWorthData } from "@/actions/net-worth";
+import { getPriceAlerts, type PriceAlert } from "@/actions/price-watch";
+import { PriceWatchCard } from "./price-watch-card";
 import { BudgetProgressCard } from "./budget-progress";
 import { PredictionCard } from "./prediction-card";
 import { SavingsCard } from "./savings-card";
@@ -32,6 +34,7 @@ import { DebtsCard } from "./debts-card";
 import { NetWorthCard } from "./net-worth-card";
 import { SpendingHeatmap } from "./spending-heatmap";
 import { QuickActions } from "./quick-actions";
+import { MoodStatsCard } from "./mood-stats-card";
 import type {
   DashboardStats,
   MonthlyData,
@@ -65,6 +68,7 @@ export function DashboardContent() {
   const showCategoryChart = useFeatureFlag("dashCategoryChart");
   const showHeatmap = useFeatureFlag("dashHeatmap");
   const showCharts = useFeatureFlag("dashCharts");
+  const showPriceWatch = useFeatureFlag("dashPriceWatch");
   const [period, setPeriod] = useState<PeriodFilter>(settings.defaultDashboardPeriod as PeriodFilter);
   const [accountId, setAccountId] = useState<string>("");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -80,6 +84,7 @@ export function DashboardContent() {
   const [prediction, setPrediction] = useState<ExpensePrediction | null>(null);
   const [dailySpend, setDailySpend] = useState<DailySpend[]>([]);
   const [netWorth, setNetWorth] = useState<NetWorthData | null>(null);
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -89,7 +94,7 @@ export function DashboardContent() {
   const loadData = useCallback(async (p: PeriodFilter, accId: string) => {
     setLoading(true);
     const aid = accId || undefined;
-    const [s, m, c, t, mc, bp, sp, pred, d, ds, nw] = await Promise.all([
+    const [s, m, c, t, mc, bp, sp, pred, d, ds, nw, pa] = await Promise.all([
       getDashboardStats(p, aid),
       getMonthlyData(p, aid),
       getCategoryBreakdown(p, aid),
@@ -101,6 +106,7 @@ export function DashboardContent() {
       getDebtSummary(),
       getDailySpendData(),
       getNetWorthData(),
+      getPriceAlerts(),
     ]);
     setStats(s);
     setMonthly(m);
@@ -114,6 +120,7 @@ export function DashboardContent() {
     setDebts(d);
     setDailySpend(ds);
     setNetWorth(nw);
+    setPriceAlerts(pa);
     setLoading(false);
   }, []);
 
@@ -186,6 +193,8 @@ export function DashboardContent() {
             {showBudgets && budgets.length > 0 && <BudgetProgressCard data={budgets} />}
             {showSavings && <SavingsCard data={savings} onRefresh={() => loadData(period, accountId)} />}
             {showDebts && <DebtsCard data={debts} />}
+            {showPriceWatch && <PriceWatchCard data={priceAlerts} />}
+            <MoodStatsCard />
           </div>
           {showCategoryChart && <MonthlyCategoryChart data={monthlyCat} categories={catMeta} />}
           {showHeatmap && <SpendingHeatmap data={dailySpend} />}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -25,7 +25,8 @@ import type { Category, Account } from "@prisma/client";
 import { toast } from "sonner";
 import { TagInput } from "@/components/ui/tag-input";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { Upload, X, Loader2, FileIcon, ImageIcon, Link, Unlink } from "lucide-react";
+import { Upload, X, Loader2, FileIcon, ImageIcon, Link, Unlink, MapPin } from "lucide-react";
+import { LocationPicker } from "./location-picker";
 import { FeatureInfo } from "@/components/ui/feature-info";
 import { SPREAD_MONTHS_INFO } from "@/lib/feature-info-content";
 import { Badge } from "@/components/ui/badge";
@@ -68,9 +69,14 @@ export function EditTransactionDialog({
     accountId: transaction.accountId,
     merchant: transaction.merchant ?? "",
     description: transaction.description ?? "",
+    location: (transaction as Record<string, unknown>).location as string ?? "",
+    latitude: (transaction as Record<string, unknown>).latitude as number | null ?? null,
+    longitude: (transaction as Record<string, unknown>).longitude as number | null ?? null,
     tagIds: transaction.tags?.map((t) => t.id) ?? [],
     spreadMonths: transaction.spreadMonths?.toString() ?? "",
   });
+
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   // Payment link state
   const [paymentLink, setPaymentLink] = useState<TransactionPaymentLink | null>(
@@ -132,6 +138,9 @@ export function EditTransactionDialog({
       accountId: form.accountId,
       merchant: form.merchant || null,
       description: form.description || null,
+      location: form.location || null,
+      latitude: form.latitude,
+      longitude: form.longitude,
       tagIds: form.tagIds,
       spreadMonths: form.spreadMonths ? Number(form.spreadMonths) : null,
     });
@@ -276,14 +285,59 @@ export function EditTransactionDialog({
               />
             </div>
           </div>
-          <div className="grid gap-1">
-            <Label>Description</Label>
-            <Input
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-            />
+          <div className="grid grid-cols-2 gap-3 items-start">
+            <div className="grid gap-1">
+              <Label>Description</Label>
+              <Input
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label>Location</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  value={form.location}
+                  onChange={(e) =>
+                    setForm({ ...form, location: e.target.value })
+                  }
+                  placeholder="e.g. Dubai Mall"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0 h-9 w-9"
+                  onClick={() => setShowLocationPicker(true)}
+                  title="Pick on map"
+                >
+                  <MapPin className={`h-3.5 w-3.5 ${form.latitude ? "text-emerald-500" : ""}`} />
+                </Button>
+              </div>
+              {form.latitude && (
+                <p className="text-[10px] text-muted-foreground">
+                  📍 {form.latitude.toFixed(4)}, {form.longitude?.toFixed(4)}
+                </p>
+              )}
+              <LocationPicker
+                open={showLocationPicker}
+                onOpenChange={setShowLocationPicker}
+                initialLat={form.latitude}
+                initialLng={form.longitude}
+                initialLocation={form.location}
+                onConfirm={(data) => {
+                  setForm((f) => ({
+                    ...f,
+                    location: data.location,
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                  }));
+                }}
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <div className="flex items-center gap-2">

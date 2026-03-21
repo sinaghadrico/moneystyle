@@ -203,6 +203,9 @@ export async function createTransaction(
       accountId: values.accountId,
       merchant: values.merchant ?? null,
       description: values.description ?? null,
+      location: values.location ?? null,
+      latitude: values.latitude ?? null,
+      longitude: values.longitude ?? null,
       source: "manual",
       spreadMonths: values.spreadMonths ?? null,
     },
@@ -282,6 +285,15 @@ export async function updateTransaction(
   }
   if (values.description !== undefined) {
     updateData.description = values.description;
+  }
+  if (values.location !== undefined) {
+    updateData.location = values.location;
+  }
+  if (values.latitude !== undefined) {
+    updateData.latitude = values.latitude;
+  }
+  if (values.longitude !== undefined) {
+    updateData.longitude = values.longitude;
   }
   if (values.spreadMonths !== undefined) {
     updateData.spreadMonths = values.spreadMonths;
@@ -520,4 +532,219 @@ export async function getUnconfirmedCount() {
   return prisma.transaction.count({
     where: { userId, confirmed: false, mergedIntoId: null },
   });
+}
+
+export async function setTransactionMood(transactionId: string, mood: string) {
+  const userId = await requireAuth();
+  const validMoods = ["great", "good", "okay", "bad", "terrible"];
+  if (!validMoods.includes(mood)) {
+    return { error: "Invalid mood" };
+  }
+  await prisma.transaction.update({
+    where: { id: transactionId, userId },
+    data: { mood },
+  });
+  revalidatePath("/transactions");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function getMoodStats(period?: string) {
+  const userId = await requireAuth();
+
+  const now = new Date();
+  let startDate: Date;
+
+  if (period === "year") {
+    startDate = new Date(now.getFullYear(), 0, 1);
+  } else {
+    // Default: current month
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      mood: { not: null },
+      date: { gte: startDate, lte: now },
+      mergedIntoId: null,
+      confirmed: true,
+    },
+    select: { mood: true, amount: true, type: true },
+  });
+
+  const moodCounts: Record<string, number> = {};
+  const spendingByMood: Record<string, number> = {};
+
+  for (const tx of transactions) {
+    const mood = tx.mood!;
+    moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+    if (tx.type === "expense" && tx.amount) {
+      spendingByMood[mood] = (spendingByMood[mood] || 0) + Number(tx.amount);
+    }
+  }
+
+  return { moodCounts, spendingByMood };
+}
+
+// ---------------------------------------------------------------------------
+// Location-based spending
+// ---------------------------------------------------------------------------
+
+export type LocationStat = {
+  location: string;
+  totalSpent: number;
+  count: number;
+  topCategory: string;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+export async function getLocationStats(): Promise<LocationStat[]> {
+  const userId = await requireAuth();
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      location: { not: null },
+      mergedIntoId: null,
+      confirmed: true,
+      type: "expense",
+    },
+    select: {
+      location: true,
+      latitude: true,
+      longitude: true,
+      amount: true,
+      category: { select: { name: true } },
+    },
+  });
+
+  const locationMap = new Map<
+    string,
+    { totalSpent: number; count: number; categories: Map<string, number>; latitude: number | null; longitude: number | null }
+  >();
+
+  for (const tx of transactions) {
+    const loc = tx.location!;
+    let entry = locationMap.get(loc);
+    if (!entry) {
+      entry = { totalSpent: 0, count: 0, categories: new Map(), latitude: null, longitude: null };
+      locationMap.set(loc, entry);
+    }
+    const amt = Number(tx.amount ?? 0);
+    entry.totalSpent += amt;
+    entry.count += 1;
+    if (tx.latitude && tx.longitude && !entry.latitude) {
+      entry.latitude = tx.latitude;
+      entry.longitude = tx.longitude;
+    }
+    const catName = tx.category?.name ?? "Uncategorized";
+    entry.categories.set(catName, (entry.categories.get(catName) || 0) + amt);
+  }
+
+  const results: LocationStat[] = [];
+  for (const [location, data] of locationMap) {
+    let topCategory = "Uncategorized";
+    let topAmount = 0;
+    for (const [cat, amt] of data.categories) {
+      if (amt > topAmount) {
+        topAmount = amt;
+        topCategory = cat;
+      }
+    }
+    results.push({
+      location,
+      totalSpent: Math.round(data.totalSpent * 100) / 100,
+      count: data.count,
+      topCategory,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
+  }
+
+  results.sort((a, b) => b.totalSpent - a.totalSpent);
+  return results;
+}
+
+export async function setTransactionLocation(
+  transactionId: string,
+  location: string,
+) {
+  const userId = await requireAuth();
+
+  await prisma.transaction.update({
+    where: { id: transactionId, userId },
+    data: { location: location || null },
+  });
+
+  revalidatePath("/transactions");
+  revalidatePath("/money-map");
+  return { success: true };
+}
+
+export async function getLocationTimeline(): Promise<
+  {
+    location: string;
+    transactions: {
+      id: string;
+      date: string;
+      amount: number | null;
+      merchant: string | null;
+      description: string | null;
+      category: string | null;
+    }[];
+  }[]
+> {
+  const userId = await requireAuth();
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      location: { not: null },
+      mergedIntoId: null,
+      confirmed: true,
+    },
+    select: {
+      id: true,
+      date: true,
+      amount: true,
+      merchant: true,
+      description: true,
+      location: true,
+      category: { select: { name: true } },
+    },
+    orderBy: { date: "desc" },
+    take: 100,
+  });
+
+  const grouped = new Map<
+    string,
+    {
+      id: string;
+      date: string;
+      amount: number | null;
+      merchant: string | null;
+      description: string | null;
+      category: string | null;
+    }[]
+  >();
+
+  for (const tx of transactions) {
+    const loc = tx.location!;
+    if (!grouped.has(loc)) grouped.set(loc, []);
+    grouped.get(loc)!.push({
+      id: tx.id,
+      date: tx.date.toISOString(),
+      amount: tx.amount != null ? Number(tx.amount) : null,
+      merchant: tx.merchant,
+      description: tx.description,
+      category: tx.category?.name ?? null,
+    });
+  }
+
+  return Array.from(grouped.entries()).map(([location, transactions]) => ({
+    location,
+    transactions,
+  }));
 }

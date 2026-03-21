@@ -32,11 +32,13 @@ import {
 import { SlidersHorizontal } from "lucide-react";
 import { EditTransactionDialog } from "./edit-transaction-dialog";
 import { AddTransactionDialog } from "./add-transaction-dialog";
+import { VoiceButton } from "./voice-button";
 import { MediaViewerDialog } from "./media-viewer-dialog";
 import { MergeDialog } from "./merge-dialog";
 import { SplitDialog } from "./split-dialog";
 import { ItemsDialog } from "./items-dialog";
 import { SwipeableCard } from "./swipeable-card";
+import { MoodPicker } from "./mood-picker";
 import { BulkImportDialog } from "./bulk-import-dialog";
 import {
   getTransactions,
@@ -186,6 +188,7 @@ export function TransactionsContent({
   const [loading, setLoading] = useState(true);
   const [editTx, setEditTx] = useState<TransactionWithCategory | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [voicePrefill, setVoicePrefill] = useState<import("./add-transaction-dialog").VoicePrefill | null>(null);
   const [viewMedia, setViewMedia] = useState<string[]>([]);
   const [viewMediaTxId, setViewMediaTxId] = useState<string | undefined>();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -474,10 +477,15 @@ export function TransactionsContent({
             </Button>
           )}
           {canAdd && (
-            <Button className="hidden sm:flex" onClick={() => setShowAdd(true)}>
-              <Plus className="mr-1 h-4 w-4" />
-              Add Transaction
-            </Button>
+            <>
+              <div className="hidden sm:block">
+                <VoiceButton onParsed={(data) => { setVoicePrefill(data); setShowAdd(true); }} />
+              </div>
+              <Button className="hidden sm:flex" onClick={() => setShowAdd(true)}>
+                <Plus className="mr-1 h-4 w-4" />
+                Add Transaction
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -687,8 +695,8 @@ export function TransactionsContent({
             </div>
           )
           : result?.data.map((tx, txIdx) => (
+              <div key={tx.id}>
               <SwipeableCard
-                key={tx.id}
                 onTap={() => toggleSelect(tx.id)}
                 showHint={txIdx === 0 && page === 1}
                 actionWidth={tx.amount != null && tx.amount > 0 ? 280 : 210}
@@ -841,6 +849,14 @@ export function TransactionsContent({
                   </div>
                 </div>
               </SwipeableCard>
+              {/* Mood Picker — outside SwipeableCard so taps work */}
+              <div className="pl-10 pb-2 -mt-1">
+                <MoodPicker
+                  transactionId={tx.id}
+                  currentMood={(tx as Record<string, unknown>).mood as string | undefined}
+                />
+              </div>
+            </div>
             ))}
       </div>
 
@@ -877,6 +893,7 @@ export function TransactionsContent({
               <TableHead className="hidden lg:table-cell">
                 Description
               </TableHead>
+              <TableHead>Mood</TableHead>
               <TableHead>Files</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -885,7 +902,7 @@ export function TransactionsContent({
             {loading
               ? [...Array(10)].map((_, i) => (
                   <TableRow key={i}>
-                    {[...Array(10)].map((_, j) => (
+                    {[...Array(11)].map((_, j) => (
                       <TableCell key={j}>
                         <Skeleton className="h-4 w-full" />
                       </TableCell>
@@ -894,7 +911,7 @@ export function TransactionsContent({
                 ))
               : result?.data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="h-40 text-center">
+                    <TableCell colSpan={11} className="h-40 text-center">
                       <p className="text-4xl mb-2">📭</p>
                       <p className="font-medium">No transactions yet</p>
                       <p className="text-sm text-muted-foreground">Add your first transaction to get started</p>
@@ -1008,6 +1025,12 @@ export function TransactionsContent({
                     </TableCell>
                     <TableCell className="hidden max-w-[200px] truncate lg:table-cell">
                       {tx.description}
+                    </TableCell>
+                    <TableCell>
+                      <MoodPicker
+                        transactionId={tx.id}
+                        currentMood={(tx as Record<string, unknown>).mood as string | undefined}
+                      />
                     </TableCell>
                     <TableCell>
                       {tx.mediaFiles.length > 0 && (
@@ -1139,13 +1162,18 @@ export function TransactionsContent({
                   </button>
                 )}
                 {canAdd && (
-                  <button
-                    className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
-                    onClick={() => { setFabOpen(false); setShowAdd(true); }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="text-sm font-medium">Add Transaction</span>
-                  </button>
+                  <>
+                    <div onClick={() => setFabOpen(false)}>
+                      <VoiceButton onParsed={(data) => { setVoicePrefill(data); setShowAdd(true); }} />
+                    </div>
+                    <button
+                      className="flex items-center gap-2 rounded-full bg-background pl-3 pr-4 py-2 shadow-lg border active:scale-95"
+                      onClick={() => { setFabOpen(false); setShowAdd(true); }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="text-sm font-medium">Add Transaction</span>
+                    </button>
+                  </>
                 )}
               </>
             )}
@@ -1253,8 +1281,9 @@ export function TransactionsContent({
           categories={categories}
           accounts={accounts}
           open={showAdd}
-          onOpenChange={setShowAdd}
-          onSuccess={loadData}
+          onOpenChange={(v) => { setShowAdd(v); if (!v) setVoicePrefill(null); }}
+          onSuccess={() => { loadData(); setVoicePrefill(null); }}
+          prefill={voicePrefill}
         />
       )}
 

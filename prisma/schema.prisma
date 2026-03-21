@@ -53,6 +53,7 @@ model User {
   blogPosts             BlogPost[]
   challenges            Challenge[]
   badges                Badge[]
+  trips                 Trip[]
   appSettings           AppSettings?
   userPreference        UserPreference?
 
@@ -272,6 +273,10 @@ model Transaction {
   confirmed    Boolean              @default(true)
   hasReceipt   Boolean              @default(false)
   mediaFiles   String[]
+  mood         String?
+  location     String?
+  latitude     Float?
+  longitude    Float?
   mergedIntoId String?
   mergedInto   Transaction?         @relation("MergedTransactions", fields: [mergedIntoId], references: [id])
   mergedFrom   Transaction[]        @relation("MergedTransactions")
@@ -280,6 +285,8 @@ model Transaction {
   tags               TransactionTag[]
   splits             TransactionSplit[]   @relation("TransactionSplits")
   lineItems          TransactionItem[]
+  tripId             String?
+  trip               Trip?                @relation(fields: [tripId], references: [id], onDelete: SetNull)
   installmentPayment InstallmentPayment?
   billPayment        BillPayment?
   incomeDeposit      IncomeDeposit?
@@ -293,6 +300,7 @@ model Transaction {
   @@index([merchant])
   @@index([mergedIntoId])
   @@index([userId])
+  @@index([tripId])
   @@map("transactions")
 }
 
@@ -790,4 +798,20 @@ model Badge {
   @@unique([userId, type])
   @@index([userId])
   @@map("badges")
+}
+
+model Trip {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  currency     String
+  startDate    DateTime
+  endDate      DateTime?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+
+  @@index([userId])
+  @@map("trips")
 }

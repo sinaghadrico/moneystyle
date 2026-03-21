@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -27,6 +27,8 @@ import { CurrencySelect } from "@/components/ui/currency-select";
 import { useAppSettings } from "@/components/settings/settings-provider";
 import { FeatureInfo } from "@/components/ui/feature-info";
 import { SPREAD_MONTHS_INFO } from "@/lib/feature-info-content";
+import { MapPin } from "lucide-react";
+import { LocationPicker } from "./location-picker";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -39,18 +41,28 @@ function nowTimeStr() {
   });
 }
 
+export type VoicePrefill = {
+  amount?: number;
+  type?: string;
+  categoryId?: string;
+  merchant?: string;
+  description?: string;
+};
+
 export function AddTransactionDialog({
   categories,
   accounts,
   open,
   onOpenChange,
   onSuccess,
+  prefill,
 }: {
   categories: Category[];
   accounts: Account[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  prefill?: VoicePrefill | null;
 }) {
   const { settings } = useAppSettings();
   const [saving, setSaving] = useState(false);
@@ -68,9 +80,27 @@ export function AddTransactionDialog({
     accountId: defaultAccId,
     merchant: "",
     description: "",
+    location: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
     tagIds: [] as string[],
     spreadMonths: "",
   });
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  // Apply voice prefill data
+  useEffect(() => {
+    if (prefill && open) {
+      setForm((f) => ({
+        ...f,
+        amount: prefill.amount ? String(prefill.amount) : f.amount,
+        type: prefill.type || f.type,
+        categoryId: prefill.categoryId || f.categoryId,
+        merchant: prefill.merchant || f.merchant,
+        description: prefill.description || f.description,
+      }));
+    }
+  }, [prefill, open]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -84,6 +114,9 @@ export function AddTransactionDialog({
       accountId: form.accountId,
       merchant: form.merchant || null,
       description: form.description || null,
+      location: form.location || null,
+      latitude: form.latitude,
+      longitude: form.longitude,
       tagIds: form.tagIds,
       spreadMonths: form.spreadMonths ? Number(form.spreadMonths) : null,
     });
@@ -212,15 +245,60 @@ export function AddTransactionDialog({
               />
             </div>
           </div>
-          <div className="grid gap-1">
-            <Label>Description</Label>
-            <Input
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              placeholder="Description"
-            />
+          <div className="grid grid-cols-2 gap-3 items-start">
+            <div className="grid gap-1">
+              <Label>Description</Label>
+              <Input
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+                placeholder="Description"
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label>Location</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  value={form.location}
+                  onChange={(e) =>
+                    setForm({ ...form, location: e.target.value })
+                  }
+                  placeholder="e.g. Dubai Mall"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0 h-9 w-9"
+                  onClick={() => setShowLocationPicker(true)}
+                  title="Pick on map"
+                >
+                  <MapPin className={`h-3.5 w-3.5 ${form.latitude ? "text-emerald-500" : ""}`} />
+                </Button>
+              </div>
+              {form.latitude && (
+                <p className="text-[10px] text-muted-foreground">
+                  📍 {form.latitude.toFixed(4)}, {form.longitude?.toFixed(4)}
+                </p>
+              )}
+              <LocationPicker
+                open={showLocationPicker}
+                onOpenChange={setShowLocationPicker}
+                initialLat={form.latitude}
+                initialLng={form.longitude}
+                initialLocation={form.location}
+                onConfirm={(data) => {
+                  setForm((f) => ({
+                    ...f,
+                    location: data.location,
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                  }));
+                }}
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <div className="flex items-center gap-2">

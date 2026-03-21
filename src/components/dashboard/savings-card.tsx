@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { SavingsProgress } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import { PiggyBank, Plus, Pencil, PlusCircle, ArrowRight } from "lucide-react";
+import { PiggyBank, Plus, Pencil, PlusCircle, ArrowRight, List, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import { SavingsFormDialog } from "@/components/savings/savings-form-dialog";
 import { AddSavingsDialog } from "@/components/savings/add-savings-dialog";
+import { SavingsJar } from "@/components/profile/savings-jar";
+import { addToSavings } from "@/actions/savings";
+import { toast } from "sonner";
 
 export function SavingsCard({
   data,
@@ -20,6 +23,20 @@ export function SavingsCard({
   const [showCreate, setShowCreate] = useState(false);
   const [editGoal, setEditGoal] = useState<SavingsProgress | undefined>();
   const [addGoal, setAddGoal] = useState<SavingsProgress | undefined>();
+  const [viewMode, setViewMode] = useState<"list" | "jar">("list");
+
+  const handleJarDeposit = async (goalId: string, goalName: string, currency: string, amount: number) => {
+    const result = await addToSavings(goalId, amount);
+    if ("error" in result) {
+      toast.error(result.error);
+    } else if (result.completed) {
+      toast.success(`Goal "${goalName}" completed!`);
+      onRefresh();
+    } else {
+      toast.success(`Added ${formatCurrency(amount, currency)} to ${goalName}`);
+      onRefresh();
+    }
+  };
 
   return (
     <>
@@ -31,6 +48,21 @@ export function SavingsCard({
               Savings Goals
             </CardTitle>
             <div className="flex items-center gap-1">
+              {data.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  title={viewMode === "list" ? "Jar View" : "List View"}
+                  onClick={() => setViewMode(viewMode === "list" ? "jar" : "list")}
+                >
+                  {viewMode === "list" ? (
+                    <FlaskConical className="h-4 w-4" />
+                  ) : (
+                    <List className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -51,8 +83,18 @@ export function SavingsCard({
         <CardContent className="space-y-4">
           {data.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              🎯 No savings goals yet. Create one to start tracking!
+              No savings goals yet. Create one to start tracking!
             </p>
+          ) : viewMode === "jar" ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 py-2">
+              {data.map((goal) => (
+                <SavingsJar
+                  key={goal.id}
+                  goal={goal}
+                  onDeposit={(amount) => handleJarDeposit(goal.id, goal.name, goal.currency, amount)}
+                />
+              ))}
+            </div>
           ) : (
             data.map((goal) => (
               <div key={goal.id} className="space-y-1.5">

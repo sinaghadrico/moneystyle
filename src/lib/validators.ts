@@ -8,6 +8,9 @@ export const transactionUpdateSchema = z.object({
   accountId: z.string().optional(),
   merchant: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  latitude: z.coerce.number().nullable().optional(),
+  longitude: z.coerce.number().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
   spreadMonths: z.coerce.number().int().min(2).max(24).nullable().optional(),
 });
@@ -24,6 +27,9 @@ export const transactionCreateSchema = z.object({
   accountId: z.string().min(1, "Account is required"),
   merchant: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  latitude: z.coerce.number().nullable().optional(),
+  longitude: z.coerce.number().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
   spreadMonths: z.coerce.number().int().min(2).max(24).nullable().optional(),
 });

@@ -44,7 +44,7 @@ export function BudgetProgressCard({ data }: { data: BudgetProgress[] }) {
           return (
             <div
               key={b.categoryId}
-              className="rounded-xl bg-muted/50 px-3 py-2.5"
+              className="rounded-lg bg-muted/50 px-3 py-2.5"
             >
               <div className="flex items-center gap-1.5 mb-2">
                 <div

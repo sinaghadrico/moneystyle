@@ -72,7 +72,7 @@ export function CategoriesContent() {
       {loading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-[120px] rounded-xl" />
+            <Skeleton key={i} className="h-[120px] rounded-lg" />
           ))}
         </div>
       ) : (

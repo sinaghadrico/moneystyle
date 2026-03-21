@@ -211,7 +211,7 @@ export function SettingsContent() {
         <h2 className="text-2xl font-bold tracking-tight">⚙️ Settings</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
+            <Skeleton key={i} className="h-48 rounded-lg" />
           ))}
         </div>
       </div>

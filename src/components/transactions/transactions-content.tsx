@@ -677,7 +677,7 @@ export function TransactionsContent({
         )}
         {loading
           ? [...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-[120px] rounded-xl" />
+              <Skeleton key={i} className="h-[120px] rounded-lg" />
             ))
           : result?.data.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -1194,7 +1194,7 @@ export function TransactionsContent({
               <Plus className="h-6 w-6" />
             </button>
           )}
-          <div className="relative flex w-full items-center rounded-2xl bg-primary px-3 py-2.5 shadow-xl">
+          <div className="relative flex w-full items-center rounded-lg bg-primary px-3 py-2.5 shadow-xl">
             <span className="absolute -top-5 left-3 rounded-t-lg rounded-b-none bg-primary text-primary-foreground text-[11px] font-semibold px-3 pt-1.5 pb-2 leading-none">{selected.size} items selected</span>
             <div className="flex flex-1 items-center gap-1.5">
               {canConfirm && showUnconfirmed && (

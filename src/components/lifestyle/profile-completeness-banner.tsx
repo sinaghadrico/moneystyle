@@ -50,7 +50,7 @@ export function ProfileCompletenessBanner() {
 
   return (
     <NextLink href={href} className="group block">
-      <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-yellow-500/15 px-4 py-3 ring-1 ring-amber-500/20 transition-all group-hover:ring-amber-500/40 group-hover:shadow-sm">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-yellow-500/15 px-4 py-3 ring-1 ring-amber-500/20 transition-all group-hover:ring-amber-500/40 group-hover:shadow-sm">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/20">
           <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400" />
         </div>

@@ -63,7 +63,7 @@ export function SubscriptionsSection() {
         <Skeleton className="h-8 w-48" />
         <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
+            <Skeleton key={i} className="h-28 rounded-lg" />
           ))}
         </div>
       </div>

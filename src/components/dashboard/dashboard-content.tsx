@@ -168,12 +168,12 @@ export function DashboardContent() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-[100px] rounded-xl" />
+              <Skeleton key={i} className="h-[100px] rounded-lg" />
             ))}
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-[370px] rounded-xl" />
+              <Skeleton key={i} className="h-[370px] rounded-lg" />
             ))}
           </div>
         </div>

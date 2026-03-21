@@ -114,7 +114,7 @@ function WelcomeStep({
                 key={g.id}
                 type="button"
                 onClick={() => onSelect(g.id)}
-                className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
+                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
                   active
                     ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
                     : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
@@ -158,7 +158,7 @@ function CurrencyStep({
               key={c.code}
               type="button"
               onClick={() => onSelect(c.code)}
-              className={`flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition-all ${
+              className={`flex flex-col items-center gap-1 rounded-lg border-2 p-4 transition-all ${
                 active
                   ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
                   : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
@@ -197,7 +197,7 @@ function BudgetStep({
         {budgets.map((b, idx) => (
           <div
             key={b.name}
-            className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-700"
+            className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
           >
             <span className="text-2xl">{b.emoji}</span>
             <span className="flex-1 text-left text-sm font-medium">

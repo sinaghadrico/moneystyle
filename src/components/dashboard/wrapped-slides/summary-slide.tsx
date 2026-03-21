@@ -46,7 +46,7 @@ export function SummarySlide({ data, isActive }: Props) {
       <div className="grid w-full grid-cols-2 gap-3">
         {stats.map((s, i) => (
           <AnimatedValue key={s.label} delay={200 + i * 100} isActive={isActive}>
-            <div className="bg-white/10 rounded-xl px-3 py-3 text-center">
+            <div className="bg-white/10 rounded-lg px-3 py-3 text-center">
               <p className="text-white/60 text-xs">{s.label}</p>
               <p className={cn("text-base font-bold truncate", s.color)}>
                 {s.value}

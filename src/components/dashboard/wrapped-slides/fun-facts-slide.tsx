@@ -25,7 +25,7 @@ export function FunFactsSlide({ data, isActive }: Props) {
 
       <div className="grid w-full max-w-sm grid-cols-1 gap-3">
         <AnimatedValue delay={200} isActive={isActive}>
-          <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
+          <div className="rounded-lg bg-white/15 px-4 py-3 backdrop-blur-sm">
             <p className="text-3xl font-bold">
               {Math.round(animatedNoSpend)}{" "}
               <span className="text-base font-normal opacity-75">
@@ -37,7 +37,7 @@ export function FunFactsSlide({ data, isActive }: Props) {
         </AnimatedValue>
 
         <AnimatedValue delay={400} isActive={isActive}>
-          <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
+          <div className="rounded-lg bg-white/15 px-4 py-3 backdrop-blur-sm">
             <p className="text-3xl font-bold">
               {formatCurrency(animatedAvg)}
             </p>
@@ -46,7 +46,7 @@ export function FunFactsSlide({ data, isActive }: Props) {
         </AnimatedValue>
 
         <AnimatedValue delay={600} isActive={isActive}>
-          <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
+          <div className="rounded-lg bg-white/15 px-4 py-3 backdrop-blur-sm">
             <p className="text-3xl font-bold">
               {Math.round(animatedStreak)}{" "}
               <span className="text-base font-normal opacity-75">days</span>

@@ -82,7 +82,7 @@ export function SwipeableCard({
   );
 
   return (
-    <div className="relative overflow-hidden rounded-xl border">
+    <div className="relative overflow-hidden rounded-lg border">
       {/* Action buttons revealed behind */}
       <div className="absolute inset-y-0 right-0 flex items-center">
         {actions}

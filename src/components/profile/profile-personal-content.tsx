@@ -42,8 +42,8 @@ export function ProfilePersonalContent() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-[120px] rounded-xl" />
-        <Skeleton className="h-[120px] rounded-xl" />
+        <Skeleton className="h-[120px] rounded-lg" />
+        <Skeleton className="h-[120px] rounded-lg" />
       </div>
     );
   }

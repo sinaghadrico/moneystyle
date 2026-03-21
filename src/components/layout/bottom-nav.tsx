@@ -88,7 +88,7 @@ function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => vo
           opacity: animating ? 1 : 0,
         }}
       >
-        <div className="w-56 rounded-2xl border shadow-2xl shadow-black/10 overflow-hidden backdrop-blur-xl bg-card bg-gradient-to-br from-neutral-500/10 via-neutral-400/5 to-neutral-500/10 dark:from-neutral-400/15 dark:via-neutral-500/10 dark:to-neutral-400/15">
+        <div className="w-56 rounded-lg border shadow-2xl shadow-black/10 overflow-hidden backdrop-blur-xl bg-card bg-gradient-to-br from-neutral-500/10 via-neutral-400/5 to-neutral-500/10 dark:from-neutral-400/15 dark:via-neutral-500/10 dark:to-neutral-400/15">
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
             <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => vo
                 <button
                   key={action.href}
                   onClick={() => handleAction(action.href)}
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-muted active:scale-[0.98]"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted active:scale-[0.98]"
                   style={{
                     transition: "opacity 300ms ease, transform 300ms ease",
                     transitionDelay: animating ? `${(i + 1) * 60}ms` : "0ms",

@@ -72,7 +72,7 @@ export function FinancialTipsSection() {
       <div className="space-y-3">
         <Skeleton className="h-8 w-48" />
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+          <Skeleton key={i} className="h-20 rounded-lg" />
         ))}
       </div>
     );
@@ -101,7 +101,7 @@ export function FinancialTipsSection() {
           return (
             <div
               key={tip.id}
-              className={`rounded-xl border p-4 ${style.bg} ${style.border}`}
+              className={`rounded-lg border p-4 ${style.bg} ${style.border}`}
             >
               <div className="flex gap-3">
                 <div className={`shrink-0 mt-0.5 ${style.icon}`}>

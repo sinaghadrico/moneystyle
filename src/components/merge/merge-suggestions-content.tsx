@@ -84,7 +84,7 @@ export function MergeSuggestionsContent() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-[400px] rounded-xl" />
+        <Skeleton className="h-[400px] rounded-lg" />
       </div>
     );
   }

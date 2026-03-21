@@ -162,7 +162,7 @@ export function HouseholdSection() {
     return (
       <div className="space-y-3">
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 rounded-xl" />
+        <Skeleton className="h-40 rounded-lg" />
       </div>
     );
   }

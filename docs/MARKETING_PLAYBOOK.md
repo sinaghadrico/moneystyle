@@ -630,38 +630,107 @@ Founder: Sina Ghadri
 
 ## 13. Paid Channels
 
-### Google Ads (Start Week 2)
+### Google Ads — Complete Guide
 
-**Campaign 1: Brand alternatives**
+**How It Works:**
+You pay → when someone searches a specific keyword on Google → your ad shows at the top → they click → you pay per click (CPC). You set a daily budget cap — Google never exceeds it. No contracts, pause/stop anytime.
+
+**Setup Steps:**
+1. Go to https://ads.google.com and sign in
+2. Create Campaign → Goal: "Website traffic" → Type: "Search"
+3. Set keywords (see table below)
+4. Set daily budget ($5 to start)
+5. Write ad copy
+6. Set landing page URL
+7. Enable conversion tracking (connect Google Analytics)
+
+**Best Keywords for MoneyStyle:**
+
+| Keyword | Competition | CPC Estimate | Landing Page |
+|---------|------------|-------------|-------------|
+| "free budget app" | Medium | $0.50 | `/` |
+| "YNAB alternative free" | Low | $0.30 | `/vs/ynab` |
+| "Mint replacement" | Medium | $0.80 | `/vs/mint` |
+| "expense tracker free" | Medium | $0.60 | `/` |
+| "AI receipt scanner app" | Low | $0.40 | `/features/receipt-scanner` |
+| "personal finance app free" | High | $1.50 | `/` |
+| "Monarch Money free alternative" | Low | $0.30 | `/vs/monarch` |
+| "voice expense tracker" | Low | $0.40 | `/features/transaction-tracking` |
+| "spending map app" | Low | $0.30 | `/money-map` |
+| "free budget app like YNAB" | Low | $0.30 | `/vs/ynab` |
+
+**Ad Copy Templates:**
+
 ```
-Keywords: "YNAB alternative free", "Monarch Money free alternative", "free budget app", "Mint replacement 2026"
-Budget: $5/day
-Bid: $0.50-1.50 CPC
-Landing: /vs/ynab or /vs/monarch (relevant comparison page)
+Ad 1 (General):
+  Headline 1: Free Personal Finance Tracker
+  Headline 2: 30+ Features — No Subscription
+  Headline 3: AI Receipt Scanning & Voice Input
+  Description: Track expenses, budget with rollover, see spending on Google Maps.
+               100% free. Try MoneyStyle today.
+  URL: moneystyle.app
+
+Ad 2 (YNAB alternative):
+  Headline 1: Free YNAB Alternative
+  Headline 2: Same Features, $0 Price
+  Headline 3: Budget Rollover + AI Features
+  Description: Everything YNAB does, plus AI receipt scanning, voice transactions,
+               and Google Maps. 100% free.
+  URL: moneystyle.app/vs/ynab
+
+Ad 3 (AI-focused):
+  Headline 1: AI-Powered Expense Tracker
+  Headline 2: Scan Receipts, Log by Voice
+  Headline 3: 100% Free — No Subscription
+  Description: Snap a receipt, AI extracts items. Say "50 coffee" and it's logged.
+               30+ features, completely free.
+  URL: moneystyle.app/features/receipt-scanner
 ```
 
-**Campaign 2: Feature-based**
+**Budget Scenarios:**
+
+| Level | Daily | Monthly | Clicks/Month | Signups (~10% conversion) |
+|-------|-------|---------|-------------|--------------------------|
+| Test | $3 | ~$90 | 90-180 | 9-18 |
+| Start | $5 | ~$150 | 150-300 | 15-30 |
+| Growth | $10 | ~$300 | 300-600 | 30-60 |
+| Serious | $20 | ~$600 | 600-1200 | 60-120 |
+
+**Recommendation:** Start with **$5/day**. After 1 week, check which keywords brought the most signups → increase budget on those, pause the rest.
+
+**Negative Keywords (exclude these):**
 ```
-Keywords: "AI receipt scanner app", "voice expense tracker", "spending map app"
-Budget: $3/day
-Bid: $0.30-1.00 CPC
-Landing: Relevant feature page (/features/receipt-scanner etc.)
+download, android, ios, APK, app store, play store, desktop app, windows, mac app
 ```
 
-**Ad Copy Template:**
-```
-Headline: Free Personal Finance Tracker — 30+ Features
-Description: Track expenses, scan receipts with AI, log by voice. Budget, save, invest — all free. No subscription needed.
-CTA: Try Free
-```
+**Targeting Settings:**
+- Locations: UAE, US, UK, Canada, Australia
+- Language: English
+- Schedule: 8 AM - 10 PM (local time)
+- Devices: All (mobile + desktop)
+
+**Important Tips:**
+- Connect Google Analytics for conversion tracking (signups)
+- Check "Search Terms" report weekly — add irrelevant searches to negative keywords
+- Use comparison pages (`/vs/ynab`) as landing pages for competitor keywords
+- Increase budget only on keywords with >5% conversion rate
 
 ### Reddit Ads (Start Week 3)
+
 ```
-Target: r/personalfinance, r/ynab, r/budgeting
+Platform: https://ads.reddit.com
+Target: r/personalfinance, r/ynab, r/budgeting, r/frugal
 Budget: $5/day
-Format: Promoted post (looks like regular post)
-Copy: Same as Reddit post template above
+Format: Promoted post (looks like regular Reddit post)
+Copy: Same as Reddit post template from Section 3
+Landing: moneystyle.app
 ```
+
+**Reddit Ads Tips:**
+- Promoted posts look native — less "ad feeling"
+- Target specific subreddits, not broad interests
+- Use casual tone, not corporate
+- Best CPC: $0.30-0.80
 
 ---
 

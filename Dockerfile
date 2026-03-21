@@ -18,6 +18,8 @@ RUN npx prisma generate
 ENV NODE_OPTIONS="--max-old-space-size=1536"
 ARG NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
 ENV NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=$NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+ARG NEXT_PUBLIC_GOOGLE_MAPS_KEY
+ENV NEXT_PUBLIC_GOOGLE_MAPS_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_KEY
 RUN pnpm next build
 
 # --- Runner ---
@@ -38,4 +40,4 @@ COPY --from=builder /app/transactions.json ./
 
 EXPOSE 3000
 ENV HOSTNAME=0.0.0.0
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node server.js"]

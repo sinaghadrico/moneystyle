@@ -330,6 +330,7 @@ export function OnboardingWizard() {
     setLoading(true);
     try {
       await completeOnboarding();
+      router.refresh();
       router.replace("/dashboard");
     } finally {
       setLoading(false);

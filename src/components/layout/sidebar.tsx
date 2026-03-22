@@ -11,6 +11,7 @@ import {
   Palette,
   MessageCircle,
   Rocket,
+  Shield,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { WrappedButton } from "./wrapped-button";
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: "/lifestyle", label: "Lifestyle", icon: Palette, feature: "_lifestyle" as FeatureKey },
   { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/admin", label: "Admin", icon: Shield, adminOnly: true },
 ];
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
@@ -35,6 +37,7 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
   const { settings } = useAppSettings();
 
   const visibleItems = NAV_ITEMS.filter((item) => {
+    if ("adminOnly" in item && item.adminOnly) return settings.isAdmin;
     if (!item.feature) return true;
     if (settings.isAdmin) return true;
     if (item.feature === ("_lifestyle" as FeatureKey)) {

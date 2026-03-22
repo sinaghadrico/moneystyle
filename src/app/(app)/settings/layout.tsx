@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Settings2, ArrowLeftRight, Plug, Wrench, ToggleLeft } from "lucide-react";
+import { Loader2, Settings2, ArrowLeftRight, Plug, Wrench } from "lucide-react";
 import {
   SettingsContextProvider,
   useSettingsContext,
@@ -14,7 +14,6 @@ const SETTINGS_TABS = [
   { href: "/settings", label: "General", icon: Settings2 },
   { href: "/settings/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/settings/integrations", label: "Integrations", icon: Plug },
-  { href: "/settings/features", label: "Features", icon: ToggleLeft, adminOnly: true },
   { href: "/settings/advanced", label: "Advanced", icon: Wrench },
 ];
 

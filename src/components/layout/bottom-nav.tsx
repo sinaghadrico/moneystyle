@@ -19,8 +19,7 @@ import {
   Rocket,
   MapPin,
   Plane,
-  Store,
-  Trophy,
+  Shield,
 } from "lucide-react";
 
 const PRIMARY_NAV = [
@@ -174,7 +173,7 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-50 border-t backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 bg-background md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="grid grid-cols-4">
+        <div className={`grid ${settings.isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
           {PRIMARY_NAV.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -206,6 +205,18 @@ export function BottomNav() {
             <Settings className="h-5 w-5" />
             <span className="text-[10px] leading-tight font-medium">Settings</span>
           </Link>
+          {settings.isAdmin && (
+            <Link
+              href="/admin"
+              className={cn(
+                "flex flex-col items-center gap-1 py-3",
+                pathname.startsWith("/admin") ? "text-amber-500" : "text-muted-foreground"
+              )}
+            >
+              <Shield className="h-5 w-5" />
+              <span className="text-[10px] leading-tight font-medium">Admin</span>
+            </Link>
+          )}
         </div>
       </nav>
     </>

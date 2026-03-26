@@ -13,9 +13,11 @@ import {
 import { ArrowLeftRight } from "lucide-react";
 import { useSettingsContext, type Settings } from "@/components/settings/settings-context";
 import { CurrencyManagementSection } from "@/components/settings/currency-management-section";
+import { useAppSettings } from "@/components/settings/settings-provider";
 
 export default function SettingsTransactionsPage() {
   const { settings, accounts, update } = useSettingsContext();
+  const { settings: appSettings } = useAppSettings();
 
   if (!settings) return null;
 
@@ -80,7 +82,7 @@ export default function SettingsTransactionsPage() {
         </CardContent>
       </Card>
 
-      <CurrencyManagementSection />
+      {appSettings.isAdmin && <CurrencyManagementSection />}
     </div>
   );
 }

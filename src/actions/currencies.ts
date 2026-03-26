@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { currencyCreateSchema, currencyUpdateSchema } from "@/lib/validators";
 import { revalidatePath } from "next/cache";
 import type { CurrencyData } from "@/lib/types";
+import { isAdmin } from "@/lib/auth-utils";
 
 export async function getActiveCurrencies(): Promise<CurrencyData[]> {
   const rows = await prisma.currency.findMany({
@@ -35,6 +36,7 @@ export async function getAllCurrencies(): Promise<CurrencyData[]> {
 }
 
 export async function createCurrency(data: Record<string, unknown>) {
+  if (!(await isAdmin())) return { error: { _: ["Admin only"] } };
   const parsed = currencyCreateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -48,6 +50,7 @@ export async function updateCurrency(
   id: string,
   data: Record<string, unknown>
 ) {
+  if (!(await isAdmin())) return { error: { _: ["Admin only"] } };
   const parsed = currencyUpdateSchema.safeParse(data);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -58,6 +61,7 @@ export async function updateCurrency(
 }
 
 export async function deleteCurrency(id: string) {
+  if (!(await isAdmin())) return { error: { _: ["Admin only"] } };
   await prisma.currency.delete({ where: { id } });
   revalidatePath("/settings");
   return { success: true };

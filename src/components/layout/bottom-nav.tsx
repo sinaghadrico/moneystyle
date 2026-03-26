@@ -98,7 +98,7 @@ function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => vo
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-neutral-500" />
-              <span className="text-sm font-semibold">More</span>
+              <span className="text-sm font-semibold">AI & Lifestyle</span>
             </div>
           </div>
 
@@ -166,7 +166,7 @@ export function BottomNav() {
           className="fixed z-50 right-4 rounded-full bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-900 shadow-lg shadow-black/40 flex items-center justify-center gap-2 px-4 active:scale-95 transition-transform bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] h-12 w-auto md:bottom-6 md:h-10 animate-fab-pulse overflow-hidden fab-shimmer"
         >
           <Sparkles className="h-5 w-5 text-amber-400 md:h-4 md:w-4 animate-[spin_4s_linear_infinite]" />
-          <span className="text-sm font-medium text-white">More</span>
+          <span className="text-sm font-medium text-white">AI & Lifestyle</span>
         </button>
       )}
 

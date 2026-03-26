@@ -522,3 +522,38 @@ export async function removeSavedTopic(title: string) {
   await setAiMemory("savedTopics", JSON.stringify(filtered));
   return { success: true };
 }
+
+// ── Blog View Tracking ──
+
+import crypto from "crypto";
+
+export async function recordBlogView(postId: string, ip: string, ua: string, lang: string) {
+  const fingerprint = crypto
+    .createHash("sha256")
+    .update(`${ip}|${ua}|${lang}`)
+    .digest("hex")
+    .slice(0, 32);
+
+  try {
+    await prisma.blogPostView.upsert({
+      where: { postId_fingerprint: { postId, fingerprint } },
+      update: {},
+      create: { postId, fingerprint },
+    });
+  } catch {
+    // ignore - post may not exist or duplicate
+  }
+}
+
+export async function getBlogViewCounts(): Promise<Record<string, number>> {
+  await requireAdmin();
+  const counts = await prisma.blogPostView.groupBy({
+    by: ["postId"],
+    _count: { id: true },
+  });
+  const map: Record<string, number> = {};
+  for (const c of counts) {
+    map[c.postId] = c._count.id;
+  }
+  return map;
+}

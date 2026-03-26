@@ -37,6 +37,7 @@ import {
   saveTopic,
   type BlogPostData,
   type SavedTopic,
+  getBlogViewCounts,
 } from "@/actions/blog";
 import {
   Plus,
@@ -62,10 +63,12 @@ export function BlogAdmin() {
   const [showAiGen, setShowAiGen] = useState(false);
   const [showTopics, setShowTopics] = useState(false);
   const [showMemory, setShowMemory] = useState(false);
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
 
   const loadPosts = useCallback(async () => {
-    const data = await getBlogPosts();
+    const [data, views] = await Promise.all([getBlogPosts(), getBlogViewCounts()]);
     setPosts(data);
+    setViewCounts(views);
     setLoading(false);
   }, []);
 
@@ -164,6 +167,11 @@ export function BlogAdmin() {
                           day: "numeric",
                         })}
                       </span>
+                      {viewCounts[post.id] > 0 && (
+                        <span className="flex items-center gap-1">
+                          👁 {viewCounts[post.id].toLocaleString()} views
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">

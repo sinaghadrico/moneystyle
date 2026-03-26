@@ -95,7 +95,21 @@ model BlogPost {
   @@index([status])
   @@index([publishedAt])
   @@index([authorId])
+  views         BlogPostView[]
+
   @@map("blog_posts")
+}
+
+model BlogPostView {
+  id          String   @id @default(cuid())
+  postId      String
+  post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  fingerprint String
+  createdAt   DateTime @default(now())
+
+  @@unique([postId, fingerprint])
+  @@index([postId])
+  @@map("blog_post_views")
 }
 
 model BlogAiMemory {

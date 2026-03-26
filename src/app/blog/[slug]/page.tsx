@@ -4,7 +4,9 @@ import Link from "next/link";
 import { LogoMark } from "@/components/ui/logo";
 import { ArrowLeft, Clock, User } from "lucide-react";
 import { getBlogPost, getBlogPosts } from "@/actions/blog";
+import { recordBlogView } from "@/actions/blog";
 import Image from "next/image";
+import { headers } from "next/headers";
 
 export async function generateMetadata({
   params,
@@ -52,6 +54,13 @@ export default async function BlogPostPage({
   const { slug } = await params;
   const post = await getBlogPost(slug);
   if (!post || post.status !== "published") notFound();
+
+  // Record view server-side
+  const hdrs = await headers();
+  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || hdrs.get("x-real-ip") || "unknown";
+  const ua = hdrs.get("user-agent") || "unknown";
+  const lang = hdrs.get("accept-language") || "";
+  recordBlogView(post.id, ip, ua, lang); // fire-and-forget, no await
 
   // Simple markdown to HTML (headers, bold, links, lists, paragraphs)
   const html = markdownToHtml(post.content);

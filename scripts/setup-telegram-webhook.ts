@@ -67,12 +67,16 @@ async function main() {
 async function registerCommands(token: string) {
   console.log("Registering bot commands...");
   const commands = [
-    { command: "help", description: "Show all commands and usage guide" },
-    { command: "stats", description: "Monthly expense report" },
-    { command: "today", description: "Today's transactions" },
-    { command: "del", description: "Delete transaction(s)" },
-    { command: "undo", description: "Undo last transaction" },
-    { command: "report", description: "Monthly report with comparisons" },
+    { command: "start", description: "👋 Welcome & getting started" },
+    { command: "help", description: "📖 Show all commands and usage guide" },
+    { command: "link", description: "🔗 Link your account with a code" },
+    { command: "unlink", description: "🔓 Unlink your Telegram account" },
+    { command: "stats", description: "📊 Monthly expense breakdown" },
+    { command: "report", description: "📈 Full monthly report with comparisons" },
+    { command: "savings", description: "🎯 Savings goals progress" },
+    { command: "debts", description: "💳 Debts summary" },
+    { command: "settle", description: "🤝 Record a settlement (e.g. /settle John 50)" },
+    { command: "del", description: "🗑️ Delete transaction(s)" },
   ];
 
   const res = await fetch(`${TELEGRAM_API}${token}/setMyCommands`, {

@@ -54,10 +54,24 @@ model User {
   challenges            Challenge[]
   badges                Badge[]
   trips                 Trip[]
+  telegramLinkCodes     TelegramLinkCode[]
   appSettings           AppSettings?
   userPreference        UserPreference?
 
   @@map("users")
+}
+
+model TelegramLinkCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([code])
+  @@index([userId])
+  @@map("telegram_link_codes")
 }
 
 model BlogPost {
@@ -733,8 +747,6 @@ model AppSettings {
   defaultDashboardPeriod String   @default("3m")
   autoCategorize         Boolean  @default(true)
   telegramEnabled        Boolean  @default(false)
-  telegramBotToken       String?
-  telegramWebhookSecret  String?
   telegramChatId         String?
   smsApiKey              String?
   aiEnabled              Boolean  @default(false)

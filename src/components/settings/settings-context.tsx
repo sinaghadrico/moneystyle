@@ -20,9 +20,7 @@ export type Settings = {
   defaultDashboardPeriod: "all" | "3m" | "6m" | "1y";
   autoCategorize: boolean;
   telegramEnabled: boolean;
-  telegramBotToken: string | null;
-  telegramWebhookSecret: string | null;
-  telegramChatId: string | null;
+  telegramLinked: boolean;
   smsApiKey: string | null;
   aiEnabled: boolean;
   openaiApiKey: string | null;
@@ -79,9 +77,7 @@ export function SettingsContextProvider({ children }: { children: React.ReactNod
       defaultDashboardPeriod: s.defaultDashboardPeriod as Settings["defaultDashboardPeriod"],
       autoCategorize: s.autoCategorize,
       telegramEnabled: s.telegramEnabled,
-      telegramBotToken: s.telegramBotToken,
-      telegramWebhookSecret: s.telegramWebhookSecret,
-      telegramChatId: s.telegramChatId,
+      telegramLinked: !!s.telegramChatId,
       smsApiKey: s.smsApiKey,
       aiEnabled: s.aiEnabled,
       openaiApiKey: s.openaiApiKey,
@@ -117,17 +113,17 @@ export function SettingsContextProvider({ children }: { children: React.ReactNod
   };
 
   const handleTestTelegram = async () => {
-    if (!settings?.telegramBotToken || !settings?.telegramChatId) {
-      toast.error("❌ Bot token and chat ID are required");
+    if (!settings?.telegramLinked) {
+      toast.error("Telegram is not linked");
       return;
     }
     setTestingTelegram(true);
-    const result = await testTelegramConnection(settings.telegramBotToken, settings.telegramChatId);
+    const result = await testTelegramConnection();
     setTestingTelegram(false);
     if ("error" in result) {
       toast.error(`❌ ${result.error}`);
     } else {
-      toast.success("📨 Test message sent! Check your Telegram.");
+      toast.success("Test message sent! Check your Telegram.");
     }
   };
 

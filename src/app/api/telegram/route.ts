@@ -41,6 +41,53 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  // Handle inline keyboard callback queries
+  const callbackQuery = body.callback_query as Record<string, unknown> | undefined;
+  if (callbackQuery) {
+    const cbChatId = ((callbackQuery.message as Record<string, unknown>)?.chat as Record<string, unknown>)?.id as number;
+    const cbData = callbackQuery.data as string;
+    const cbUserId = callbackQuery.id as string;
+
+    // Acknowledge the callback
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    if (token) {
+      await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callback_query_id: cbUserId }),
+      });
+    }
+
+    // Find linked user
+    const cbSettings = await prisma.appSettings.findFirst({
+      where: { telegramChatId: String(cbChatId) },
+    });
+
+    if (!cbSettings) {
+      await sendTelegramMessage(cbChatId, "Your account is not linked. Use /start to get started.");
+      return NextResponse.json({ ok: true });
+    }
+
+    // Route callback commands
+    if (cbData === "cmd_stats") {
+      const report = await generateStats(undefined, cbSettings.userId);
+      await sendTelegramMessage(cbChatId, report);
+    } else if (cbData === "cmd_report") {
+      const report = await generateMonthlyReport(undefined, cbSettings.userId);
+      await sendTelegramMessage(cbChatId, report);
+    } else if (cbData === "cmd_savings") {
+      const report = await generateSavingsReport(cbSettings.userId);
+      await sendTelegramMessage(cbChatId, report);
+    } else if (cbData === "cmd_debts") {
+      const report = await generateDebtsReport(cbSettings.userId);
+      await sendTelegramMessage(cbChatId, report);
+    } else if (cbData === "cmd_help") {
+      await sendTelegramMessage(cbChatId, generateHelp());
+    }
+
+    return NextResponse.json({ ok: true });
+  }
+
   const message =
     (body.channel_post as Record<string, unknown>) ??
     (body.message as Record<string, unknown>);
@@ -52,20 +99,115 @@ export async function POST(request: NextRequest) {
   const chatId = (message.chat as Record<string, unknown>)?.id as number;
   const text = message.text as string;
 
+  // Handle /start without code (welcome message)
+  if (/^\/start$/i.test(text.trim())) {
+    const existing = await prisma.appSettings.findFirst({
+      where: { telegramChatId: String(chatId) },
+    });
+    if (existing) {
+      await sendTelegramMessage(
+        chatId,
+        "Welcome back to MoneyStyle! 👋\n\nYour account is linked. Send a transaction like:\n250 Carrefour #grocery",
+        undefined,
+        [
+          [
+            { text: "📊 Stats", callback_data: "cmd_stats" },
+            { text: "📈 Report", callback_data: "cmd_report" },
+          ],
+          [
+            { text: "🎯 Savings", callback_data: "cmd_savings" },
+            { text: "💳 Debts", callback_data: "cmd_debts" },
+          ],
+          [
+            { text: "📖 All Commands", callback_data: "cmd_help" },
+            { text: "🌐 Open App", url: "https://moneystyle.app/dashboard" },
+          ],
+        ],
+      );
+    } else {
+      await sendTelegramMessage(
+        chatId,
+        "Welcome to MoneyStyle! 👋💰\n\nTo get started, link your account:\n\n1️⃣ Open MoneyStyle app\n2️⃣ Go to Settings → Integrations → Telegram\n3️⃣ Tap \"Generate Link Code\"\n4️⃣ Send the code here: /link CODE",
+        undefined,
+        [
+          [{ text: "🔗 Open Settings to Link", url: "https://moneystyle.app/settings/integrations/telegram" }],
+        ],
+      );
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  // Handle /link CODE and /start CODE before user lookup
+  const linkMatch = text.trim().match(/^\/(link|start)\s+(\d{6})$/i);
+  if (linkMatch) {
+    const code = linkMatch[2];
+    const linkCode = await prisma.telegramLinkCode.findFirst({
+      where: { code, expiresAt: { gt: new Date() } },
+    });
+    if (linkCode) {
+      await prisma.appSettings.update({
+        where: { userId: linkCode.userId },
+        data: { telegramChatId: String(chatId), telegramEnabled: true },
+      });
+      await prisma.telegramLinkCode.delete({ where: { id: linkCode.id } });
+      await sendTelegramMessage(
+        chatId,
+        "✅ Account linked successfully!\n\nYou can now send transactions like:\n250 Carrefour #grocery\n\nOr use the buttons below:",
+        undefined,
+        [
+          [
+            { text: "📊 Stats", callback_data: "cmd_stats" },
+            { text: "📈 Report", callback_data: "cmd_report" },
+          ],
+          [
+            { text: "🎯 Savings", callback_data: "cmd_savings" },
+            { text: "💳 Debts", callback_data: "cmd_debts" },
+          ],
+          [
+            { text: "📖 All Commands", callback_data: "cmd_help" },
+            { text: "🌐 Open App", url: "https://moneystyle.app/dashboard" },
+          ],
+        ],
+      );
+    } else {
+      await sendTelegramMessage(
+        chatId,
+        "Invalid or expired code. Get a new one from Settings.",
+      );
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  // Handle /unlink
+  if (/^\/unlink$/i.test(text.trim())) {
+    const unlinkSettings = await prisma.appSettings.findFirst({
+      where: { telegramChatId: String(chatId) },
+    });
+    if (unlinkSettings) {
+      await prisma.appSettings.update({
+        where: { userId: unlinkSettings.userId },
+        data: { telegramChatId: null, telegramEnabled: false },
+      });
+      await sendTelegramMessage(chatId, "Account unlinked successfully.");
+    } else {
+      await sendTelegramMessage(chatId, "Your Telegram is not linked to any account.");
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   // Look up user by telegramChatId
   const settings = await prisma.appSettings.findFirst({
     where: { telegramChatId: String(chatId) },
   });
 
   if (!settings) {
-    // Try env-level fallback — find first user with telegram enabled
-    const fallbackSettings = await prisma.appSettings.findFirst({
-      where: { telegramEnabled: true },
-    });
-    if (!fallbackSettings) {
-      return NextResponse.json({ ok: true });
-    }
-    return handleTelegram(text, chatId, fallbackSettings, fallbackSettings.userId);
+    await sendTelegramMessage(
+      chatId,
+      "Your Telegram is not linked to any account.\n\nGet a link code from Settings:",
+      undefined,
+      [[{ text: "🔗 Open Settings to Link", url: "https://moneystyle.app/settings/integrations/telegram" }]],
+    );
+    return NextResponse.json({ ok: true });
   }
 
   return handleTelegram(text, chatId, settings, settings.userId);
@@ -77,16 +219,26 @@ async function handleTelegram(
   settings: {
     currency: string;
     defaultAccountId: string | null;
-    telegramBotToken: string | null;
   },
   userId: string,
 ) {
-  const botToken = settings.telegramBotToken || undefined;
-  const reply = (msg: string) => sendTelegramMessage(chatId, msg, undefined, botToken);
+  const reply = (msg: string) => sendTelegramMessage(chatId, msg);
 
-  // /help or /start
+  // /help or /start (without code)
   if (/^\/?(help|start|راهنما)$/i.test(text.trim())) {
-    await reply(generateHelp());
+    await sendTelegramMessage(chatId, generateHelp(), undefined, [
+      [
+        { text: "📊 Stats", callback_data: "cmd_stats" },
+        { text: "📈 Report", callback_data: "cmd_report" },
+      ],
+      [
+        { text: "🎯 Savings", callback_data: "cmd_savings" },
+        { text: "💳 Debts", callback_data: "cmd_debts" },
+      ],
+      [
+        { text: "🌐 Open App", url: "https://moneystyle.app/dashboard" },
+      ],
+    ]);
     return NextResponse.json({ ok: true });
   }
 

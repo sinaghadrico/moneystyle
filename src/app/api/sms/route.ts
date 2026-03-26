@@ -49,7 +49,6 @@ async function handleSms(
     currency: string;
     defaultAccountId: string | null;
     telegramChatId: string | null;
-    telegramBotToken: string | null;
     notifySmsTransaction: boolean;
   },
   userId: string,
@@ -108,7 +107,6 @@ async function handleSms(
 
   // Send Telegram notification
   const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-  const botToken = settings.telegramBotToken || undefined;
   if (chatId && settings.notifySmsTransaction) {
     const typeIcon = parsed.type === "income" ? "💰" : "💳";
     const merchantLabel = parsed.merchant ? ` at ${parsed.merchant}` : "";
@@ -154,7 +152,7 @@ async function handleSms(
     );
     if (anomalyWarning) msg += anomalyWarning;
 
-    await sendTelegramMessage(chatId, msg, undefined, botToken);
+    await sendTelegramMessage(chatId, msg);
   }
 
   return NextResponse.json({

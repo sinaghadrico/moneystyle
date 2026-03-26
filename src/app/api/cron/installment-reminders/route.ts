@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
   for (const settings of allSettings) {
     const userId = settings.userId;
     const chatId = settings.telegramChatId!;
-    const botToken = settings.telegramBotToken || undefined;
 
     try {
       const [installments, bills] = await Promise.all([
@@ -113,7 +112,7 @@ export async function GET(request: NextRequest) {
       if (lines.length === 0) continue;
 
       const message = `${tplHeader}\n\n${lines.join("\n")}`;
-      await sendTelegramMessage(chatId, message, undefined, botToken);
+      await sendTelegramMessage(chatId, message);
       totalReminders += lines.length;
     } catch (err) {
       console.error(`Payment reminders error for user ${userId}:`, err);

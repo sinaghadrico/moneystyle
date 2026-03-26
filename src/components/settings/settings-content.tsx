@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,11 @@ import {
   MessageSquare,
   Bell,
   ToggleLeft,
+  Link2,
+  Unlink,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import {
   getSettings,
@@ -41,6 +47,8 @@ import {
   exportTransactions,
   generateDeveloperApiKey,
   revokeApiKey,
+  generateTelegramLinkCode,
+  unlinkTelegram,
 } from "@/actions/settings";
 import { getAccountsList } from "@/actions/transactions";
 import { useAppSettings } from "@/components/settings/settings-provider";
@@ -64,9 +72,7 @@ type Settings = {
   defaultDashboardPeriod: "all" | "3m" | "6m" | "1y";
   autoCategorize: boolean;
   telegramEnabled: boolean;
-  telegramBotToken: string | null;
-  telegramWebhookSecret: string | null;
-  telegramChatId: string | null;
+  telegramLinked: boolean;
   smsApiKey: string | null;
   aiEnabled: boolean;
   openaiApiKey: string | null;
@@ -111,9 +117,14 @@ export function SettingsContent() {
   const [testingTelegram, setTestingTelegram] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
   const [exportingJson, setExportingJson] = useState(false);
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [generatingCode, setGeneratingCode] = useState(false);
+  const [unlinkingTelegram, setUnlinkingTelegram] = useState(false);
   const { theme, setTheme } = useTheme();
   const { refresh: refreshAppSettings, settings: appSettings } =
     useAppSettings();
+
+  const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? "moneystyle_app_bot";
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -128,9 +139,7 @@ export function SettingsContent() {
         s.defaultDashboardPeriod as Settings["defaultDashboardPeriod"],
       autoCategorize: s.autoCategorize,
       telegramEnabled: s.telegramEnabled,
-      telegramBotToken: s.telegramBotToken,
-      telegramWebhookSecret: s.telegramWebhookSecret,
-      telegramChatId: s.telegramChatId,
+      telegramLinked: !!s.telegramChatId,
       smsApiKey: s.smsApiKey,
       aiEnabled: s.aiEnabled,
       openaiApiKey: s.openaiApiKey,
@@ -164,20 +173,17 @@ export function SettingsContent() {
   };
 
   const handleTestTelegram = async () => {
-    if (!settings?.telegramBotToken || !settings?.telegramChatId) {
-      toast.error("❌ Bot token and chat ID are required");
+    if (!settings?.telegramLinked) {
+      toast.error("Telegram is not linked");
       return;
     }
     setTestingTelegram(true);
-    const result = await testTelegramConnection(
-      settings.telegramBotToken,
-      settings.telegramChatId,
-    );
+    const result = await testTelegramConnection();
     setTestingTelegram(false);
     if ("error" in result) {
       toast.error(`❌ ${result.error}`);
     } else {
-      toast.success("📨 Test message sent! Check your Telegram.");
+      toast.success("Test message sent! Check your Telegram.");
     }
   };
 
@@ -473,69 +479,141 @@ export function SettingsContent() {
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Send className="h-4 w-4" />
                     Telegram
+                    {settings.telegramLinked && (
+                      <Badge variant="default" className="ml-auto bg-emerald-500 hover:bg-emerald-600 text-white">
+                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        Linked
+                      </Badge>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="telegramEnabled">Enable Telegram</Label>
-                    <Switch
-                      id="telegramEnabled"
-                      checked={settings.telegramEnabled}
-                      onCheckedChange={(v) => update({ telegramEnabled: v })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="botToken">Bot Token</Label>
-                    <Input
-                      id="botToken"
-                      type="password"
-                      value={settings.telegramBotToken ?? ""}
-                      onChange={(e) =>
-                        update({ telegramBotToken: e.target.value || null })
-                      }
-                      placeholder="123456:ABC-DEF..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="webhookSecret">Webhook Secret</Label>
-                    <Input
-                      id="webhookSecret"
-                      type="password"
-                      value={settings.telegramWebhookSecret ?? ""}
-                      onChange={(e) =>
-                        update({
-                          telegramWebhookSecret: e.target.value || null,
-                        })
-                      }
-                      placeholder="Optional secret"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="chatId">Chat ID</Label>
-                    <Input
-                      id="chatId"
-                      value={settings.telegramChatId ?? ""}
-                      onChange={(e) =>
-                        update({ telegramChatId: e.target.value || null })
-                      }
-                      placeholder="-1001234567890"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTestTelegram}
-                    disabled={
-                      testingTelegram ||
-                      !settings.telegramBotToken ||
-                      !settings.telegramChatId
-                    }
-                  >
-                    {testingTelegram && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Test Connection
-                  </Button>
+                  {settings.telegramLinked ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Your Telegram account is linked. You will receive notifications via the bot.
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="telegramEnabled">Enable Telegram Notifications</Label>
+                        <Switch
+                          id="telegramEnabled"
+                          checked={settings.telegramEnabled}
+                          onCheckedChange={(v) => update({ telegramEnabled: v })}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleTestTelegram}
+                          disabled={testingTelegram}
+                        >
+                          {testingTelegram ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="mr-2 h-4 w-4" />
+                          )}
+                          Test Connection
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            setUnlinkingTelegram(true);
+                            try {
+                              const result = await unlinkTelegram();
+                              if ("error" in result) {
+                                toast.error(`${result.error}`);
+                              } else {
+                                toast.success("Telegram account unlinked");
+                                update({ telegramLinked: false, telegramEnabled: false });
+                                setLinkCode(null);
+                              }
+                            } catch {
+                              toast.error("Failed to unlink Telegram");
+                            } finally {
+                              setUnlinkingTelegram(false);
+                            }
+                          }}
+                          disabled={unlinkingTelegram}
+                        >
+                          {unlinkingTelegram ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Unlink className="mr-2 h-4 w-4" />
+                          )}
+                          Unlink
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Link your Telegram account to receive notifications directly in Telegram.
+                      </p>
+                      {linkCode ? (
+                        <div className="space-y-3">
+                          <div className="rounded-lg border bg-muted/50 p-4 text-center space-y-2">
+                            <p className="text-xs text-muted-foreground">Your link code</p>
+                            <div className="flex items-center justify-center gap-2">
+                              <code className="text-2xl font-mono font-bold tracking-widest">{linkCode}</code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(linkCode);
+                                  toast.success("Code copied to clipboard");
+                                }}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Expires in 10 minutes</p>
+                          </div>
+                          <div className="space-y-2 text-sm text-muted-foreground">
+                            <p>
+                              Send <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs font-medium">/link {linkCode}</code> to{" "}
+                              <span className="font-medium text-foreground">@{BOT_USERNAME}</span> on Telegram.
+                            </p>
+                          </div>
+                          <Button asChild variant="outline" size="sm" className="w-full">
+                            <a
+                              href={`https://t.me/${BOT_USERNAME}?start=${linkCode}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="mr-2 h-4 w-4" />
+                              Open in Telegram
+                            </a>
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={async () => {
+                            setGeneratingCode(true);
+                            try {
+                              const result = await generateTelegramLinkCode();
+                              setLinkCode(result.code);
+                            } catch {
+                              toast.error("Failed to generate link code");
+                            } finally {
+                              setGeneratingCode(false);
+                            }
+                          }}
+                          disabled={generatingCode}
+                        >
+                          {generatingCode ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Link2 className="mr-2 h-4 w-4" />
+                          )}
+                          Generate Link Code
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </CardContent>
               </Card>
 

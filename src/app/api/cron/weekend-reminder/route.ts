@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
   for (const settings of allSettings) {
     const userId = settings.userId;
     const chatId = settings.telegramChatId!;
-    const botToken = settings.telegramBotToken || undefined;
 
     try {
       const oneWeekAgo = new Date();
@@ -97,7 +96,7 @@ export async function GET(request: NextRequest) {
         })
       );
 
-      await sendTelegramMessage(chatId, lines.join("\n"), undefined, botToken);
+      await sendTelegramMessage(chatId, lines.join("\n"));
       sent++;
     } catch (err) {
       console.error(`Weekend reminder error for user ${userId}:`, err);

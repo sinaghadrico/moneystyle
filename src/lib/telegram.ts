@@ -570,6 +570,9 @@ export function generateHelp(): string {
     "",
     "🐷 /savings — View savings goals progress",
     "",
+    "🔗 /link CODE — Link your Telegram to your account",
+    "  /unlink — Unlink your Telegram account",
+    "",
     "❓ /help — Show this message",
     "",
     "Format: [+]amount merchant [#category] [#tag1 #tag2] [@account] [/split name]",
@@ -849,13 +852,15 @@ export function isUnknownCommand(text: string): boolean {
 
 const TELEGRAM_API = "https://api.telegram.org/bot";
 
+export type InlineButton = { text: string; callback_data?: string; url?: string };
+
 export async function sendTelegramMessage(
   chatId: number | string,
   text: string,
   parseMode?: "HTML" | "Markdown",
-  botToken?: string,
+  keyboard?: InlineButton[][],
 ): Promise<void> {
-  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     console.error("TELEGRAM_BOT_TOKEN not set");
     return;
@@ -863,6 +868,7 @@ export async function sendTelegramMessage(
 
   const payload: Record<string, unknown> = { chat_id: chatId, text };
   if (parseMode) payload.parse_mode = parseMode;
+  if (keyboard) payload.reply_markup = { inline_keyboard: keyboard };
 
   await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
     method: "POST",

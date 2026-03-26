@@ -221,7 +221,6 @@ export async function createTransaction(
   if (values.type === "expense" && values.amount && values.amount > 0) {
     const settings = await getSettings();
     const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-    const botToken = settings.telegramBotToken || undefined;
     if (chatId && settings.notifyWebTransaction) {
       const warning = await checkTransactionAnomaly(
         values.amount,
@@ -237,7 +236,7 @@ export async function createTransaction(
           merchant: values.merchant ? ` at ${values.merchant}` : "",
           warning,
         });
-        await sendTelegramMessage(chatId, msg, undefined, botToken);
+        await sendTelegramMessage(chatId, msg);
       }
     }
   }

@@ -26,10 +26,9 @@ export async function GET(request: NextRequest) {
   let sent = 0;
   for (const settings of allSettings) {
     const chatId = settings.telegramChatId!;
-    const botToken = settings.telegramBotToken || undefined;
     try {
       const report = await generateMonthlyReport(monthStr, settings.userId);
-      await sendTelegramMessage(chatId, report, undefined, botToken);
+      await sendTelegramMessage(chatId, report);
       sent++;
     } catch (err) {
       console.error(`Monthly report error for user ${settings.userId}:`, err);

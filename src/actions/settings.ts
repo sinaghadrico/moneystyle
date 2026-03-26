@@ -25,9 +25,6 @@ const DEFAULTS = {
   defaultDashboardPeriod: "3m",
   autoCategorize: true,
   telegramEnabled: false,
-  telegramBotToken: null,
-  telegramWebhookSecret: null,
-  telegramChatId: null,
   aiEnabled: false,
   openaiApiKey: null,
   notifyPaymentReminders: true,
@@ -132,13 +129,17 @@ export async function revokeApiKey() {
   return { success: true };
 }
 
-export async function testTelegramConnection(
-  botToken: string,
-  chatId: string,
-): Promise<{ success: true } | { error: string }> {
-  await requireAuth();
-  if (!botToken || !chatId) {
-    return { error: "Bot token and chat ID are required" };
+export async function testTelegramConnection(): Promise<{ success: true } | { error: string }> {
+  const userId = await requireAuth();
+
+  const settings = await prisma.appSettings.findUnique({ where: { userId } });
+  if (!settings?.telegramChatId) {
+    return { error: "Telegram is not linked. Use a link code to connect first." };
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    return { error: "TELEGRAM_BOT_TOKEN not configured on server" };
   }
 
   try {
@@ -148,7 +149,7 @@ export async function testTelegramConnection(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: chatId,
+          chat_id: settings.telegramChatId,
           text: "MoneyStyle app connected successfully!",
         }),
       },
@@ -167,6 +168,29 @@ export async function testTelegramConnection(
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Connection failed" };
   }
+}
+
+export async function generateTelegramLinkCode() {
+  const userId = await requireAuth();
+  // Delete existing codes for this user
+  await prisma.telegramLinkCode.deleteMany({ where: { userId } });
+  // Generate 6-digit code
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  // Store with 10-minute expiry
+  await prisma.telegramLinkCode.create({
+    data: { code, userId, expiresAt: new Date(Date.now() + 10 * 60 * 1000) },
+  });
+  return { code };
+}
+
+export async function unlinkTelegram() {
+  const userId = await requireAuth();
+  await prisma.appSettings.update({
+    where: { userId },
+    data: { telegramChatId: null, telegramEnabled: false },
+  });
+  revalidatePath("/settings");
+  return { success: true };
 }
 
 export async function exportTransactions(

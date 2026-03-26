@@ -86,12 +86,13 @@ export function BlogAdmin() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold tracking-tight">Blog</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
           <Button
             size="sm"
             variant="outline"
+            className="shrink-0"
             onClick={() => setShowMemory(true)}
           >
             <Brain className="mr-1 h-4 w-4" /> AI Memory
@@ -99,6 +100,7 @@ export function BlogAdmin() {
           <Button
             size="sm"
             variant="outline"
+            className="shrink-0"
             onClick={() => setShowTopics(true)}
           >
             <Lightbulb className="mr-1 h-4 w-4" /> Suggest Topics
@@ -106,12 +108,14 @@ export function BlogAdmin() {
           <Button
             size="sm"
             variant="outline"
+            className="shrink-0"
             onClick={() => setShowAiGen(true)}
           >
             <Sparkles className="mr-1 h-4 w-4" /> AI Generate
           </Button>
           <Button
             size="sm"
+            className="shrink-0"
             onClick={() => {
               setEditingPost(null);
               setShowEditor(true);

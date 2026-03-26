@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <h2 className="text-2xl font-bold tracking-tight">Admin Panel</h2>
       </div>
 
-      <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
+      <div className="flex gap-1 overflow-x-auto no-scrollbar">
         {ADMIN_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive =
@@ -40,13 +40,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 isActive
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-3.5 w-3.5" />
               {tab.label}
             </Link>
           );

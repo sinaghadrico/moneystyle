@@ -12,12 +12,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTheme } from "next-themes";
-import { Settings2, Palette, Sun, Moon, Monitor } from "lucide-react";
+import { Settings2, Palette, Sun, Moon, Monitor, Loader2 } from "lucide-react";
 import { useSettingsContext, type Settings } from "@/components/settings/settings-context";
 import { CurrencySelect } from "@/components/ui/currency-select";
 
 export default function SettingsGeneralPage() {
-  const { settings, update } = useSettingsContext();
+  const { settings, update, saving, handleSave } = useSettingsContext();
   const { theme, setTheme } = useTheme();
 
   if (!settings) return null;
@@ -70,6 +70,10 @@ export default function SettingsGeneralPage() {
               </SelectContent>
             </Select>
           </div>
+          <Button onClick={handleSave} disabled={saving} size="sm" className="mt-2">
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
         </CardContent>
       </Card>
 

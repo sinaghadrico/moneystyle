@@ -220,13 +220,7 @@ export function SettingsContent() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">⚙️ Settings</h2>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Changes
-        </Button>
-      </div>
+      <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
 
       {/* Tab navigation */}
       <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
@@ -253,6 +247,7 @@ export function SettingsContent() {
 
       {/* General tab */}
       {activeTab === "general" && (
+        <>
         <div className="grid gap-4 md:grid-cols-2">
           {/* General */}
           <Card>
@@ -353,10 +348,18 @@ export function SettingsContent() {
             </CardContent>
           </Card>
         </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </div>
+        </>
       )}
 
       {/* Transactions tab */}
       {activeTab === "transactions" && (
+        <>
         <div className="grid gap-4 md:grid-cols-2">
           {/* Transactions */}
           <Card>
@@ -426,10 +429,18 @@ export function SettingsContent() {
           {/* Currency Management */}
           <CurrencyManagementSection />
         </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </div>
+        </>
       )}
 
       {/* Integrations tab */}
       {activeTab === "integrations" && (
+        <>
         <div className="space-y-5">
           {/* Integration sub-navigation */}
           <div className="flex gap-1 overflow-x-auto no-scrollbar">
@@ -753,14 +764,29 @@ export function SettingsContent() {
             </Card>
           )}
         </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </div>
+        </>
       )}
 
       {/* Features tab */}
       {activeTab === "features" && (
-        <FeatureFlagsSection
-          flags={settings.featureFlags}
-          onChange={(flags) => update({ featureFlags: flags })}
-        />
+        <>
+          <FeatureFlagsSection
+            flags={settings.featureFlags}
+            onChange={(flags) => update({ featureFlags: flags })}
+          />
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
+          </div>
+        </>
       )}
 
       {/* Advanced tab */}

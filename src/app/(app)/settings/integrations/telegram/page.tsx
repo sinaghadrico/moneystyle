@@ -10,7 +10,7 @@ import { useSettingsContext } from "@/components/settings/settings-context";
 import { NotificationTemplatesSection } from "@/components/settings/notification-templates-section";
 
 export default function SettingsTelegramPage() {
-  const { settings, update, handleTestTelegram, testingTelegram } = useSettingsContext();
+  const { settings, update, saving, handleSave, handleTestTelegram, testingTelegram } = useSettingsContext();
 
   if (!settings) return null;
 
@@ -82,6 +82,12 @@ export default function SettingsTelegramPage() {
             )}
             Test Connection
           </Button>
+          <div className="border-t pt-3 mt-3 flex justify-end">
+          <Button onClick={handleSave} disabled={saving} size="sm">
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+          </div>
         </CardContent>
       </Card>
 

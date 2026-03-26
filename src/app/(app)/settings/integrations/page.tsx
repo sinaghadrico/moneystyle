@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Brain } from "lucide-react";
+import { Brain, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSettingsContext } from "@/components/settings/settings-context";
 import { AiPromptsSection } from "@/components/settings/ai-prompts-section";
 
 export default function SettingsAiPage() {
-  const { settings, update } = useSettingsContext();
+  const { settings, update, saving, handleSave } = useSettingsContext();
 
   if (!settings) return null;
 
@@ -73,6 +74,10 @@ export default function SettingsAiPage() {
               </p>
             </details>
           </div>
+          <Button onClick={handleSave} disabled={saving} size="sm" className="mt-2">
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
         </CardContent>
       </Card>
 

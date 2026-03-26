@@ -10,13 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSettingsContext, type Settings } from "@/components/settings/settings-context";
 import { CurrencyManagementSection } from "@/components/settings/currency-management-section";
 import { useAppSettings } from "@/components/settings/settings-provider";
 
 export default function SettingsTransactionsPage() {
-  const { settings, accounts, update } = useSettingsContext();
+  const { settings, accounts, update, saving, handleSave } = useSettingsContext();
   const { settings: appSettings } = useAppSettings();
 
   if (!settings) return null;
@@ -79,6 +80,10 @@ export default function SettingsTransactionsPage() {
               onCheckedChange={(v) => update({ autoCategorize: v })}
             />
           </div>
+          <Button onClick={handleSave} disabled={saving} size="sm" className="mt-2">
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
         </CardContent>
       </Card>
 

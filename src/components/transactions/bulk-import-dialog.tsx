@@ -30,6 +30,7 @@ import type {
 import type { Account, Category } from "@prisma/client";
 import { toast } from "sonner";
 import { useAppSettings } from "@/components/settings/settings-provider";
+import { useRouter } from "next/navigation";
 import {
   Upload,
   FileSpreadsheet,
@@ -42,6 +43,10 @@ import {
   Pencil,
   X,
   MessageCircle,
+  ToggleRight,
+  Key,
+  Settings,
+  ExternalLink,
 } from "lucide-react";
 import JSZip from "jszip";
 
@@ -80,6 +85,8 @@ export function BulkImportDialog({
   onSuccess: () => void;
 }) {
   const { settings } = useAppSettings();
+  const router = useRouter();
+  const needsAiSetup = !settings.aiEnabled || !settings.hasOpenaiKey;
   const csvEnabled = settings.isAdmin || settings.featureFlags.importCsv;
   const aiEnabled = settings.isAdmin || settings.featureFlags.importAi;
   const telegramEnabled = settings.isAdmin || settings.featureFlags.importTelegram;
@@ -676,19 +683,56 @@ export function BulkImportDialog({
               )}
             </div>
 
-            {(mode === "ai" || mode === "telegram") && !settings.aiEnabled && (
-              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900/50 dark:bg-yellow-950/30">
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  AI is not enabled
-                </p>
-                <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
-                  {mode === "telegram"
-                    ? "Receipts won't be parsed for amounts. Enable AI in Settings for best results."
-                    : "Go to Settings → enable AI and add your OpenAI API key to use this feature."}
-                </p>
+            {(mode === "ai" || mode === "telegram") && needsAiSetup && (
+              <div className="space-y-3">
+                <div className={`flex items-start gap-3 rounded-lg border p-3 ${!settings.aiEnabled ? "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30" : "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30"}`}>
+                  <ToggleRight className={`h-5 w-5 mt-0.5 shrink-0 ${!settings.aiEnabled ? "text-amber-600" : "text-green-600"}`} />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {!settings.aiEnabled ? "1. Enable AI" : "AI is enabled"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {!settings.aiEnabled
+                        ? "Go to Settings → Integrations and turn on the AI toggle."
+                        : "Already enabled."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`flex items-start gap-3 rounded-lg border p-3 ${!settings.hasOpenaiKey ? "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30" : "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30"}`}>
+                  <Key className={`h-5 w-5 mt-0.5 shrink-0 ${!settings.hasOpenaiKey ? "text-amber-600" : "text-green-600"}`} />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {!settings.hasOpenaiKey ? "2. Add OpenAI API Key" : "API key configured"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {!settings.hasOpenaiKey ? (
+                        <>
+                          Get your key from{" "}
+                          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 underline hover:text-foreground">
+                            platform.openai.com <ExternalLink className="h-3 w-3" />
+                          </a>{" "}
+                          and paste it in Settings → Integrations.
+                        </>
+                      ) : "Already configured."}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    onOpenChange(false);
+                    router.push("/settings/integrations");
+                  }}
+                >
+                  <Settings className="mr-1 h-4 w-4" />
+                  Go to Settings
+                </Button>
               </div>
             )}
 
+            {!((mode === "ai" || mode === "telegram") && needsAiSetup) && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Account</label>
               <Select value={accountId} onValueChange={setAccountId}>
@@ -704,7 +748,9 @@ export function BulkImportDialog({
                 </SelectContent>
               </Select>
             </div>
+            )}
 
+            {!((mode === "ai" || mode === "telegram") && needsAiSetup) && (
             <div
               className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-primary/50 hover:bg-muted/30"
               onClick={() =>
@@ -772,6 +818,7 @@ export function BulkImportDialog({
                 }}
               />
             </div>
+            )}
 
             {mode === "csv" && (
               <button
@@ -783,7 +830,7 @@ export function BulkImportDialog({
               </button>
             )}
 
-            {mode === "telegram" && (
+            {mode === "telegram" && !needsAiSetup && (
               <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
                 <p className="text-xs font-medium">
                   How to export from Telegram:

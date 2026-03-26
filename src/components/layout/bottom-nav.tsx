@@ -149,9 +149,13 @@ export function BottomNav() {
   const [fabOpen, setFabOpen] = useState(false);
   const { settings } = useAppSettings();
 
+  const isOnboarding = pathname.startsWith("/onboarding");
+
   const visibleActions = QUICK_ACTIONS.filter(
     (action) => !action.feature || settings.isAdmin || settings.featureFlags[action.feature]
   );
+
+  if (isOnboarding) return null;
 
   return (
     <>

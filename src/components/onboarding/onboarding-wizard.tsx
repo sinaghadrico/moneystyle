@@ -14,8 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateSettings } from "@/actions/settings";
-import { upsertBudget } from "@/actions/budgets";
-import { completeOnboarding } from "@/actions/onboarding";
+import { completeOnboarding, setupOnboardingBudgets } from "@/actions/onboarding";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,7 +30,7 @@ type Currency = {
 type BudgetCategory = {
   emoji: string;
   name: string;
-  categoryId: string;
+  color: string;
   amount: string;
 };
 
@@ -58,10 +57,10 @@ const CURRENCIES: Currency[] = [
 ];
 
 const INITIAL_BUDGETS: BudgetCategory[] = [
-  { emoji: "\uD83C\uDF54", name: "Food & Dining", categoryId: "", amount: "" },
-  { emoji: "\uD83D\uDED2", name: "Groceries", categoryId: "", amount: "" },
-  { emoji: "\uD83D\uDE97", name: "Transport", categoryId: "", amount: "" },
-  { emoji: "\uD83C\uDFAC", name: "Entertainment", categoryId: "", amount: "" },
+  { emoji: "\uD83C\uDF54", name: "Food & Dining", color: "#ef4444", amount: "" },
+  { emoji: "\uD83D\uDED2", name: "Groceries", color: "#22c55e", amount: "" },
+  { emoji: "\uD83D\uDE97", name: "Transport", color: "#3b82f6", amount: "" },
+  { emoji: "\uD83C\uDFAC", name: "Entertainment", color: "#a855f7", amount: "" },
 ];
 
 const TOTAL_STEPS = 4;
@@ -303,16 +302,11 @@ export function OnboardingWizard() {
 
       // Save budgets when leaving step 3
       if (step === 2) {
-        for (const b of budgets) {
-          const amount = Number(b.amount);
-          if (amount > 0 && b.categoryId) {
-            await upsertBudget({
-              categoryId: b.categoryId,
-              monthlyLimit: amount,
-              alertThreshold: 80,
-              rolloverEnabled: false,
-            });
-          }
+        const items = budgets
+          .filter((b) => Number(b.amount) > 0)
+          .map((b) => ({ name: b.name, color: b.color, amount: Number(b.amount) }));
+        if (items.length > 0) {
+          await setupOnboardingBudgets(items);
         }
       }
 

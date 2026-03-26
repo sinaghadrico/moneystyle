@@ -1,10 +1,5 @@
-import { TravelContent } from "@/components/travel/travel-content";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Travel",
-};
+import { redirect } from "next/navigation";
 
 export default function TravelPage() {
-  return <TravelContent />;
+  redirect("/profile/travel");
 }

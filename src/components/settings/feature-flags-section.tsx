@@ -25,7 +25,7 @@ const FEATURE_GROUPS: { title: string; keys: FeatureKey[] }[] = [
   },
   {
     title: "Profile",
-    keys: ["profileIncome", "profilePayments", "profileSubscriptions", "profileCashflow", "profileGoals", "profileHousehold", "profileTips", "profileChallenges"],
+    keys: ["profileIncome", "profilePayments", "profileSubscriptions", "profileCashflow", "profileGoals", "profileHousehold", "profileTips", "profileChallenges", "profileTravel"],
   },
 ];
 

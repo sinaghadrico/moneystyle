@@ -37,7 +37,7 @@ const QUICK_ACTIONS = [
   { href: "/lifestyle/meals", label: "Meal Planner", icon: UtensilsCrossed, color: "text-lime-500", bg: "bg-lime-500/10", feature: "mealPlanner" as FeatureKey },
   { href: "/lifestyle/shopping", label: "Shopping Lists", icon: ShoppingCart, color: "text-blue-500", bg: "bg-blue-500/10", feature: "shoppingLists" as FeatureKey },
   { href: "/money-map", label: "Money Map", icon: MapPin, color: "text-teal-500", bg: "bg-teal-500/10" },
-  { href: "/travel", label: "Travel", icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10" },
+  { href: "/profile/travel", label: "Travel", icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10", feature: "profileTravel" as FeatureKey },
 ];
 
 function FabPopup({ open, onClose, actions }: { open: boolean; onClose: () => void; actions: typeof QUICK_ACTIONS }) {

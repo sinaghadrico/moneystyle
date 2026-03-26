@@ -20,7 +20,7 @@ import { UserMenu } from "@/components/auth/user-menu";
 import { useAppSettings } from "@/components/settings/settings-provider";
 import type { FeatureKey } from "@/lib/feature-flags";
 
-const LIFESTYLE_FEATURES: FeatureKey[] = ["moneyPilot", "billNegotiator", "weekendPlanner", "mealPlanner", "shoppingLists"];
+const LIFESTYLE_FEATURES: FeatureKey[] = ["billNegotiator", "weekendPlanner", "mealPlanner", "shoppingLists"];
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },

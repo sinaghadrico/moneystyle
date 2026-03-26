@@ -69,6 +69,8 @@ export function DashboardContent() {
   const showHeatmap = useFeatureFlag("dashHeatmap");
   const showCharts = useFeatureFlag("dashCharts");
   const showPriceWatch = useFeatureFlag("dashPriceWatch");
+  const showNetWorth = useFeatureFlag("dashNetWorth");
+  const showMood = useFeatureFlag("dashMood");
   const [period, setPeriod] = useState<PeriodFilter>(settings.defaultDashboardPeriod as PeriodFilter);
   const [accountId, setAccountId] = useState<string>("");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -187,14 +189,14 @@ export function DashboardContent() {
       ) : (
         <>
           <StatsCards stats={stats} />
-          {netWorth && <NetWorthCard data={netWorth} />}
+          {showNetWorth && netWorth && <NetWorthCard data={netWorth} />}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {showPrediction && prediction && <PredictionCard prediction={prediction} />}
             {showBudgets && budgets.length > 0 && <BudgetProgressCard data={budgets} />}
             {showSavings && <SavingsCard data={savings} onRefresh={() => loadData(period, accountId)} />}
             {showDebts && <DebtsCard data={debts} />}
             {showPriceWatch && <PriceWatchCard data={priceAlerts} />}
-            <MoodStatsCard />
+            {showMood && <MoodStatsCard />}
           </div>
           {showCategoryChart && <MonthlyCategoryChart data={monthlyCat} categories={catMeta} />}
           {showHeatmap && <SpendingHeatmap data={dailySpend} />}

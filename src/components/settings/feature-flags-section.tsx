@@ -17,11 +17,11 @@ const FEATURE_GROUPS: { title: string; keys: FeatureKey[] }[] = [
   },
   {
     title: "Transactions",
-    keys: ["priceAnalysis", "transactionMerge", "importCsv", "importAi", "importTelegram", "txAdd", "txEdit", "txDelete", "txSplit", "txItems", "txConfirm"],
+    keys: ["priceAnalysis", "transactionMerge", "importCsv", "importAi", "importTelegram", "txAdd", "txEdit", "txDelete", "txSplit", "txItems", "txConfirm", "txMood", "txMerchants"],
   },
   {
     title: "Dashboard",
-    keys: ["dashPrediction", "dashBudgets", "dashSavings", "dashDebts", "dashCategoryChart", "dashHeatmap", "dashCharts", "spendingWrapped"],
+    keys: ["dashPrediction", "dashBudgets", "dashSavings", "dashDebts", "dashCategoryChart", "dashHeatmap", "dashCharts", "dashNetWorth", "dashMood", "dashPriceWatch", "spendingWrapped"],
   },
   {
     title: "Profile",

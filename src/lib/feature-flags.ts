@@ -36,6 +36,10 @@ export const FEATURE_KEYS = [
   "profileHousehold",
   "profileTips",
   "profileChallenges",
+  "dashNetWorth",
+  "dashMood",
+  "txMood",
+  "txMerchants",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
@@ -80,6 +84,10 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   profileHousehold: true,
   profileTips: true,
   profileChallenges: true,
+  dashNetWorth: true,
+  dashMood: true,
+  txMood: true,
+  txMerchants: true,
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: string }> = {
@@ -120,6 +128,10 @@ export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: st
   profileHousehold: { label: "Household", description: "Household management tab in profile" },
   profileTips: { label: "Financial Tips", description: "Financial tips on profile overview" },
   profileChallenges: { label: "Challenges", description: "Savings challenges and badges" },
+  dashNetWorth: { label: "Net Worth", description: "Net worth card on dashboard" },
+  dashMood: { label: "Money Mood", description: "Money mood stats card on dashboard" },
+  txMood: { label: "Transaction Mood", description: "Mood picker column in transactions list" },
+  txMerchants: { label: "Merchants", description: "Merchants management tab" },
 };
 
 export function parseFeatureFlags(raw: unknown): FeatureFlags {

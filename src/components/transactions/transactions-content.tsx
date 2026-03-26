@@ -142,6 +142,7 @@ export function TransactionsContent({
   const isAdm = settings.isAdmin;
   const importEnabled = isAdm || ff.importCsv || ff.importAi || ff.importTelegram;
   const canAdd = isAdm || ff.txAdd;
+  const showMood = isAdm || ff.txMood;
   const canEdit = isAdm || ff.txEdit;
   const canDelete = isAdm || ff.txDelete;
   const canSplit = isAdm || ff.txSplit;
@@ -850,12 +851,14 @@ export function TransactionsContent({
                 </div>
               </SwipeableCard>
               {/* Mood Picker — outside SwipeableCard so taps work */}
+              {showMood && (
               <div className="pl-10 pb-2 -mt-1">
                 <MoodPicker
                   transactionId={tx.id}
                   currentMood={(tx as Record<string, unknown>).mood as string | undefined}
                 />
               </div>
+              )}
             </div>
             ))}
       </div>
@@ -893,7 +896,7 @@ export function TransactionsContent({
               <TableHead className="hidden lg:table-cell">
                 Description
               </TableHead>
-              <TableHead>Mood</TableHead>
+              {showMood && <TableHead>Mood</TableHead>}
               <TableHead>Files</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -1026,12 +1029,14 @@ export function TransactionsContent({
                     <TableCell className="hidden max-w-[200px] truncate lg:table-cell">
                       {tx.description}
                     </TableCell>
+                    {showMood && (
                     <TableCell>
                       <MoodPicker
                         transactionId={tx.id}
                         currentMood={(tx as Record<string, unknown>).mood as string | undefined}
                       />
                     </TableCell>
+                    )}
                     <TableCell>
                       {tx.mediaFiles.length > 0 && (
                         <Button

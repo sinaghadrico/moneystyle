@@ -13,7 +13,7 @@ const FEATURE_GROUPS: { title: string; keys: FeatureKey[] }[] = [
   },
   {
     title: "AI & Tools",
-    keys: ["moneyPilot", "chat", "receiptScanner"],
+    keys: ["moneyPilot", "chat", "receiptScanner", "moneyMap"],
   },
   {
     title: "Transactions",

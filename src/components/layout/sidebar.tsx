@@ -11,6 +11,7 @@ import {
   Palette,
   MessageCircle,
   Rocket,
+  MapPin,
   Shield,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/pilot", label: "Money Pilot", icon: Rocket, feature: "moneyPilot" as FeatureKey },
   { href: "/chat", label: "Money Chat", icon: MessageCircle, feature: "chat" as FeatureKey },
+  { href: "/money-map", label: "Money Map", icon: MapPin, feature: "moneyMap" as FeatureKey },
   { href: "/lifestyle", label: "Lifestyle", icon: Palette, feature: "_lifestyle" as FeatureKey },
   { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/settings", label: "Settings", icon: Settings },

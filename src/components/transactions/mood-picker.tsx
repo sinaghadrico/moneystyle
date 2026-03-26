@@ -19,7 +19,11 @@ interface MoodPickerProps {
   onMoodSet?: () => void;
 }
 
-export function MoodPicker({ transactionId, currentMood, onMoodSet }: MoodPickerProps) {
+export function MoodPicker({
+  transactionId,
+  currentMood,
+  onMoodSet,
+}: MoodPickerProps) {
   const [selected, setSelected] = useState<string | undefined>(currentMood);
   const [isPending, startTransition] = useTransition();
 
@@ -44,12 +48,16 @@ export function MoodPicker({ transactionId, currentMood, onMoodSet }: MoodPicker
           key={mood.value}
           type="button"
           disabled={isPending}
-          onClick={(e) => { e.stopPropagation(); handleSelect(mood.value); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSelect(mood.value);
+          }}
           title={mood.label}
           className={cn(
-            "rounded-md px-1 py-0.5 text-base transition-all hover:bg-muted",
+            " rounded-b md:rounded-md px-1 py-0.5 text-base transition-all hover:bg-muted",
             "disabled:opacity-50",
-            selected === mood.value && "ring-2 ring-emerald-500 bg-emerald-500/10",
+            selected === mood.value &&
+              "ring-2 ring-emerald-500 bg-emerald-500/10",
           )}
         >
           {mood.emoji}

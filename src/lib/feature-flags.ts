@@ -28,6 +28,14 @@ export const FEATURE_KEYS = [
   "spendingWrapped",
   "moneyMap",
   "dashPriceWatch",
+  "profileIncome",
+  "profilePayments",
+  "profileSubscriptions",
+  "profileCashflow",
+  "profileGoals",
+  "profileHousehold",
+  "profileTips",
+  "profileChallenges",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
@@ -64,6 +72,14 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   spendingWrapped: true,
   moneyMap: true,
   dashPriceWatch: true,
+  profileIncome: true,
+  profilePayments: true,
+  profileSubscriptions: true,
+  profileCashflow: true,
+  profileGoals: true,
+  profileHousehold: true,
+  profileTips: true,
+  profileChallenges: true,
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: string }> = {
@@ -96,6 +112,14 @@ export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: st
   spendingWrapped: { label: "Spending Wrapped", description: "Monthly/yearly spending summary with slides" },
   moneyMap: { label: "Money Map", description: "Location-based spending visualization" },
   dashPriceWatch: { label: "Price Watch", description: "Price alerts card on dashboard" },
+  profileIncome: { label: "Income & Saving", description: "Income and savings tab in profile" },
+  profilePayments: { label: "Payments", description: "Bills and payments tab in profile" },
+  profileSubscriptions: { label: "Subscriptions", description: "Subscriptions tab in profile" },
+  profileCashflow: { label: "Cashflow", description: "Cashflow calendar tab in profile" },
+  profileGoals: { label: "Goals", description: "Savings goals tab in profile" },
+  profileHousehold: { label: "Household", description: "Household management tab in profile" },
+  profileTips: { label: "Financial Tips", description: "Financial tips on profile overview" },
+  profileChallenges: { label: "Challenges", description: "Savings challenges and badges" },
 };
 
 export function parseFeatureFlags(raw: unknown): FeatureFlags {

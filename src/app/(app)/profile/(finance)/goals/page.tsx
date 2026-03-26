@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SavingsGoalsSection } from "@/components/profile/savings-goals-section";
 import { getSavingsProgress } from "@/actions/savings";
 import type { SavingsProgress } from "@/lib/types";
+import { FeatureGate } from "@/components/layout/feature-gate";
 
 export default function ProfileGoalsPage() {
   const [loading, setLoading] = useState(true);
@@ -25,5 +26,9 @@ export default function ProfileGoalsPage() {
     return <Skeleton className="h-[200px] rounded-xl" />;
   }
 
-  return <SavingsGoalsSection goals={savingsGoals} onRefresh={loadData} />;
+  return (
+    <FeatureGate feature="profileGoals">
+      <SavingsGoalsSection goals={savingsGoals} onRefresh={loadData} />
+    </FeatureGate>
+  );
 }

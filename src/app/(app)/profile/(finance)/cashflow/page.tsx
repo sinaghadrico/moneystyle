@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CashflowCalendar } from "@/components/profile/cashflow-calendar";
 import { getCashflowData } from "@/actions/profile";
 import type { CashflowData } from "@/lib/types";
+import { FeatureGate } from "@/components/layout/feature-gate";
 
 export default function ProfileCashflowPage() {
   const now = new Date();
@@ -36,5 +37,9 @@ export default function ProfileCashflowPage() {
 
   if (!data) return null;
 
-  return <CashflowCalendar data={data} month={month} onMonthChange={setMonth} />;
+  return (
+    <FeatureGate feature="profileCashflow">
+      <CashflowCalendar data={data} month={month} onMonthChange={setMonth} />
+    </FeatureGate>
+  );
 }

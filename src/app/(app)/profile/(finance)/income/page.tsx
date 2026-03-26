@@ -6,6 +6,7 @@ import { IncomeSourcesSection } from "@/components/profile/income-sources-sectio
 import { ReservesSection } from "@/components/profile/reserves-section";
 import { getIncomeSources, getReserves } from "@/actions/profile";
 import type { IncomeSourceData, ReserveData } from "@/lib/types";
+import { FeatureGate } from "@/components/layout/feature-gate";
 
 export default function ProfileIncomePage() {
   const [loading, setLoading] = useState(true);
@@ -37,9 +38,11 @@ export default function ProfileIncomePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <IncomeSourcesSection sources={incomeSources} onRefresh={loadData} />
-      <ReservesSection reserves={reserves} onRefresh={loadData} />
-    </div>
+    <FeatureGate feature="profileIncome">
+      <div className="space-y-6">
+        <IncomeSourcesSection sources={incomeSources} onRefresh={loadData} />
+        <ReservesSection reserves={reserves} onRefresh={loadData} />
+      </div>
+    </FeatureGate>
   );
 }

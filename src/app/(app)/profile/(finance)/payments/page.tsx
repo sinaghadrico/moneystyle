@@ -6,6 +6,7 @@ import { InstallmentsSection } from "@/components/profile/installments-section";
 import { BillsSection } from "@/components/profile/bills-section";
 import { getInstallments, getBills } from "@/actions/profile";
 import type { InstallmentData, BillData } from "@/lib/types";
+import { FeatureGate } from "@/components/layout/feature-gate";
 
 export default function ProfilePaymentsPage() {
   const [loading, setLoading] = useState(true);
@@ -37,9 +38,11 @@ export default function ProfilePaymentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <InstallmentsSection installments={installments} onRefresh={loadData} />
-      <BillsSection bills={bills} onRefresh={loadData} />
-    </div>
+    <FeatureGate feature="profilePayments">
+      <div className="space-y-6">
+        <InstallmentsSection installments={installments} onRefresh={loadData} />
+        <BillsSection bills={bills} onRefresh={loadData} />
+      </div>
+    </FeatureGate>
   );
 }

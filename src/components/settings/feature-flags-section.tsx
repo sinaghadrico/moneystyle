@@ -23,6 +23,10 @@ const FEATURE_GROUPS: { title: string; keys: FeatureKey[] }[] = [
     title: "Dashboard",
     keys: ["dashPrediction", "dashBudgets", "dashSavings", "dashDebts", "dashCategoryChart", "dashHeatmap", "dashCharts", "spendingWrapped"],
   },
+  {
+    title: "Profile",
+    keys: ["profileIncome", "profilePayments", "profileSubscriptions", "profileCashflow", "profileGoals", "profileHousehold", "profileTips", "profileChallenges"],
+  },
 ];
 
 export function FeatureFlagsSection({

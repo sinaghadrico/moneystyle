@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useAppSettings } from "@/components/settings/settings-provider";
+import { useAiCheck, AiSetupDialog } from "@/components/ai-setup-dialog";
 
 export interface VoiceParsedData {
   amount?: number;
@@ -22,7 +22,7 @@ interface VoiceButtonProps {
 type VoiceState = "idle" | "recording" | "processing";
 
 export function VoiceButton({ onParsed }: VoiceButtonProps) {
-  const { settings } = useAppSettings();
+  const { checkAi, showSetup, setShowSetup } = useAiCheck();
   const [state, setState] = useState<VoiceState>("idle");
   const [duration, setDuration] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -30,10 +30,7 @@ export function VoiceButton({ onParsed }: VoiceButtonProps) {
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const startRecording = useCallback(async () => {
-    if (!settings.hasOpenaiKey) {
-      toast.error("OpenAI API key not set. Go to Settings → Integrations to add it.");
-      return;
-    }
+    if (!checkAi()) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, {
@@ -137,16 +134,19 @@ export function VoiceButton({ onParsed }: VoiceButtonProps) {
   }
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={startRecording}
-      title="Voice transaction"
-      className={cn(
-        "shrink-0 hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/50",
-      )}
-    >
-      <Mic className="h-4 w-4" />
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={startRecording}
+        title="Voice transaction"
+        className={cn(
+          "shrink-0 hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/50",
+        )}
+      >
+        <Mic className="h-4 w-4" />
+      </Button>
+      <AiSetupDialog open={showSetup} onOpenChange={setShowSetup} />
+    </>
   );
 }

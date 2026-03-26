@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, CalendarHeart, ChefHat, ShoppingCart, Scissors } from "lucide-react";
-import { MoneyAdviceSection } from "@/components/profile/money-advice-section";
+import { CalendarHeart, ChefHat, ShoppingCart, Scissors } from "lucide-react";
 import { BillNegotiatorSection } from "@/components/profile/bill-negotiator-section";
 import { ProfileCompletenessBanner } from "./profile-completeness-banner";
 import { WeekendPlannerContent } from "@/components/weekend-planner/weekend-planner-content";
@@ -11,7 +10,6 @@ import { MealPlannerContent } from "@/components/meal-planner/meal-planner-conte
 import { ShoppingBasketsSection } from "./shopping-baskets-section";
 
 const TABS = [
-  { key: "money-advice", label: "Advice", icon: Sparkles, route: "/lifestyle/advice" },
   { key: "negotiate", label: "Negotiate", icon: Scissors, route: "/lifestyle/negotiate" },
   { key: "weekend", label: "Weekend", icon: CalendarHeart, route: "/lifestyle/weekend" },
   { key: "meals", label: "Meals", icon: ChefHat, route: "/lifestyle/meals" },
@@ -23,7 +21,7 @@ type Tab = (typeof TABS)[number]["key"];
 export function LifestyleContent({ initialTab }: { initialTab?: string }) {
   const router = useRouter();
   const validTab = TABS.find((t) => t.key === initialTab)?.key;
-  const [activeTab, setActiveTab] = useState<Tab>(validTab ?? "money-advice");
+  const [activeTab, setActiveTab] = useState<Tab>(validTab ?? "negotiate");
 
   return (
     <div className="space-y-6">
@@ -56,7 +54,6 @@ export function LifestyleContent({ initialTab }: { initialTab?: string }) {
       <ProfileCompletenessBanner />
 
       {/* Tab content */}
-      {activeTab === "money-advice" && <MoneyAdviceSection />}
       {activeTab === "negotiate" && <BillNegotiatorSection />}
       {activeTab === "weekend" && <WeekendPlannerContent />}
       {activeTab === "meals" && <MealPlannerContent />}

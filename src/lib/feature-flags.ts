@@ -1,11 +1,10 @@
 export const FEATURE_KEYS = [
-  "moneyAdvice",
+  "moneyPilot",
   "billNegotiator",
   "weekendPlanner",
   "mealPlanner",
   "shoppingLists",
   "chat",
-  "wealthPilot",
   "receiptScanner",
   "priceAnalysis",
   "transactionMerge",
@@ -47,13 +46,12 @@ export type FeatureKey = (typeof FEATURE_KEYS)[number];
 export type FeatureFlags = Record<FeatureKey, boolean>;
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
-  moneyAdvice: true,
+  moneyPilot: true,
   billNegotiator: true,
   weekendPlanner: true,
   mealPlanner: true,
   shoppingLists: true,
   chat: true,
-  wealthPilot: true,
   receiptScanner: true,
   priceAnalysis: true,
   transactionMerge: true,
@@ -91,13 +89,12 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: string }> = {
-  moneyAdvice: { label: "Money Advice", description: "AI-powered financial advice" },
+  moneyPilot: { label: "Money Pilot", description: "AI-powered financial planning, scoring, and investment suggestions" },
   billNegotiator: { label: "Bill Negotiator", description: "AI bill negotiation suggestions" },
   weekendPlanner: { label: "Weekend Planner", description: "AI weekend activity planner" },
   mealPlanner: { label: "Meal Planner", description: "AI weekly meal planner" },
   shoppingLists: { label: "Shopping Lists", description: "Create and manage shopping lists" },
   chat: { label: "Money Chat", description: "AI chat assistant" },
-  wealthPilot: { label: "Wealth Pilot", description: "AI-powered wealth planning and scoring" },
   receiptScanner: { label: "Receipt Scanner", description: "AI receipt item extraction" },
   priceAnalysis: { label: "Price Analysis", description: "Item price tracking and comparison" },
   transactionMerge: { label: "Transaction Merge", description: "Merge duplicate transactions" },

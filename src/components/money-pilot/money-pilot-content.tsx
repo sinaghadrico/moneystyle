@@ -5,13 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  generateWealthPlan,
-  getWealthPlanHistory,
-  toggleWealthAction,
-  deleteWealthPlan,
-} from "@/actions/wealth-pilot";
+  generateMoneyPilot,
+  getMoneyPilotHistory,
+  toggleMoneyPilotAction,
+  deleteMoneyPilot,
+} from "@/actions/money-pilot";
 import { formatCurrency } from "@/lib/utils";
-import type { WealthPlanHistoryItem, WealthAction, WealthScoreBreakdown } from "@/lib/types";
+import type { MoneyPilotHistoryItem, MoneyPilotAction, MoneyPilotScoreBreakdown, InvestmentSuggestions } from "@/lib/types";
 import {
   Rocket,
   Loader2,
@@ -92,7 +92,7 @@ function ScoreGauge({ score }: { score: number }) {
   );
 }
 
-function ScoreBreakdown({ breakdown }: { breakdown: WealthScoreBreakdown }) {
+function ScoreBreakdown({ breakdown }: { breakdown: MoneyPilotScoreBreakdown }) {
   const items = [
     { key: "savingsRate", label: "Savings Rate", icon: Target, ...breakdown.savingsRate },
     { key: "emergencyFund", label: "Emergency Fund", icon: Shield, ...breakdown.emergencyFund },
@@ -134,7 +134,7 @@ function ActionCard({
   completed,
   onToggle,
 }: {
-  action: WealthAction;
+  action: MoneyPilotAction;
   completed: boolean;
   onToggle: () => void;
 }) {
@@ -214,8 +214,8 @@ function ActionCard({
   );
 }
 
-export function WealthPilotContent() {
-  const [history, setHistory] = useState<WealthPlanHistoryItem[]>([]);
+export function MoneyPilotContent() {
+  const [history, setHistory] = useState<MoneyPilotHistoryItem[]>([]);
   const [viewIndex, setViewIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -224,7 +224,7 @@ export function WealthPilotContent() {
 
   const loadHistory = async () => {
     setHistoryLoading(true);
-    const items = await getWealthPlanHistory();
+    const items = await getMoneyPilotHistory();
     setHistory(items);
     setViewIndex(0);
     setHistoryLoading(false);
@@ -240,7 +240,7 @@ export function WealthPilotContent() {
     if (!checkAi()) return;
     setLoading(true);
     setError(null);
-    const res = await generateWealthPlan();
+    const res = await generateMoneyPilot();
     if ("error" in res) {
       setError(res.error);
     } else {
@@ -252,7 +252,7 @@ export function WealthPilotContent() {
   const handleToggleAction = async (actionId: string) => {
     const plan = history[viewIndex];
     if (!plan) return;
-    const res = await toggleWealthAction(plan.id, actionId);
+    const res = await toggleMoneyPilotAction(plan.id, actionId);
     if ("completed" in res) {
       setHistory((prev) =>
         prev.map((p) =>
@@ -263,7 +263,7 @@ export function WealthPilotContent() {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteWealthPlan(id);
+    await deleteMoneyPilot(id);
     toast.success("Plan deleted");
     await loadHistory();
   };
@@ -289,7 +289,7 @@ export function WealthPilotContent() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Rocket className="h-5 w-5 text-violet-500" />
-              Wealth Pilot
+              Money Pilot
             </h2>
             <Button size="sm" variant="outline" onClick={handleGenerate} disabled={loading}>
               {loading ? (
@@ -306,7 +306,7 @@ export function WealthPilotContent() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            AI-powered action plan to grow your wealth with exact steps.
+            AI-powered action plan to grow your money with exact steps.
           </p>
         </div>
 
@@ -322,7 +322,7 @@ export function WealthPilotContent() {
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
               <Lightbulb className="h-8 w-8 mx-auto mb-2 text-violet-400" />
-              <p>Get a personalized wealth growth plan with exact action steps.</p>
+              <p>Get a personalized financial growth plan with exact action steps.</p>
               <p className="text-xs mt-1">
                 Uses your real income, expenses, and reserves data.
               </p>
@@ -335,7 +335,7 @@ export function WealthPilotContent() {
             <CardContent className="py-8 flex flex-col items-center gap-2">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {loading ? "Building your wealth plan..." : "Loading..."}
+                {loading ? "Building your money plan..." : "Loading..."}
               </p>
             </CardContent>
           </Card>
@@ -370,11 +370,11 @@ export function WealthPilotContent() {
               </div>
             )}
 
-            {/* Wealth Score */}
+            {/* Money Score */}
             <Card>
               <CardContent className="pt-4 pb-4">
                 <h3 className="text-xs font-medium text-muted-foreground text-center mb-2">
-                  Wealth Score
+                  Money Score
                 </h3>
                 <ScoreGauge score={current.wealthScore} />
                 <p className="text-sm text-center mt-3 font-medium">{current.summary}</p>
@@ -414,7 +414,7 @@ export function WealthPilotContent() {
             <Card>
               <CardContent className="pt-4 pb-4">
                 <h3 className="text-xs font-medium text-muted-foreground mb-3">
-                  Wealth Projections
+                  Projections
                 </h3>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg border p-3">
@@ -481,6 +481,57 @@ export function WealthPilotContent() {
                 onToggle={() => handleToggleAction(action.id)}
               />
             ))}
+
+            {/* Investment Suggestions */}
+            {current.investmentSuggestions?.suggestions && current.investmentSuggestions.suggestions.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                  Investment Suggestions
+                </h3>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                    <span className="text-muted-foreground">Emergency Fund Needed</span>
+                    <span className="font-medium">{formatCurrency(current.investmentSuggestions.emergencyFundNeeded)}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                    <span className="text-muted-foreground">Emergency Fund Current</span>
+                    <span className="font-medium">{formatCurrency(current.investmentSuggestions.emergencyFundCurrent)}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                    <span className="text-muted-foreground">Investable Amount</span>
+                    <span className="font-medium text-emerald-600">{formatCurrency(current.investmentSuggestions.investableAmount)}</span>
+                  </div>
+                </div>
+                {current.investmentSuggestions.suggestions.map((s, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-3 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{s.title}</span>
+                        <Badge variant="outline" className={cn(
+                          "text-[10px]",
+                          s.risk === "low" ? "text-green-600 border-green-300" :
+                          s.risk === "medium" ? "text-amber-600 border-amber-300" :
+                          "text-red-600 border-red-300"
+                        )}>{s.risk}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{s.description}</p>
+                      <div className="flex gap-3 text-xs">
+                        {s.potentialMonthly != null && (
+                          <span className="text-emerald-600">+{formatCurrency(s.potentialMonthly)}/mo</span>
+                        )}
+                        {s.potentialYearly != null && (
+                          <span className="text-emerald-600">+{formatCurrency(s.potentialYearly)}/yr</span>
+                        )}
+                      </div>
+                      {s.relatedReserve && (
+                        <p className="text-[10px] text-muted-foreground">Based on: {s.relatedReserve}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">

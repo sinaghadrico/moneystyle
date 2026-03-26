@@ -45,7 +45,7 @@ export default function SettingsAiPage() {
           </div>
           <div className="space-y-1 text-xs text-muted-foreground">
             <p>
-              Used for receipt parsing, meal planning, weekend planning, money advice, and more.
+              Used for receipt parsing, meal planning, weekend planning, Money Pilot, and more.
               If left blank, falls back to the <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">OPENAI_API_KEY</code> env var.
             </p>
             <details className="cursor-pointer">

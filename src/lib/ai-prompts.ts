@@ -2,14 +2,13 @@ import { prisma } from "@/lib/db";
 
 export const AI_PROMPT_KEYS = {
   receiptParser: "receipt_parser",
-  moneyAdvice: "money_advice",
   itemNormalizer: "item_normalizer",
   mealPlanner: "meal_planner",
   weekendPlanner: "weekend_planner",
   weekendItemSwap: "weekend_item_swap",
   billNegotiator: "bill_negotiator",
   moneyChat: "money_chat",
-  wealthPilot: "wealth_pilot",
+  moneyPilot: "money_pilot",
 } as const;
 
 export type AiPromptKey = (typeof AI_PROMPT_KEYS)[keyof typeof AI_PROMPT_KEYS];
@@ -29,28 +28,6 @@ Rules:
 - Do NOT include tax lines, subtotals, totals, discounts, or payment method lines as items
 - Round all prices to 2 decimal places
 - Return ONLY the JSON, no markdown, no explanation`,
-  },
-  [AI_PROMPT_KEYS.moneyAdvice]: {
-    label: "Money Advice",
-    content: `You are a personal finance advisor. Analyze the user's financial data and suggest how they can generate income from their reserves and savings.
-
-Rules:
-- Be specific: use the actual amounts, types, and locations from their data
-- Calculate emergency fund needed (3 months of expenses)
-- Calculate how much is actually investable (total reserves minus emergency fund)
-- Give 3-5 concrete suggestions based on their reserve types and locations
-- For each suggestion, estimate potential monthly and yearly returns
-- Consider the reserve type: cash → savings accounts/deposits, gold → hold or diversify, crypto → staking/yield, family loans → N/A
-- Risk levels: low (savings accounts, deposits), medium (bonds, funds), high (stocks, crypto yield)
-- Be practical for someone in the UAE/Middle East region
-- Respond in the user's currency
-- Be concise and actionable
-- Use emojis in the summary and suggestion titles (e.g. 💰, 📈, 🏦, 🔒)
-
-Return ONLY a JSON object in this exact format:
-{"summary":"Brief 1-2 sentence overview","emergencyFundNeeded":NUMBER,"emergencyFundCurrent":NUMBER,"investableAmount":NUMBER,"suggestions":[{"title":"Short title","description":"2-3 sentence explanation with specific numbers","potentialMonthly":NUMBER_OR_NULL,"potentialYearly":NUMBER_OR_NULL,"risk":"low|medium|high","relatedReserve":"name of reserve or null"}]}
-
-Return ONLY the JSON, no markdown, no explanation.`,
   },
   [AI_PROMPT_KEYS.itemNormalizer]: {
     label: "Item Name Normalizer",
@@ -187,11 +164,11 @@ Return ONLY a JSON object in this exact format:
 
 Return ONLY the JSON, no markdown, no explanation.`,
   },
-  [AI_PROMPT_KEYS.wealthPilot]: {
-    label: "Wealth Pilot",
+  [AI_PROMPT_KEYS.moneyPilot]: {
+    label: "Money Pilot",
     content: `You are an elite personal wealth advisor specializing in the UAE/Middle East market. The user wants SPECIFIC, ACTIONABLE steps to grow their wealth and generate passive income.
 
-You have their REAL financial data. Use it to create a hyper-personalized action plan.
+You have their REAL financial data. Use it to create a hyper-personalized action plan AND investment suggestions for their reserves.
 
 CRITICAL RULES:
 - Every action must use EXACT amounts from their data — never round numbers vaguely
@@ -214,13 +191,21 @@ ACTION CATEGORIES:
 WEALTH SCORE (0-100):
 Calculate based on: savings rate (25pts), emergency fund coverage (20pts), investment diversification (20pts), debt-to-income ratio (15pts), passive income ratio (20pts).
 
+INVESTMENT SUGGESTIONS:
+Also analyze the user's reserves and savings to suggest how they can generate income:
+- Calculate emergency fund needed (3 months of expenses)
+- Calculate investable amount (total reserves minus emergency fund)
+- Give 3-5 concrete suggestions based on reserve types (cash → savings accounts/deposits, gold → hold or diversify, crypto → staking/yield)
+- For each suggestion, estimate potential monthly and yearly returns
+- Use emojis in suggestion titles
+
 For trade signals:
 - Be specific: "Buy X at around Y price" or "Stake Z on platform W for X% APY"
 - Always include risk level and rationale
 - Never guarantee returns, use "approximately" or "historically"
 
 Return ONLY a JSON object:
-{"wealthScore":NUMBER,"scoreBreakdown":{"savingsRate":{"score":NUMBER,"max":25,"detail":"string"},"emergencyFund":{"score":NUMBER,"max":20,"detail":"string"},"diversification":{"score":NUMBER,"max":20,"detail":"string"},"debtRatio":{"score":NUMBER,"max":15,"detail":"string"},"passiveIncome":{"score":NUMBER,"max":20,"detail":"string"}},"monthlySurplus":NUMBER,"investableCapital":NUMBER,"projections":{"oneYear":NUMBER,"threeYear":NUMBER,"fiveYear":NUMBER,"assumptions":"string"},"actions":[{"id":"string","category":"quick_win|monthly_habit|growth_move|trade_signal|expense_hack","title":"string with emoji","description":"2-3 sentences with EXACT amounts and names","platform":"string or null","expectedReturn":"string (e.g. '525 AED in 6 months')","risk":"low|medium|high","timeline":"tomorrow|this_week|this_month|next_3_months","steps":["Step 1 with exact details","Step 2"]}],"summary":"1-2 sentence motivational summary with their projected wealth in 1 year"}
+{"wealthScore":NUMBER,"scoreBreakdown":{"savingsRate":{"score":NUMBER,"max":25,"detail":"string"},"emergencyFund":{"score":NUMBER,"max":20,"detail":"string"},"diversification":{"score":NUMBER,"max":20,"detail":"string"},"debtRatio":{"score":NUMBER,"max":15,"detail":"string"},"passiveIncome":{"score":NUMBER,"max":20,"detail":"string"}},"monthlySurplus":NUMBER,"investableCapital":NUMBER,"projections":{"oneYear":NUMBER,"threeYear":NUMBER,"fiveYear":NUMBER,"assumptions":"string"},"investmentSuggestions":{"emergencyFundNeeded":NUMBER,"emergencyFundCurrent":NUMBER,"investableAmount":NUMBER,"suggestions":[{"title":"Short title with emoji","description":"2-3 sentence explanation with specific numbers","potentialMonthly":NUMBER_OR_NULL,"potentialYearly":NUMBER_OR_NULL,"risk":"low|medium|high","relatedReserve":"name of reserve or null"}]},"actions":[{"id":"string","category":"quick_win|monthly_habit|growth_move|trade_signal|expense_hack","title":"string with emoji","description":"2-3 sentences with EXACT amounts and names","platform":"string or null","expectedReturn":"string (e.g. '525 AED in 6 months')","risk":"low|medium|high","timeline":"tomorrow|this_week|this_month|next_3_months","steps":["Step 1 with exact details","Step 2"]}],"summary":"1-2 sentence motivational summary with their projected wealth in 1 year"}
 
 Return ONLY the JSON, no markdown, no explanation.`,
   },

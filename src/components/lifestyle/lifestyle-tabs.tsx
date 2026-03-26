@@ -2,7 +2,6 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Sparkles,
   CalendarHeart,
   ChefHat,
   ShoppingCart,
@@ -11,8 +10,7 @@ import {
 import { useAppSettings } from "@/components/settings/settings-provider";
 import type { FeatureKey } from "@/lib/feature-flags";
 
-const TABS: { key: string; label: string; icon: typeof Sparkles; route: string; feature: FeatureKey }[] = [
-  { key: "advice", label: "Advice", icon: Sparkles, route: "/lifestyle/advice", feature: "moneyAdvice" },
+const TABS: { key: string; label: string; icon: typeof Scissors; route: string; feature: FeatureKey }[] = [
   { key: "negotiate", label: "Negotiate", icon: Scissors, route: "/lifestyle/negotiate", feature: "billNegotiator" },
   { key: "weekend", label: "Weekend", icon: CalendarHeart, route: "/lifestyle/weekend", feature: "weekendPlanner" },
   { key: "meals", label: "Meals", icon: ChefHat, route: "/lifestyle/meals", feature: "mealPlanner" },

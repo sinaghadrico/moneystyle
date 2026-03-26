@@ -146,7 +146,7 @@ const STEPS = [
     num: "3",
     title: "Want AI? Bring your own key",
     description:
-      "Set your own OpenAI API key in Settings to unlock receipt scanning, money advice, and more. Or message us — we'll set it up for you.",
+      "Set your own OpenAI API key in Settings to unlock receipt scanning, Money Pilot, and more. Or message us — we'll set it up for you.",
   },
 ];
 
@@ -267,15 +267,6 @@ const FEATURES: {
     href: "/features/shared-expenses",
   },
   {
-    icon: Sparkles,
-    title: "AI Money Advice",
-    description:
-      "Personalized investment suggestions based on your actual income, expenses, and reserves.",
-    color: "text-yellow-500",
-    bg: "bg-yellow-500/10",
-    href: "/features/money-advice",
-  },
-  {
     icon: Calendar,
     title: "Weekend Planner",
     description:
@@ -376,12 +367,12 @@ const FEATURES: {
   },
   {
     icon: Rocket,
-    title: "Wealth Pilot",
+    title: "Money Pilot",
     description:
-      "AI-powered wealth growth plan with exact amounts, platforms, and timelines tailored to your finances.",
+      "AI-powered financial growth plan with exact amounts, platforms, and timelines tailored to your finances.",
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
-    href: "/features/wealth-pilot",
+    href: "/features/money-pilot",
   },
   {
     icon: LineChart,
@@ -555,7 +546,7 @@ export function LandingContent() {
                 MoneyStyle is a completely free personal finance tracker that
                 shows you exactly where every dollar goes. All 30 features
                 are free — forever. Want AI powers like receipt scanning and
-                money advice? Just bring your own OpenAI API key, or let us
+                Money Pilot? Just bring your own OpenAI API key, or let us
                 set it up for you.
               </p>
               <div
@@ -982,7 +973,7 @@ export function LandingContent() {
                 {[
                   ["AI Receipt Scanning", true, false, false],
                   ["Price Comparison", true, false, false],
-                  ["AI Money Advice", true, false, "Limited"],
+                  ["AI Money Pilot", true, false, "Limited"],
                   ["Multi-Currency", true, "Manual", "Limited"],
                   ["Budget Alerts", true, false, true],
                   ["Investment Tracking", true, false, false],
@@ -1090,7 +1081,7 @@ export function LandingContent() {
                 {
                   icon: TrendingUp,
                   color: "text-green-500",
-                  label: "Money Advice",
+                  label: "Money Pilot",
                   desc: "Investment tips from data",
                 },
                 {

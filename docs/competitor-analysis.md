@@ -213,7 +213,7 @@
 - No price comparison
 - No lifestyle features
 - No multi-currency
-- No AI money advice
+- No AI financial advice
 - No Telegram/SMS integration
 - US-only
 - Bill negotiation takes large commission
@@ -257,7 +257,7 @@
 - No lifestyle features (meal/weekend planner)
 - No multi-currency
 - No Telegram/SMS integration
-- No AI money advice or wealth planning
+- No AI financial planning
 - US-only focus
 - No free tier
 
@@ -272,9 +272,8 @@
 | Smart Shopping / Price Compare | ✅              | ❌             | ❌             | ❌             | ❌             | ❌            | ❌            |
 | Meal Planner                   | ✅              | ❌             | ❌             | ❌             | ❌             | ❌            | ❌            |
 | Weekend Planner                | ✅              | ❌             | ❌             | ❌             | ❌             | ❌            | ❌            |
-| AI Money Advice                | ✅              | ❌             | ❌             | ❌             | ❌             | ❌            | ❌            |
 | Money Chat (conversational)    | ✅              | ✅ (Agent)     | ❌             | ❌             | ❌             | ❌            | ❌            |
-| Wealth Pilot                   | ✅              | ❌             | ❌             | ❌             | ❌             | ❌            | ❌            |
+| Money Pilot                    | ✅              | ❌             | ❌             | ❌             | ❌             | ❌            | ❌            |
 | Bill Negotiator                | ✅              | ❌             | ❌             | ❌             | ✅ (concierge) | ❌            | ❌            |
 | Spending Wrapped               | ✅              | ✅             | ❌             | ❌             | ❌             | ❌            | ❌            |
 | Cashflow Calendar              | ✅              | ✅             | ❌             | ❌             | ❌             | ❌            | ❌            |
@@ -302,7 +301,7 @@
 
 1. **AI Receipt Scanner + Smart Shopping combo** — Scan receipts and compare prices across stores using your own purchase data
 2. **Lifestyle Suite** — Meal Planner + Weekend Planner (zero competitors offer this)
-3. **Wealth Pilot** — AI-powered personalized wealth growth plan with exact amounts, platforms, and timelines
+3. **Money Pilot** — AI-powered personalized financial growth plan with exact amounts, platforms, and timelines
 4. **Telegram Bot + SMS Import** — Unique positioning for emerging/international markets
 5. **Multi-language receipt scanning** — English, Arabic, Farsi support
 6. **25 features in one free-to-start app** — Broadest feature set with lowest entry barrier
@@ -322,7 +321,7 @@
 | Real Estate/Vehicle Value | Copilot (Zillow), Monarch (Zillow + vehicles) | 🟢 Low      | Hard       | US-only (Zillow API). Low priority unless targeting US homeowners specifically.                                    |
 | Credit Score Monitoring   | Rocket Money                                  | 🟢 Low      | Hard       | Requires partnerships with credit bureaus. Not core to MoneyStyle's value prop.                                    |
 | Developer API             | Lunch Money, Expensify                        | 🟢 Low      | Medium     | Appeals to technical users. Nice differentiator but small audience.                                                |
-| Financial Education       | YNAB (live workshops)                         | 🟢 Low      | Easy       | Could add blog content, guides, or AI-powered financial tips (partially covered by AI Money Advice).               |
+| Financial Education       | YNAB (live workshops)                         | 🟢 Low      | Easy       | Could add blog content, guides, or AI-powered financial tips (partially covered by Money Pilot).               |
 
 
 ---
@@ -366,7 +365,7 @@ MoneyStyle's free tier is a competitive advantage — only Rocket Money and Expe
 
 ### Positioning Strategy
 
-MoneyStyle's unique moat is **AI + Lifestyle** — no competitor combines receipt scanning, price comparison, meal planning, weekend planning, and wealth advice in one app. This should be the primary marketing message:
+MoneyStyle's unique moat is **AI + Lifestyle** — no competitor combines receipt scanning, price comparison, meal planning, weekend planning, and financial advice in one app. This should be the primary marketing message:
 
 > "The only personal finance app that doesn't just track your money — it helps you live better with it."
 

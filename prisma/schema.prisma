@@ -658,6 +658,7 @@ model WealthPlan {
   investableCapital  Float
   projections        Json
   actions            Json
+  investmentSuggestions Json?
   summary            String
   completedActions   String[] @default([])
   userId             String

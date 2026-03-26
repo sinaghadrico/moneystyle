@@ -406,7 +406,7 @@ export const FEATURES: FeatureConfig[] = [
       {
         title: "Track Over Time",
         description:
-          "Take periodic snapshots of your reserves. Watch your wealth grow (or spot when it dips) with historical data.",
+          "Take periodic snapshots of your reserves. Watch your money grow (or spot when it dips) with historical data.",
         items: [
           { label: "Jan 2026", value: "$24,100" },
           { label: "Feb 2026", value: "$26,350" },
@@ -433,7 +433,7 @@ export const FEATURES: FeatureConfig[] = [
       },
       {
         title: "Historical Snapshots",
-        description: "See how your wealth changes over months and years.",
+        description: "See how your finances change over months and years.",
       },
       {
         title: "Multi-Currency",
@@ -804,77 +804,6 @@ export const FEATURES: FeatureConfig[] = [
       items: ["Alex: +$45", "Sam: +$85", "Jordan: -$30", "Taylor: +$20", "Morgan: -$15"],
       resultLabel: "Net balance",
       resultValue: "+$105",
-    },
-  },
-  {
-    slug: "money-advice",
-    title: "AI Money Advice",
-    headline: "AI-Powered",
-    headlineAccent: "Financial Insight",
-    tagline:
-      "Get personalized investment suggestions based on your actual income, expenses, and idle reserves — with real numbers, not generic tips.",
-    badge: "AI Advice",
-    color: "yellow-500",
-    hex: "#eab308",
-    hexSecondary: "#ca8a04",
-    steps: [
-      {
-        title: "AI Analyzes Your Finances",
-        description:
-          "AI reviews your income, spending patterns, savings rate, and idle reserves to understand your complete financial picture.",
-        items: [
-          { label: "Monthly Income", value: "$6,100" },
-          { label: "Monthly Expenses", value: "$4,200" },
-          { label: "Savings Rate", value: "31%" },
-          { label: "Idle Cash", value: "$8,500", highlight: true },
-        ],
-      },
-      {
-        title: "Get Personalized Suggestions",
-        description:
-          "Based on YOUR numbers, AI suggests specific actions — not generic advice. Real amounts, real timelines.",
-        items: [
-          { label: "Emergency Fund", value: "Add $4,100 more" },
-          { label: "Invest Idle Cash", value: "$3,500 available" },
-          { label: "Cut Dining Out", value: "Save $85/mo", highlight: true },
-          { label: "Increase Savings", value: "To 35% possible" },
-        ],
-      },
-      {
-        title: "Take Action",
-        description:
-          "Follow the suggestions at your own pace. Track progress as your financial habits improve over time.",
-        items: [
-          { label: "Suggestion #1", value: "Done", highlight: true },
-          { label: "Suggestion #2", value: "In Progress" },
-          { label: "Monthly Savings", value: "+$285" },
-          { label: "Projected Annual", value: "+$3,420" },
-        ],
-      },
-    ],
-    benefits: [
-      {
-        title: "Real Numbers",
-        description: "Advice based on your actual income and spending data.",
-      },
-      {
-        title: "Personalized",
-        description: "Suggestions tailored to your specific financial situation.",
-      },
-      {
-        title: "Actionable",
-        description: "Specific steps with amounts, not vague recommendations.",
-      },
-      {
-        title: "Evolving",
-        description: "Advice updates as your financial picture changes.",
-      },
-    ],
-    ogPhone: {
-      title: "AI Advice",
-      items: ["Build emergency fund", "Invest idle $3.5K", "Cut dining: $85/mo", "Auto-save: $500/mo", "Review insurance"],
-      resultLabel: "Potential savings",
-      resultValue: "$3,420/yr",
     },
   },
   {
@@ -1371,27 +1300,27 @@ export const FEATURES: FeatureConfig[] = [
     ogPhone: { title: "Money Chat", items: ["Q: Food spending?", "A: $485 this month", "Q: vs last month?", "A: +12% increase", "Q: Top merchant?"], resultLabel: "A:", resultValue: "FreshMart" },
   },
   {
-    slug: "wealth-pilot",
-    title: "Wealth Pilot",
-    headline: "Grow Your Wealth,",
+    slug: "money-pilot",
+    title: "Money Pilot",
+    headline: "Grow Your Money,",
     headlineAccent: "Step by Step",
-    tagline: "AI-powered wealth growth plan with a personalized wealth score, exact investment amounts, recommended platforms, and timelines tailored to your actual financial situation.",
-    badge: "Wealth Pilot",
+    tagline: "AI-powered financial growth plan with a personalized money score, exact investment amounts, recommended platforms, and timelines tailored to your actual financial situation.",
+    badge: "Money Pilot",
     color: "emerald-500",
     hex: "#10b981",
     hexSecondary: "#34d399",
     steps: [
-      { title: "Wealth Score", description: "Get a personalized wealth score (0-100) based on your income, expenses, savings, reserves, and debt situation.", items: [{ label: "Income", value: "85/100" }, { label: "Savings", value: "60/100" }, { label: "Reserves", value: "70/100" }, { label: "Overall", value: "72/100", highlight: true }] },
+      { title: "Money Score", description: "Get a personalized money score (0-100) based on your income, expenses, savings, reserves, and debt situation.", items: [{ label: "Income", value: "85/100" }, { label: "Savings", value: "60/100" }, { label: "Reserves", value: "70/100" }, { label: "Overall", value: "72/100", highlight: true }] },
       { title: "Action Plan", description: "AI creates a step-by-step plan — exact amounts to invest, which platforms to use, and when to take each step.", items: [{ label: "Step 1", value: "Emergency fund" }, { label: "Step 2", value: "Index fund $500/mo" }, { label: "Step 3", value: "Real estate fund" }, { label: "Timeline", value: "12 months", highlight: true }] },
-      { title: "Projections", description: "See where you'll be in 1, 5, and 10 years if you follow the plan. Visualize your wealth growth.", items: [{ label: "1 year", value: "$18,000" }, { label: "5 years", value: "$95,000" }, { label: "10 years", value: "$245,000" }, { label: "Growth", value: "Compound", highlight: true }] },
+      { title: "Projections", description: "See where you'll be in 1, 5, and 10 years if you follow the plan. Visualize your financial growth.", items: [{ label: "1 year", value: "$18,000" }, { label: "5 years", value: "$95,000" }, { label: "10 years", value: "$245,000" }, { label: "Growth", value: "Compound", highlight: true }] },
     ],
     benefits: [
-      { title: "Wealth Score", description: "Know exactly where you stand financially." },
+      { title: "Money Score", description: "Know exactly where you stand financially." },
       { title: "Personalized Plan", description: "Actions based on YOUR income and expenses." },
       { title: "Specific Amounts", description: "Not vague advice — exact dollar amounts." },
       { title: "Long-term Projections", description: "See your financial future with compound growth." },
     ],
-    ogPhone: { title: "Wealth Pilot", items: ["Score: 72/100", "Monthly surplus: $800", "Step 1: Emergency fund", "Step 2: Index fund", "Step 3: Real estate"], resultLabel: "10-year goal", resultValue: "$245,000" },
+    ogPhone: { title: "Money Pilot", items: ["Score: 72/100", "Monthly surplus: $800", "Step 1: Emergency fund", "Step 2: Index fund", "Step 3: Real estate"], resultLabel: "10-year goal", resultValue: "$245,000" },
   },
   {
     slug: "investment-tracking",

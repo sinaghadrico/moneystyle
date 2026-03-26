@@ -3,7 +3,7 @@
 **Domain:** moneystyle.app
 **Brand:** Emerald gradient (#10b981 → #14b8a6)
 
-A full-stack, multi-user personal finance platform with AI-powered insights, receipt scanning, wealth planning, and Telegram/SMS integrations. Built mobile-first as a PWA.
+A full-stack, multi-user personal finance platform with AI-powered insights, receipt scanning, financial planning, and Telegram/SMS integrations. Built mobile-first as a PWA.
 
 ---
 
@@ -49,9 +49,8 @@ A full-stack, multi-user personal finance platform with AI-powered insights, rec
 |---------|-------------|
 | **Receipt Parser** | Extract line items from receipt images |
 | **Money Chat** | Conversational financial Q&A with access to user data |
-| **Wealth Pilot** | Comprehensive wealth score (0-100), 1/3/5-year projections, actionable plans |
+| **Money Pilot** | Comprehensive money score (0-100), 1/3/5-year projections, actionable plans |
 | **Bill Negotiator** | Analyze bills/subscriptions, find savings opportunities with step-by-step actions |
-| **Money Advice** | Personalized financial tips based on spending patterns |
 | **Meal Planner** | Weekly meal plans with ingredients |
 | **Weekend Planner** | Budget/Balanced/Premium activity plans based on location & preferences |
 | **Item Normalizer** | Group similar product names for price analysis |
@@ -119,14 +118,14 @@ src/
 │   │   │   ├── payments/         # Bills & installments
 │   │   │   ├── goals/            # Savings goals
 │   │   │   └── personal/         # User profile
-│   │   ├── wealth/               # Wealth Pilot (AI)
+│   │   ├── money-pilot/           # Money Pilot (AI)
 │   │   ├── chat/                 # Money Chat (AI)
 │   │   ├── lifestyle/            # Lifestyle hub
 │   │   │   ├── weekend/          # Weekend planner
 │   │   │   ├── meals/            # Meal planner
 │   │   │   ├── shopping/         # Smart shopping
 │   │   │   ├── negotiate/        # Bill negotiator
-│   │   │   └── advice/           # Money advice
+│   │   │   └── advice/           # Financial tips
 │   │   ├── persons/[id]/summary/ # Person debt summary
 │   │   ├── settings/             # App settings
 │   │   │   ├── integrations/     # Telegram, SMS, AI config
@@ -175,7 +174,7 @@ src/
 │   ├── ai.ts                     # Receipt parsing
 │   ├── bulk-import.ts            # CSV/Excel import
 │   ├── money-chat.ts             # AI chat sessions
-│   ├── wealth-pilot.ts           # Wealth plan generation
+│   ├── money-pilot.ts            # Money Pilot plan generation
 │   ├── profile.ts                # Profile data
 │   ├── savings.ts                # Savings goals
 │   ├── budgets.ts                # Budget management
@@ -200,7 +199,7 @@ src/
 │   ├── profile/                  # Income, bills, installments, reserves, cashflow calendar
 │   ├── savings/                  # Savings goal forms
 │   ├── budgets/                  # Budget forms
-│   ├── wealth/                   # Wealth Pilot content
+│   ├── money-pilot/              # Money Pilot content
 │   ├── chat/                     # Money Chat content
 │   ├── lifestyle/                # Lifestyle tabs, shopping baskets, profile completeness
 │   ├── meal-planner/             # Meal planner content
@@ -296,8 +295,8 @@ scripts/
 - **MealPlan** — Weekly meal plans (JSON)
 - **WeekendPlan** — Activity plans (JSON)
 - **UserPreference** — Likes, dislikes, location, companion type
-- **MoneyAdvice** — Financial advice results (JSON)
-- **WealthPlan** — Wealth Pilot results (JSON)
+- **MoneyAdvice** — Financial tips results (JSON)
+- **WealthPlan** — Money Pilot results (JSON)
 - **BillNegotiation** — Bill reduction suggestions (JSON)
 - **ChatSession** — Money Chat conversations (JSON)
 

@@ -19,12 +19,12 @@ import { UserMenu } from "@/components/auth/user-menu";
 import { useAppSettings } from "@/components/settings/settings-provider";
 import type { FeatureKey } from "@/lib/feature-flags";
 
-const LIFESTYLE_FEATURES: FeatureKey[] = ["moneyAdvice", "billNegotiator", "weekendPlanner", "mealPlanner", "shoppingLists"];
+const LIFESTYLE_FEATURES: FeatureKey[] = ["moneyPilot", "billNegotiator", "weekendPlanner", "mealPlanner", "shoppingLists"];
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/wealth", label: "Wealth Pilot", icon: Rocket, feature: "wealthPilot" as FeatureKey },
+  { href: "/pilot", label: "Money Pilot", icon: Rocket, feature: "moneyPilot" as FeatureKey },
   { href: "/chat", label: "Money Chat", icon: MessageCircle, feature: "chat" as FeatureKey },
   { href: "/lifestyle", label: "Lifestyle", icon: Palette, feature: "_lifestyle" as FeatureKey },
   { href: "/profile", label: "Profile", icon: UserCircle },

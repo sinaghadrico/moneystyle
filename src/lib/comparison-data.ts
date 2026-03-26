@@ -30,7 +30,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       {
         title: "AI-Powered Insights",
         description:
-          "Get personalized money advice, smart spending analysis, and AI-generated financial tips. YNAB has no AI features at all.",
+          "Get personalized money pilot, smart spending analysis, and AI-generated financial tips. YNAB has no AI features at all.",
       },
       {
         title: "Receipt Scanning with AI",
@@ -58,7 +58,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       { feature: "Budget Management", moneystyle: true, competitor: true },
       { feature: "Transaction Tracking", moneystyle: true, competitor: true },
       { feature: "Savings Goals", moneystyle: true, competitor: true },
-      { feature: "AI Money Advice", moneystyle: true, competitor: false },
+      { feature: "AI Money Pilot", moneystyle: true, competitor: false },
       { feature: "AI Receipt Scanning", moneystyle: true, competitor: false },
       { feature: "Meal Planner", moneystyle: true, competitor: false },
       { feature: "Weekend Planner", moneystyle: true, competitor: false },
@@ -89,7 +89,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       {
         question: "What does MoneyStyle offer that YNAB doesn't?",
         answer:
-          "MoneyStyle includes AI receipt scanning, personalized money advice, meal planning, weekend planning, smart shopping lists, price analysis, shared expenses, Telegram bot integration, and multi-currency support — none of which are available in YNAB.",
+          "MoneyStyle includes AI receipt scanning, personalized money pilot, meal planning, weekend planning, smart shopping lists, price analysis, shared expenses, Telegram bot integration, and multi-currency support — none of which are available in YNAB.",
       },
     ],
   },
@@ -117,7 +117,7 @@ export const COMPARISONS: ComparisonConfig[] = [
           "Plan your weekends, meals, and shopping within the same app you track finances. Monarch is limited to numbers and charts.",
       },
       {
-        title: "AI-Powered Money Advice",
+        title: "AI-Powered Money Pilot",
         description:
           "Receive personalized financial recommendations based on your spending patterns. Monarch provides data but not actionable AI advice.",
       },
@@ -138,7 +138,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       { feature: "Investment Tracking", moneystyle: "Basic", competitor: true },
       { feature: "Budget Management", moneystyle: true, competitor: true },
       { feature: "Transaction Tracking", moneystyle: true, competitor: true },
-      { feature: "AI Money Advice", moneystyle: true, competitor: false },
+      { feature: "AI Money Pilot", moneystyle: true, competitor: false },
       { feature: "AI Receipt Scanning", moneystyle: true, competitor: false },
       { feature: "Meal Planner", moneystyle: true, competitor: false },
       { feature: "Weekend Planner", moneystyle: true, competitor: false },
@@ -201,7 +201,7 @@ export const COMPARISONS: ComparisonConfig[] = [
           "Meal planning, weekend planning, and smart shopping built right in. Copilot is a finance-only app with no lifestyle integration.",
       },
       {
-        title: "AI Money Advice",
+        title: "AI Money Pilot",
         description:
           "Get smart, personalized financial recommendations powered by AI. Copilot shows you data but doesn't advise you on what to do next.",
       },
@@ -218,7 +218,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       { feature: "Web App", moneystyle: true, competitor: "Limited" },
       { feature: "Budget Management", moneystyle: true, competitor: true },
       { feature: "Transaction Tracking", moneystyle: true, competitor: true },
-      { feature: "AI Money Advice", moneystyle: true, competitor: false },
+      { feature: "AI Money Pilot", moneystyle: true, competitor: false },
       { feature: "AI Receipt Scanning", moneystyle: true, competitor: false },
       { feature: "Meal Planner", moneystyle: true, competitor: false },
       { feature: "Weekend Planner", moneystyle: true, competitor: false },
@@ -296,7 +296,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       { feature: "Transaction Tracking", moneystyle: true, competitor: true },
       { feature: "Subscription Tracking", moneystyle: true, competitor: true },
       { feature: "Bill Negotiation", moneystyle: false, competitor: "Paid (commission)" },
-      { feature: "AI Money Advice", moneystyle: true, competitor: false },
+      { feature: "AI Money Pilot", moneystyle: true, competitor: false },
       { feature: "AI Receipt Scanning", moneystyle: true, competitor: false },
       { feature: "Meal Planner", moneystyle: true, competitor: false },
       { feature: "Weekend Planner", moneystyle: true, competitor: false },
@@ -321,7 +321,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       {
         question: "What does MoneyStyle offer that Rocket Money does not?",
         answer:
-          "MoneyStyle includes AI receipt scanning, personalized money advice, meal planning, weekend planning, smart shopping, price analysis, multi-currency support, and installment tracking — none of which Rocket Money provides.",
+          "MoneyStyle includes AI receipt scanning, personalized money pilot, meal planning, weekend planning, smart shopping, price analysis, multi-currency support, and installment tracking — none of which Rocket Money provides.",
       },
       {
         question: "Can I track bills and recurring expenses on MoneyStyle?",
@@ -354,7 +354,7 @@ export const COMPARISONS: ComparisonConfig[] = [
           "Scan receipts on the go and let AI handle categorization. Lunch Money has no AI features or receipt scanning capability.",
       },
       {
-        title: "AI Money Advice",
+        title: "AI Money Pilot",
         description:
           "Get personalized financial insights and recommendations powered by AI. Lunch Money shows data but provides no intelligent guidance.",
       },
@@ -376,7 +376,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       { feature: "Budget Management", moneystyle: true, competitor: true },
       { feature: "Transaction Tracking", moneystyle: true, competitor: true },
       { feature: "Developer API", moneystyle: false, competitor: true },
-      { feature: "AI Money Advice", moneystyle: true, competitor: false },
+      { feature: "AI Money Pilot", moneystyle: true, competitor: false },
       { feature: "AI Receipt Scanning", moneystyle: true, competitor: false },
       { feature: "Meal Planner", moneystyle: true, competitor: false },
       { feature: "Weekend Planner", moneystyle: true, competitor: false },
@@ -430,7 +430,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       {
         title: "AI-Powered Intelligence",
         description:
-          "MoneyStyle uses AI for receipt scanning, money advice, and spending insights. Mint relied on basic categorization rules from a decade ago.",
+          "MoneyStyle uses AI for receipt scanning, money pilot, and spending insights. Mint relied on basic categorization rules from a decade ago.",
       },
       {
         title: "Lifestyle Features",
@@ -455,7 +455,7 @@ export const COMPARISONS: ComparisonConfig[] = [
       { feature: "Budget Management", moneystyle: true, competitor: true },
       { feature: "Transaction Tracking", moneystyle: true, competitor: true },
       { feature: "Credit Score", moneystyle: false, competitor: true },
-      { feature: "AI Money Advice", moneystyle: true, competitor: false },
+      { feature: "AI Money Pilot", moneystyle: true, competitor: false },
       { feature: "AI Receipt Scanning", moneystyle: true, competitor: false },
       { feature: "Meal Planner", moneystyle: true, competitor: false },
       { feature: "Weekend Planner", moneystyle: true, competitor: false },

@@ -71,7 +71,7 @@ MoneyStyle is a 100% free personal finance tracker with 30+ features:
 🤖 AI receipt scanning — snap a photo, auto-extract items
 🗣️ Voice transactions — say "50 dirhams coffee" and it's logged
 🗺️ Money Map — see your spending on Google Maps
-📊 Wealth Pilot — AI scores your financial health
+📊 Money Pilot — AI scores your financial health
 🍽️ Meal & Weekend Planner — AI-powered lifestyle features
 📱 Telegram bot — log expenses from Telegram
 🏆 Financial challenges & gamification
@@ -501,7 +501,7 @@ Structure:
 1:00 - Dashboard walkthrough
 1:30 - Adding transactions (manual + voice + receipt scan)
 2:30 - Money Map (Google Maps)
-3:00 - AI features (Wealth Pilot, Meal Planner)
+3:00 - AI features (Money Pilot, Meal Planner)
 3:30 - Telegram bot demo
 4:00 - Pricing (free!) + CTA
 ```

@@ -39,7 +39,7 @@ const steps = [
     number: 3,
     title: "Grow Together",
     description:
-      "Combined savings goals and wealth insights. Build your future as a team with shared financial clarity.",
+      "Combined savings goals and financial insights. Build your future as a team with shared financial clarity.",
   },
 ];
 

@@ -61,7 +61,7 @@ export default function AboutPage() {
           <h2 className="text-xl font-bold">How We Keep It Free</h2>
           <p className="text-muted-foreground leading-relaxed">
             All 30 features work without paying a cent. AI-powered features like receipt
-            scanning, money advice, meal planning, and money chat use OpenAI under the hood.
+            scanning, Money Pilot, meal planning, and money chat use OpenAI under the hood.
             You have two options:
           </p>
           <ul className="space-y-2 text-muted-foreground">

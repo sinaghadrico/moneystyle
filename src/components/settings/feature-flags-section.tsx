@@ -9,11 +9,11 @@ import { FEATURE_LABELS, type FeatureKey, type FeatureFlags } from "@/lib/featur
 const FEATURE_GROUPS: { title: string; keys: FeatureKey[] }[] = [
   {
     title: "Lifestyle",
-    keys: ["moneyAdvice", "billNegotiator", "weekendPlanner", "mealPlanner", "shoppingLists"],
+    keys: ["billNegotiator", "weekendPlanner", "mealPlanner", "shoppingLists"],
   },
   {
     title: "AI & Tools",
-    keys: ["chat", "wealthPilot", "receiptScanner"],
+    keys: ["moneyPilot", "chat", "receiptScanner"],
   },
   {
     title: "Transactions",

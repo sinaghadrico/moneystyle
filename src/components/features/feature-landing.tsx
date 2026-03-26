@@ -48,7 +48,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "price-analysis": ShoppingCart,
   "smart-shopping": ShoppingBasket,
   "shared-expenses": Users,
-  "money-advice": Sparkles,
+  "money-pilot": Sparkles,
   "weekend-planner": Calendar,
   "meal-planner": UtensilsCrossed,
   "multi-currency": Globe,

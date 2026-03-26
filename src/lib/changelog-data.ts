@@ -98,7 +98,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       { type: "feature", text: "Bill Negotiator — AI finds subscriptions to cancel and bills to reduce" },
       { type: "feature", text: "Money Chat — ask your finances questions in natural language" },
-      { type: "feature", text: "Wealth Pilot — AI wealth growth plan with score, actions, and projections" },
+      { type: "feature", text: "Money Pilot — AI financial growth plan with score, actions, and projections" },
     ],
   },
   {
@@ -146,7 +146,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "AI Lifestyle Features",
     description: "AI doesn't just track your money — it helps you live better.",
     changes: [
-      { type: "feature", text: "AI Money Advice — personalized investment suggestions based on your data" },
+      { type: "feature", text: "AI Money Pilot — personalized investment suggestions based on your data" },
       { type: "feature", text: "Weekend Planner — AI generates weekend plans based on your city, budget, and taste" },
       { type: "feature", text: "Meal Planner — weekly meal plans and recipes based on what you actually buy" },
     ],

@@ -17,7 +17,7 @@ import { MessageSquareCode, Loader2, RotateCcw, Save } from "lucide-react";
 
 const PROMPT_COST: Record<string, string> = {
   receipt_parser: "~$0.01/image",
-  money_advice: "~$0.01",
+  money_pilot: "~$0.01",
   item_normalizer: "~$0.005",
   meal_planner: "~$0.02",
   weekend_planner: "~$0.03",

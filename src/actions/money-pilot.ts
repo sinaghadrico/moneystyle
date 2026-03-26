@@ -6,15 +6,16 @@ import { getCurrencyRates } from "@/actions/currencies";
 import { convertAmount } from "@/lib/currency";
 import { getPrompt, AI_PROMPT_KEYS } from "@/lib/ai-prompts";
 import type {
-  WealthPlanResult,
-  WealthPlanHistoryItem,
-  WealthAction,
-  WealthScoreBreakdown,
-  WealthProjections,
+  MoneyPilotResult,
+  MoneyPilotHistoryItem,
+  MoneyPilotAction,
+  MoneyPilotScoreBreakdown,
+  MoneyPilotProjections,
+  InvestmentSuggestions,
 } from "@/lib/types";
 
-export async function generateWealthPlan(): Promise<
-  { data: WealthPlanResult } | { error: string }
+export async function generateMoneyPilot(): Promise<
+  { data: MoneyPilotResult } | { error: string }
 > {
   const userId = await requireAuth();
   const settings = await prisma.appSettings.findUnique({ where: { userId } });
@@ -168,7 +169,7 @@ EMERGENCY FUND NEEDED: ${Math.round(avgMonthlySpend * 3)} (3 months of expenses)
 
   const { default: OpenAI } = await import("openai");
   const openai = new OpenAI({ apiKey });
-  const systemPrompt = await getPrompt(AI_PROMPT_KEYS.wealthPilot);
+  const systemPrompt = await getPrompt(AI_PROMPT_KEYS.moneyPilot);
 
   try {
     const response = await openai.chat.completions.create({
@@ -184,7 +185,7 @@ EMERGENCY FUND NEEDED: ${Math.round(avgMonthlySpend * 3)} (3 months of expenses)
     if (!content) return { error: "No response from AI" };
 
     const jsonStr = content.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-    const parsed = JSON.parse(jsonStr) as WealthPlanResult;
+    const parsed = JSON.parse(jsonStr) as MoneyPilotResult;
 
     if (!Array.isArray(parsed.actions) || typeof parsed.wealthScore !== "number") {
       return { error: "AI returned an unexpected format" };
@@ -199,6 +200,7 @@ EMERGENCY FUND NEEDED: ${Math.round(avgMonthlySpend * 3)} (3 months of expenses)
         investableCapital: parsed.investableCapital,
         projections: JSON.parse(JSON.stringify(parsed.projections)),
         actions: JSON.parse(JSON.stringify(parsed.actions)),
+        investmentSuggestions: parsed.investmentSuggestions ? JSON.parse(JSON.stringify(parsed.investmentSuggestions)) : undefined,
         summary: parsed.summary,
       },
     });
@@ -213,7 +215,7 @@ EMERGENCY FUND NEEDED: ${Math.round(avgMonthlySpend * 3)} (3 months of expenses)
   }
 }
 
-export async function getWealthPlanHistory(): Promise<WealthPlanHistoryItem[]> {
+export async function getMoneyPilotHistory(): Promise<MoneyPilotHistoryItem[]> {
   const userId = await requireAuth();
   const rows = await prisma.wealthPlan.findMany({
     where: { userId },
@@ -223,18 +225,19 @@ export async function getWealthPlanHistory(): Promise<WealthPlanHistoryItem[]> {
   return rows.map((r) => ({
     id: r.id,
     wealthScore: r.wealthScore,
-    scoreBreakdown: r.scoreBreakdown as unknown as WealthScoreBreakdown,
+    scoreBreakdown: r.scoreBreakdown as unknown as MoneyPilotScoreBreakdown,
     monthlySurplus: r.monthlySurplus,
     investableCapital: r.investableCapital,
-    projections: r.projections as unknown as WealthProjections,
-    actions: r.actions as unknown as WealthAction[],
+    projections: r.projections as unknown as MoneyPilotProjections,
+    actions: r.actions as unknown as MoneyPilotAction[],
+    investmentSuggestions: r.investmentSuggestions as unknown as InvestmentSuggestions | undefined,
     summary: r.summary,
     completedActions: r.completedActions,
     createdAt: r.createdAt.toISOString(),
   }));
 }
 
-export async function toggleWealthAction(planId: string, actionId: string) {
+export async function toggleMoneyPilotAction(planId: string, actionId: string) {
   const userId = await requireAuth();
   const plan = await prisma.wealthPlan.findUnique({ where: { id: planId, userId } });
   if (!plan) return { error: "Plan not found" };
@@ -250,7 +253,7 @@ export async function toggleWealthAction(planId: string, actionId: string) {
   return { success: true, completed };
 }
 
-export async function deleteWealthPlan(id: string) {
+export async function deleteMoneyPilot(id: string) {
   const userId = await requireAuth();
   await prisma.wealthPlan.delete({ where: { id, userId } });
   return { success: true };

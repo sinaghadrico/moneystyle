@@ -102,7 +102,7 @@ const PLATFORMS: Platform[] = [
     guide: [
       "Go to theresanaiforthat.com/submit",
       "Fill: Name, URL, Description, Category (Finance)",
-      "Highlight AI features: Receipt scanning, Voice, Wealth Pilot",
+      "Highlight AI features: Receipt scanning, Voice, Money Pilot",
       "They review and list within 1-3 days",
     ],
   },
@@ -148,7 +148,7 @@ const PLATFORMS: Platform[] = [
     guide: [
       "Go to bensbites.com/submit",
       "Fill the submit form",
-      "Focus on AI angle: receipt scanning, voice, wealth pilot",
+      "Focus on AI angle: receipt scanning, voice, money pilot",
       "They feature AI tools in daily newsletter",
     ],
   },

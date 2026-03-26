@@ -178,7 +178,7 @@ export async function getFinancialTips(): Promise<FinancialTip[]> {
     tips.push({
       id: "enable-ai",
       title: "Enable AI Features",
-      description: "Unlock receipt scanning, money advice, meal planning, and more by adding your OpenAI API key in Settings.",
+      description: "Unlock receipt scanning, Money Pilot, meal planning, and more by adding your OpenAI API key in Settings.",
       type: "suggestion",
       icon: "sparkles",
     });
@@ -188,7 +188,7 @@ export async function getFinancialTips(): Promise<FinancialTip[]> {
     tips.push({
       id: "diversify",
       title: "Consider Diversifying",
-      description: "All your reserves are in cash. Consider diversifying into investments — even index funds can grow your wealth over time.",
+      description: "All your reserves are in cash. Consider diversifying into investments — even index funds can grow your money over time.",
       type: "suggestion",
       icon: "pie-chart",
     });
@@ -280,7 +280,7 @@ export async function getFinancialTips(): Promise<FinancialTip[]> {
     tips.push({
       id: "milestone-1000",
       title: "1,000+ Transactions!",
-      description: "You've logged over 1,000 transactions. MoneyStyle has a clear picture of your finances — check out Money Advice and Wealth Pilot for personalized insights.",
+      description: "You've logged over 1,000 transactions. MoneyStyle has a clear picture of your finances — check out Money Pilot for personalized insights.",
       type: "achievement",
       icon: "trophy",
     });

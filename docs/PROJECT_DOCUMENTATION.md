@@ -52,7 +52,7 @@
 ### Key Value Propositions
 
 - **Smart Transaction Management** — Manual entry, receipt scanning, Telegram bot, and SMS auto-import
-- **AI-Powered Insights** — Wealth scoring, spending predictions, bill negotiation, meal & weekend planning
+- **AI-Powered Insights** — Money scoring, spending predictions, bill negotiation, meal & weekend planning
 - **Multi-User Households** — Shared financial management with invitation system
 - **Developer-Friendly API** — RESTful API with key-based authentication
 - **Progressive Web App** — Installable on mobile with offline support
@@ -92,8 +92,8 @@ graph LR
 | **Dashboard** | Real-time financial overview with charts, heatmaps, budgets |
 | **Transactions** | Full CRUD with splitting, tagging, receipt scanning |
 | **Profile** | Income sources, bills, installments, reserves, savings goals |
-| **Lifestyle** | AI weekend planner, meal planner, shopping lists, money advice |
-| **Wealth Pilot** | AI-generated wealth score and 1/3/5-year projections |
+| **Lifestyle** | AI weekend planner, meal planner, shopping lists |
+| **Money Pilot** | AI-generated money score and 1/3/5-year projections |
 | **Money Chat** | Conversational AI assistant for financial questions |
 | **Settings** | Integrations (Telegram, SMS), feature flags, API keys |
 
@@ -452,7 +452,7 @@ src/
 │   │   │   ├── goals/
 │   │   │   ├── household/
 │   │   │   └── personal/
-│   │   ├── wealth/               # Wealth Pilot (AI)
+│   │   ├── money-pilot/           # Money Pilot (AI)
 │   │   ├── chat/                 # Money Chat (AI)
 │   │   ├── lifestyle/            # Lifestyle features
 │   │   │   ├── weekend/
@@ -705,9 +705,8 @@ mindmap
       Meal Planner (AI)
       Shopping Lists
       Bill Negotiator (AI)
-      Money Advice (AI)
-    Wealth Pilot
-      Wealth Score
+    Money Pilot
+      Money Score
       1/3/5 Year Projections
       AI Recommendations
     Money Chat
@@ -764,7 +763,7 @@ mindmap
 | Weekend Planner | Production | Yes | Yes |
 | Meal Planner | Production | Yes | Yes |
 | Money Chat | Production | Yes | Yes |
-| Wealth Pilot | Production | Yes | Yes |
+| Money Pilot | Production | Yes | Yes |
 | Bill Negotiator | Production | Yes | Yes |
 | Telegram Bot | Production | No | Yes |
 | SMS Import | Production | No | N/A |
@@ -865,9 +864,8 @@ graph TB
         P1[receiptParser]
         P2[weekendPlanner]
         P3[mealPlanner]
-        P4[moneyAdvice]
+        P4[moneyPilot]
         P5[billNegotiator]
-        P6[wealthPilot]
         P7[moneyChat]
         P8[blogAssistant]
         P9[aiImport]
@@ -882,7 +880,7 @@ graph TB
         ITEMS[Parsed Line Items]
         PLAN[Weekend/Meal Plans]
         ADVICE[Financial Advice]
-        SCORE[Wealth Score]
+        SCORE[Money Score]
         RESPONSE[Chat Response]
     end
 
@@ -908,9 +906,8 @@ Users can customize all 9 AI prompt templates through the Settings page. Each pr
 | **Receipt Parser** | Image (JPEG/PNG/WebP/HEIC/PDF) | Line items with quantity, price, merchant |
 | **Weekend Planner** | Budget, preferences, location | 3 plans (Budget/Balanced/Premium) |
 | **Meal Planner** | Budget, dietary preferences | 7-day meal plan with recipes |
-| **Money Advice** | Income, expenses, goals | Personalized financial tips |
 | **Bill Negotiator** | Bill details, market rates | Negotiation strategy & scripts |
-| **Wealth Pilot** | Full financial profile | Wealth score + projections |
+| **Money Pilot** | Full financial profile | Money score + projections |
 | **Money Chat** | Conversation + financial context | Conversational response |
 | **Blog Assistant** | Topic, keywords | Blog post draft |
 | **AI Import** | Unstructured text | Structured transactions |
@@ -1243,7 +1240,7 @@ MoneyStyle uses a per-user feature flag system stored in `AppSettings.featureFla
 graph LR
     subgraph Flags["28 Feature Flags"]
         direction TB
-        AI_FLAGS["AI Features<br/>moneyAdvice, billNegotiator,<br/>weekendPlanner, mealPlanner,<br/>chat, wealthPilot,<br/>receiptScanner, priceAnalysis"]
+        AI_FLAGS["AI Features<br/>moneyPilot, billNegotiator,<br/>weekendPlanner, mealPlanner,<br/>chat, receiptScanner,<br/>priceAnalysis"]
         TX_FLAGS["Transaction Features<br/>txAdd, txEdit, txDelete,<br/>txSplit, txItems, txConfirm,<br/>transactionMerge"]
         IMPORT_FLAGS["Import Features<br/>importCsv, importAi,<br/>importTelegram"]
         DASH_FLAGS["Dashboard Features<br/>dashPrediction, dashBudgets,<br/>dashSavings, dashDebts,<br/>dashCategoryChart, dashHeatmap,<br/>dashCharts"]
@@ -1752,7 +1749,7 @@ export async function createItem(data: z.infer<typeof schema>) {
 | **shadcn/ui** | Copy-paste component library built on Radix UI |
 | **ResponsiveDialog** | Custom component: Dialog on desktop, Drawer on mobile |
 | **FeatureGate** | Component wrapper that shows/hides based on feature flags |
-| **Wealth Pilot** | AI feature that scores financial health and projects growth |
+| **Money Pilot** | AI feature that scores financial health and projects growth |
 | **Money Chat** | Conversational AI assistant for financial questions |
 | **MinIO** | Open-source S3-compatible object storage |
 | **Serwist** | Service worker library for PWA support in Next.js |

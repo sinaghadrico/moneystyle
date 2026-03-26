@@ -585,9 +585,9 @@ export type CashflowData = {
 
 // Bill Negotiator types
 
-// Wealth Pilot types
+// Money Pilot types
 
-export type WealthScoreBreakdown = {
+export type MoneyPilotScoreBreakdown = {
   savingsRate: { score: number; max: number; detail: string };
   emergencyFund: { score: number; max: number; detail: string };
   diversification: { score: number; max: number; detail: string };
@@ -595,14 +595,14 @@ export type WealthScoreBreakdown = {
   passiveIncome: { score: number; max: number; detail: string };
 };
 
-export type WealthProjections = {
+export type MoneyPilotProjections = {
   oneYear: number;
   threeYear: number;
   fiveYear: number;
   assumptions: string;
 };
 
-export type WealthAction = {
+export type MoneyPilotAction = {
   id: string;
   category: "quick_win" | "monthly_habit" | "growth_move" | "trade_signal" | "expense_hack";
   title: string;
@@ -614,17 +614,34 @@ export type WealthAction = {
   steps: string[];
 };
 
-export type WealthPlanResult = {
+export type InvestmentSuggestion = {
+  title: string;
+  description: string;
+  potentialMonthly: number | null;
+  potentialYearly: number | null;
+  risk: "low" | "medium" | "high";
+  relatedReserve: string | null;
+};
+
+export type InvestmentSuggestions = {
+  emergencyFundNeeded: number;
+  emergencyFundCurrent: number;
+  investableAmount: number;
+  suggestions: InvestmentSuggestion[];
+};
+
+export type MoneyPilotResult = {
   wealthScore: number;
-  scoreBreakdown: WealthScoreBreakdown;
+  scoreBreakdown: MoneyPilotScoreBreakdown;
   monthlySurplus: number;
   investableCapital: number;
-  projections: WealthProjections;
-  actions: WealthAction[];
+  projections: MoneyPilotProjections;
+  actions: MoneyPilotAction[];
+  investmentSuggestions?: InvestmentSuggestions;
   summary: string;
 };
 
-export type WealthPlanHistoryItem = WealthPlanResult & {
+export type MoneyPilotHistoryItem = MoneyPilotResult & {
   id: string;
   completedActions: string[];
   createdAt: string;

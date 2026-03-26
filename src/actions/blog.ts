@@ -254,7 +254,7 @@ export async function generateBlogPost(opts: {
 
 BRAND CONTEXT:
 - MoneyStyle is completely free, no subscriptions, no hidden fees
-- Features: expense tracking, AI receipt scanning, budgets, savings goals, investment tracking (stocks/ETFs with live prices), subscription detection, household sharing, developer API, meal planner, weekend planner, money chat, wealth pilot, bill negotiator, cashflow calendar, spending wrapped, and more
+- Features: expense tracking, AI receipt scanning, budgets, savings goals, investment tracking (stocks/ETFs with live prices), subscription detection, household sharing, developer API, meal planner, weekend planner, money chat, money pilot, bill negotiator, cashflow calendar, spending wrapped, and more
 - Target audience: anyone who wants to manage their money better — globally
 - Tone: helpful, clear, data-backed, not salesy
 - Founded by Sina Ghadri

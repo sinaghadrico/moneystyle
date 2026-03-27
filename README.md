@@ -11,6 +11,44 @@ A full-stack, multi-user personal finance platform with AI-powered insights, rec
 
 ---
 
+## Screenshots
+
+### Desktop
+
+| Dashboard | Transactions | Money Pilot |
+|:-:|:-:|:-:|
+| ![Dashboard](screenshot/desktop/dashboard.png) | ![Transactions](screenshot/desktop/transactions.png) | ![Money Pilot](screenshot/desktop/pilot.png) |
+
+| Money Chat | Money Map | Challenges |
+|:-:|:-:|:-:|
+| ![Chat](screenshot/desktop/chat.png) | ![Map](screenshot/desktop/map.png) | ![Challenges](screenshot/desktop/challenges.png) |
+
+| Blog | Landing Page |
+|:-:|:-:|
+| ![Blog](screenshot/desktop/blog.png) | ![Landing](screenshot/desktop/landing.png) |
+
+### Mobile
+
+| Dashboard | Transactions | Profile | Lifestyle |
+|:-:|:-:|:-:|:-:|
+| ![Dashboard](screenshot/mobile/dashboard.png) | ![Transactions](screenshot/mobile/transactions.png) | ![Profile](screenshot/mobile/profile.png) | ![Lifestyle](screenshot/mobile/lifestyle.png) |
+
+| AI Features | Money Map | Travel Mode | Goals |
+|:-:|:-:|:-:|:-:|
+| ![AI](screenshot/mobile/ai-features.png) | ![Map](screenshot/mobile/map.png) | ![Travel](screenshot/mobile/travel-mode.png) | ![Goals](screenshot/mobile/goals.png) |
+
+| Household | Auth | Integrations | Landing |
+|:-:|:-:|:-:|:-:|
+| ![Household](screenshot/mobile/household.png) | ![Auth](screenshot/mobile/auth.png) | ![Integrations](screenshot/mobile/integrations.png) | ![Landing](screenshot/mobile/landing.png) |
+
+### Telegram Bot & Admin
+
+| Telegram Bot | Mini App | Feature Flags | Blog AI |
+|:-:|:-:|:-:|:-:|
+| ![Bot](screenshot/telegram-bot.png) | ![MiniApp](screenshot/telegram-miniapp.png) | ![Flags](screenshot/admin/features-flag.png) | ![BlogAI](screenshot/admin/blog-ai.png) |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |

@@ -11,6 +11,38 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.1.0",
+    date: "2026-03-28",
+    title: "Open Source, Performance & Developer Experience",
+    description:
+      "MoneyStyle goes open source! Massive code quality improvements, centralized Telegram bot, lazy loading, and marketing tools for growth.",
+    changes: [
+      { type: "feature", text: "Open Source — MIT license, public GitHub repo with full documentation" },
+      { type: "feature", text: "Telegram Link Flow — users link account via 6-digit code instead of manual bot setup" },
+      { type: "feature", text: "Telegram Inline Keyboards — interactive buttons for quick actions in bot" },
+      { type: "feature", text: "Blog View Tracking — server-side unique views with fingerprint (admin stats)" },
+      { type: "feature", text: "Growth Strategy Guide — phased marketing plan in admin panel" },
+      { type: "feature", text: "Channel Strategy — objective-based channel recommendations with budgets" },
+      { type: "feature", text: "useAsyncData Hook — cleaner data fetching pattern across all pages" },
+      { type: "feature", text: "Shared ColorPicker and FormDialogFooter components" },
+      { type: "feature", text: "Product Hunt, Open Source, and Telegram Bot badges on landing page" },
+      { type: "improvement", text: "Split profile.ts (1,392 → 310 lines) into 5 focused action files" },
+      { type: "improvement", text: "Split transactions-content.tsx (1,450 → 993 lines) into 3 components" },
+      { type: "improvement", text: "Split landing-content.tsx (1,255 → 92 lines) into 4 components" },
+      { type: "improvement", text: "useReducer for price-analysis (14 states), merge (7), chat (7)" },
+      { type: "improvement", text: "Lazy loaded dashboard charts and landing sections with dynamic imports" },
+      { type: "improvement", text: "Memoized chart data transformations with useMemo" },
+      { type: "improvement", text: "Docker image optimized: 1.44GB → 1.04GB" },
+      { type: "improvement", text: "Removed unused dependencies: date-fns (38MB), react-hook-form (5MB)" },
+      { type: "improvement", text: "Shared SiteFooter with social links across all pages" },
+      { type: "improvement", text: "Standardized error handling with try-catch in all server actions" },
+      { type: "fix", text: "Onboarding bottom nav hidden, budget categories now save to database" },
+      { type: "fix", text: "Voice button and bulk import show AI setup dialog when not configured" },
+      { type: "fix", text: "Telegram webhook auto-restores to production when dev tunnel closes" },
+      { type: "fix", text: "setState in useEffect replaced with useSyncExternalStore" },
+    ],
+  },
+  {
     version: "2.0.0",
     date: "2026-03-21",
     title: "Major Feature Expansion — Maps, Voice, Gamification & More",

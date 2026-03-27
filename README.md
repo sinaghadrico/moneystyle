@@ -13,7 +13,8 @@ A full-stack, multi-user personal finance platform with AI-powered insights, rec
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-MoneyStyle-0A66C2?logo=linkedin)](https://www.linkedin.com/company/moneystyle)
 [![Instagram](https://img.shields.io/badge/Instagram-@moneystyleapp-E4405F?logo=instagram&logoColor=white)](https://instagram.com/moneystyleapp)
 [![Product Hunt](https://img.shields.io/badge/Product_Hunt-MoneyStyle-DA552F?logo=producthunt&logoColor=white)](https://www.producthunt.com/products/moneystyle)
-[![Telegram](https://img.shields.io/badge/Telegram-Bot-26A5E4?logo=telegram&logoColor=white)](https://t.me/moneystyle_app_bot)
+[![Telegram Channel](https://img.shields.io/badge/Telegram-Channel-26A5E4?logo=telegram&logoColor=white)](https://t.me/moneystyle_app)
+[![Telegram Bot](https://img.shields.io/badge/Telegram-Bot-26A5E4?logo=telegram&logoColor=white)](https://t.me/moneystyle_app_bot)
 
 ---
 

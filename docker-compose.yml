@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: revenue
-      POSTGRES_PASSWORD: revenue123
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-revenue123}
       POSTGRES_DB: revenue
     ports:
       - "5434:5432"
@@ -53,8 +53,8 @@ services:
     ports:
       - "3020:3000"
     environment:
-      DATABASE_URL: postgresql://revenue:revenue123@db:5432/revenue
-      DIRECT_URL: postgresql://revenue:revenue123@db:5432/revenue
+      DATABASE_URL: postgresql://revenue:${DB_PASSWORD:-revenue123}@db:5432/revenue
+      DIRECT_URL: postgresql://revenue:${DB_PASSWORD:-revenue123}@db:5432/revenue
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
       MINIO_ENDPOINT: minio
@@ -74,8 +74,8 @@ services:
     build: .
     command: sh -c "npx prisma migrate deploy && npx tsx prisma/seed.ts"
     environment:
-      DATABASE_URL: postgresql://revenue:revenue123@db:5432/revenue
-      DIRECT_URL: postgresql://revenue:revenue123@db:5432/revenue
+      DATABASE_URL: postgresql://revenue:${DB_PASSWORD:-revenue123}@db:5432/revenue
+      DIRECT_URL: postgresql://revenue:${DB_PASSWORD:-revenue123}@db:5432/revenue
     depends_on:
       db:
         condition: service_healthy

@@ -36,6 +36,13 @@ export const metadata: Metadata = {
   },
   description:
     "100% free personal finance tracker with 30 features. Track expenses, manage budgets, scan receipts, detect subscriptions, and track investments. AI features use your own OpenAI key.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icon-192.png",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

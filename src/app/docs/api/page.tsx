@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 export const metadata: Metadata = {
   title: "API Documentation",
@@ -209,6 +210,8 @@ export default function ApiDocsPage() {
           Currently no rate limits are enforced. Please be reasonable with your usage.
         </p>
       </section>
+
+      <SiteFooter />
     </div>
   );
 }

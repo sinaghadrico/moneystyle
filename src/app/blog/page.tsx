@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/ui/logo";
 import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { getBlogPosts } from "@/actions/blog";
 import Image from "next/image";
 
@@ -110,36 +111,7 @@ export default async function BlogPage() {
         )}
       </main>
 
-      <footer className="border-t mt-16">
-        <div className="mx-auto max-w-3xl px-4 py-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <LogoMark className="h-4 w-4" />
-              <span>&copy; 2026 MoneyStyle</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/about"
-                className="hover:text-foreground transition-colors"
-              >
-                About
-              </Link>
-              <Link
-                href="/changelog"
-                className="hover:text-foreground transition-colors"
-              >
-                Changelog
-              </Link>
-              <Link
-                href="/docs/api"
-                className="hover:text-foreground transition-colors"
-              >
-                API Docs
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

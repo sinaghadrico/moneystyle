@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useInView } from "@/hooks/use-in-view";
 import { LogoMark } from "@/components/ui/logo";
+import { SiteFooter } from "@/components/layout/site-footer";
 import {
   ArrowLeft,
   ArrowRight,
@@ -324,23 +325,7 @@ export function PricingContent() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <LogoMark className="h-4 w-4" />
-              <span>MoneyStyle</span>
-            </div>
-            <Link
-              href="/"
-              className="hover:text-foreground transition-colors"
-            >
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter maxWidth="max-w-6xl" />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/ui/logo";
 import { ArrowLeft, ArrowRight, Linkedin, Mail } from "lucide-react";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 export const metadata: Metadata = {
   title: "About",
@@ -156,22 +157,7 @@ export default function AboutPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t">
-        <div className="mx-auto max-w-3xl px-4 py-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <LogoMark className="h-4 w-4" />
-              <span>MoneyStyle</span>
-              <span className="text-muted-foreground/40">·</span>
-              <Link href="/docs/api" className="hover:text-foreground transition-colors">
-                API Docs
-              </Link>
-            </div>
-            <p>100% free personal finance tracker</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -1,23 +1,42 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useSyncExternalStore } from "react";
 import { signInWithTelegramMiniApp } from "@/actions/auth";
 
+function getTelegramWebApp() {
+  if (typeof window === "undefined") return null;
+  return (window as any).Telegram?.WebApp ?? null;
+}
+
+function subscribeTelegram() {
+  // Telegram WebApp doesn't change after load — no-op subscriber
+  return () => {};
+}
+
+function getSnapshot() {
+  const tg = getTelegramWebApp();
+  return !!(tg?.initData);
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
 export function useTelegramAutoAuth() {
-  const [isTelegram, setIsTelegram] = useState(false);
+  const isTelegram = useSyncExternalStore(subscribeTelegram, getSnapshot, getServerSnapshot);
   const [authStatus, setAuthStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const readyCalled = useRef(false);
 
   useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg?.initData) {
-      setIsTelegram(true);
-      tg.ready();
-      tg.expand();
-    }
-  }, []);
+    if (!isTelegram || readyCalled.current) return;
+    readyCalled.current = true;
+    const tg = getTelegramWebApp();
+    tg?.ready();
+    tg?.expand();
+  }, [isTelegram]);
 
   const signInWithTelegram = useCallback(async () => {
-    const tg = (window as any).Telegram?.WebApp;
+    const tg = getTelegramWebApp();
     if (!tg?.initData) return;
 
     setAuthStatus("loading");

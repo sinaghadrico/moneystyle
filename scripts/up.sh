@@ -128,6 +128,23 @@ echo "Press Ctrl+C to stop everything."
 
 cleanup() {
   echo '==> Shutting down...'
+  # Restore Telegram webhook to production
+  if [ -n "$TUNNEL_URL" ]; then
+    echo "==> Restoring Telegram webhook to production..."
+    npx tsx -e "
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+      if (token) {
+        const body = { url: 'https://moneystyle.app/api/telegram' };
+        if (secret) body.secret_token = secret;
+        fetch('https://api.telegram.org/bot' + token + '/setWebhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }).then(r => r.json()).then(d => console.log(d.ok ? '    Webhook restored to production.' : '    Failed: ' + d.description));
+      }
+    " 2>/dev/null || echo "    Could not restore webhook. Run: npx tsx scripts/setup-telegram-webhook.ts https://moneystyle.app/api/telegram"
+  fi
   kill $DEV_PID $TUNNEL_PID 2>/dev/null
   if [ "$MODE" = "--remote" ]; then
     pkill -f "ssh.*5433:localhost:5432" 2>/dev/null

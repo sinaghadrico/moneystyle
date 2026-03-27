@@ -1,6 +1,20 @@
 import "dotenv/config";
 
 const TELEGRAM_API = "https://api.telegram.org/bot";
+const PROD_WEBHOOK = "https://moneystyle.app/api/telegram";
+
+async function setWebhook(token: string, url: string, secret?: string) {
+  const body: Record<string, string> = { url };
+  if (secret) body.secret_token = secret;
+
+  const res = await fetch(`${TELEGRAM_API}${token}/setWebhook`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  return data;
+}
 
 async function main() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -39,19 +53,11 @@ async function main() {
     return;
   }
 
-  console.log(`Setting webhook to: ${url}`);
-  const body: Record<string, string> = { url };
-  if (secret) {
-    body.secret_token = secret;
-    console.log("Using secret token from TELEGRAM_WEBHOOK_SECRET");
-  }
+  // If setting a non-production URL (tunnel), restore production on exit
+  const isDevTunnel = url !== PROD_WEBHOOK;
 
-  const res = await fetch(`${TELEGRAM_API}${token}/setWebhook`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
+  console.log(`Setting webhook to: ${url}`);
+  const data = await setWebhook(token, url, secret);
 
   if (data.ok) {
     console.log("Webhook set successfully!");
@@ -62,6 +68,34 @@ async function main() {
 
   // Register bot commands menu
   await registerCommands(token);
+
+  // If dev tunnel, wait for Ctrl+C and restore production webhook
+  if (isDevTunnel) {
+    console.log();
+    console.log("=== DEV MODE ===");
+    console.log(`Webhook pointed to dev tunnel: ${url}`);
+    console.log(`Press Ctrl+C to stop and restore production webhook.`);
+    console.log();
+
+    const restore = async () => {
+      console.log();
+      console.log("Restoring production webhook...");
+      const result = await setWebhook(token, PROD_WEBHOOK, secret);
+      if (result.ok) {
+        console.log(`Webhook restored to: ${PROD_WEBHOOK}`);
+      } else {
+        console.error(`Failed to restore! Manually run:`);
+        console.error(`  npx tsx scripts/setup-telegram-webhook.ts ${PROD_WEBHOOK}`);
+      }
+      process.exit(0);
+    };
+
+    process.on("SIGINT", restore);
+    process.on("SIGTERM", restore);
+
+    // Keep process alive
+    await new Promise(() => {});
+  }
 }
 
 async function registerCommands(token: string) {

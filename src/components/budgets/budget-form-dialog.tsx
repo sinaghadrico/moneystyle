@@ -6,11 +6,11 @@ import {
   ResponsiveDialogContent,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
-  ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormDialogFooter } from "@/components/ui/form-dialog-footer";
 import { upsertBudget, deleteBudget } from "@/actions/budgets";
 import { toast } from "sonner";
 import { useAppSettings } from "@/components/settings/settings-provider";
@@ -135,16 +135,12 @@ export function BudgetFormDialog({
             />
           </label>
         </div>
-        <ResponsiveDialogFooter>
-          <div className="flex w-full gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button className="flex-1" onClick={handleSave} disabled={saving || !form.monthlyLimit}>
-              {saving ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </ResponsiveDialogFooter>
+        <FormDialogFooter
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSave}
+          saving={saving}
+          disabled={!form.monthlyLimit}
+        />
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

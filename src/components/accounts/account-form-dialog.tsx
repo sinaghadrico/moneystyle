@@ -6,9 +6,7 @@ import {
   ResponsiveDialogContent,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
-  ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ColorPicker } from "@/components/ui/color-picker";
+import { FormDialogFooter } from "@/components/ui/form-dialog-footer";
 import { createAccount, updateAccount } from "@/actions/accounts";
 import { toast } from "sonner";
 
@@ -29,12 +29,6 @@ const ACCOUNT_TYPES = [
   { value: "cash", label: "Cash" },
   { value: "other", label: "Other" },
 ] as const;
-
-const PRESET_COLORS = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
-  "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280", "#64748b",
-  "#06b6d4", "#84cc16", "#a855f7", "#f43f5e",
-];
 
 type AccountData = {
   id?: string;
@@ -135,48 +129,17 @@ export function AccountFormDialog({
           </div>
           <div className="grid gap-2">
             <Label>Color</Label>
-            <div className="flex flex-wrap gap-2">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  key={c}
-                  className={`h-7 w-7 rounded-full border-2 transition-transform ${
-                    color === c
-                      ? "border-foreground scale-110"
-                      : "border-transparent"
-                  }`}
-                  style={{ backgroundColor: c }}
-                  onClick={() => setColor(c)}
-                  type="button"
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              <Input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="h-8 w-14 cursor-pointer p-0.5"
-              />
-              <Input
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-24 font-mono text-sm"
-                maxLength={7}
-              />
-            </div>
+            <ColorPicker color={color} onChange={setColor} />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
-        <ResponsiveDialogFooter>
-          <div className="flex w-full gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button className="flex-1" onClick={handleSave} disabled={saving || !name.trim()}>
-              {saving ? "Saving..." : isEdit ? "Update" : "Create"}
-            </Button>
-          </div>
-        </ResponsiveDialogFooter>
+        <FormDialogFooter
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSave}
+          saving={saving}
+          disabled={!name.trim()}
+          saveLabel={isEdit ? "Update" : "Create"}
+        />
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormDialogFooter } from "@/components/ui/form-dialog-footer";
 import { upsertSavingsGoal, deleteSavingsGoal } from "@/actions/savings";
 import { Trash2 } from "lucide-react";
 import type { SavingsProgress } from "@/lib/types";
@@ -158,20 +159,12 @@ export function SavingsFormDialog({
             </div>
           </div>
         </div>
-        <ResponsiveDialogFooter>
-          <div className="flex w-full gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={handleSave}
-              disabled={saving || !form.name || !form.targetAmount}
-            >
-              {saving ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </ResponsiveDialogFooter>
+        <FormDialogFooter
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSave}
+          saving={saving}
+          disabled={!form.name || !form.targetAmount}
+        />
       </ResponsiveDialogContent>
     </ResponsiveDialog>
 

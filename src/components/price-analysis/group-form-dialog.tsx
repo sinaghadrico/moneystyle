@@ -6,11 +6,11 @@ import {
   ResponsiveDialogContent,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
-  ResponsiveDialogFooter,
 } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormDialogFooter } from "@/components/ui/form-dialog-footer";
 import { Badge } from "@/components/ui/badge";
 import { updateItemGroup, createItemGroup } from "@/actions/price-analysis";
 import { toast } from "sonner";
@@ -117,20 +117,13 @@ export function GroupFormDialog({
           </div>
         </div>
 
-        <ResponsiveDialogFooter>
-          <div className="flex w-full gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={handleSave}
-              disabled={saving || !name.trim() || members.length === 0}
-            >
-              {saving ? "Saving..." : isEdit ? "Save" : "Create"}
-            </Button>
-          </div>
-        </ResponsiveDialogFooter>
+        <FormDialogFooter
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSave}
+          saving={saving}
+          disabled={!name.trim() || members.length === 0}
+          saveLabel={isEdit ? "Save" : "Create"}
+        />
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

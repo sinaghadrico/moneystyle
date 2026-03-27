@@ -1,14 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { StatsCards } from "./stats-cards";
-import {
-  MonthlyBarChart,
-  CategoryDonut,
-  TopMerchantsChart,
-  MonthlyTrendChart,
-  MonthlyCategoryChart,
-} from "./charts";
 import { PeriodFilterSelect } from "./period-filter";
 import {
   getDashboardStats,
@@ -26,15 +20,22 @@ import { getDebtSummary } from "@/actions/persons";
 import { getNetWorthData } from "@/actions/net-worth";
 import type { NetWorthData } from "@/actions/net-worth";
 import { getPriceAlerts, type PriceAlert } from "@/actions/price-watch";
-import { PriceWatchCard } from "./price-watch-card";
-import { BudgetProgressCard } from "./budget-progress";
-import { PredictionCard } from "./prediction-card";
-import { SavingsCard } from "./savings-card";
-import { DebtsCard } from "./debts-card";
-import { NetWorthCard } from "./net-worth-card";
-import { SpendingHeatmap } from "./spending-heatmap";
 import { QuickActions } from "./quick-actions";
-import { MoodStatsCard } from "./mood-stats-card";
+
+// Lazy load heavy dashboard cards (recharts = 280KB, heatmap, etc)
+const MonthlyBarChart = dynamic(() => import("./charts").then(m => ({ default: m.MonthlyBarChart })));
+const CategoryDonut = dynamic(() => import("./charts").then(m => ({ default: m.CategoryDonut })));
+const TopMerchantsChart = dynamic(() => import("./charts").then(m => ({ default: m.TopMerchantsChart })));
+const MonthlyTrendChart = dynamic(() => import("./charts").then(m => ({ default: m.MonthlyTrendChart })));
+const MonthlyCategoryChart = dynamic(() => import("./charts").then(m => ({ default: m.MonthlyCategoryChart })));
+const PriceWatchCard = dynamic(() => import("./price-watch-card").then(m => ({ default: m.PriceWatchCard })));
+const BudgetProgressCard = dynamic(() => import("./budget-progress").then(m => ({ default: m.BudgetProgressCard })));
+const PredictionCard = dynamic(() => import("./prediction-card").then(m => ({ default: m.PredictionCard })));
+const SavingsCard = dynamic(() => import("./savings-card").then(m => ({ default: m.SavingsCard })));
+const DebtsCard = dynamic(() => import("./debts-card").then(m => ({ default: m.DebtsCard })));
+const NetWorthCard = dynamic(() => import("./net-worth-card").then(m => ({ default: m.NetWorthCard })));
+const SpendingHeatmap = dynamic(() => import("./spending-heatmap").then(m => ({ default: m.SpendingHeatmap })));
+const MoodStatsCard = dynamic(() => import("./mood-stats-card").then(m => ({ default: m.MoodStatsCard })));
 import type {
   DashboardStats,
   MonthlyData,

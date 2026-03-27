@@ -2,6 +2,52 @@
 
 All notable changes to MoneyStyle are documented here.
 
+## [2.1.0] - 2026-03-28
+
+### Added
+- **Blog View Tracking** — Server-side unique view counting with fingerprint (admin-only stats)
+- **Telegram Link Flow** — Users link account via 6-digit code instead of manual bot setup
+- **Telegram Inline Keyboards** — Interactive buttons for /start, /help, and after linking
+- **Onboarding Feature Flag** — Admin can enable/disable onboarding wizard globally
+- **Product Hunt Badge** — Featured on Product Hunt badge in landing hero
+- **Open Source Badge** — GitHub link in landing hero
+- **Shared SiteFooter** — Consistent footer with social links across all pages (X, LinkedIn, Instagram, GitHub, Telegram)
+- **ColorPicker Component** — Shared reusable color picker for form dialogs
+- **FormDialogFooter Component** — Shared Cancel/Save footer for all form dialogs
+- **useAsyncData Hook** — Replaces useState+useEffect+useCallback data fetching pattern
+- **Growth Strategy Guide** — Marketing page with phased strategy and key benchmarks
+- **Channel Strategy** — Marketing page with objective-based channel recommendations
+
+### Changed
+- **Centralized Telegram Bot** — One bot for all users; removed per-user bot token/webhook fields
+- **Split profile.ts** (1,392 → 310 lines) into income-sources, reserves, installments, bills, bill-negotiation
+- **Split transactions-content.tsx** (1,450 → 993 lines) into mobile-list and desktop-table
+- **Split landing-content.tsx** (1,255 → 92 lines) into hero, sections, features, footer
+- **useReducer** for price-analysis (14 states), merge-suggestions (7), money-chat (7)
+- **Memoized charts** — useMemo for dashboard chart data transformations
+- **Lazy loaded** dashboard cards and landing sections with dynamic imports
+- **Settings Save button** moved from top to inside each settings card
+- **Admin tabs** — pill-style responsive tabs instead of full-width
+- **Profile tabs** — icon on top, label below pattern
+- Removed unused dependencies: date-fns (38MB), react-hook-form (5MB)
+- Optimized Dockerfile with multi-stage build and prod-only deps (1.44GB → 1.04GB)
+
+### Fixed
+- Onboarding bottom nav hidden during wizard
+- Onboarding budget categories now save to database
+- Voice button shows AI setup dialog instead of plain toast
+- Bulk import AI mode shows setup checklist when AI not configured
+- Blog admin page force-dynamic for Docker build
+- Telegram webhook auto-restores to production when dev tunnel closes
+- setState in useEffect replaced with useSyncExternalStore for Telegram detection
+- Bottom padding increased for FAB button accessibility
+
+### Security
+- Currency management restricted to admin only
+- Telegram bot tokens removed from user settings (central bot only)
+- Server actions wrapped in try-catch with error logging
+- All Record<string, unknown> params verified to have Zod validation
+
 ## [2.0.0] - 2026-03-27
 
 ### Added

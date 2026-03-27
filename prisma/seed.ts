@@ -1,128 +1,132 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import * as fs from "fs";
-import * as path from "path";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-const CATEGORY_COLORS: Record<string, string> = {
-  deposit: "#22c55e",
-  food: "#f97316",
-  groceries: "#84cc16",
-  transport: "#3b82f6",
-  utilities: "#8b5cf6",
-  other: "#6b7280",
-  housing: "#ec4899",
-  entertainment: "#06b6d4",
-  clothing: "#f43f5e",
-  transfer: "#14b8a6",
-  healthcare: "#ef4444",
-  subscription: "#a855f7",
-  education: "#eab308",
-  government: "#64748b",
-};
-
-function normalizeItems(items: unknown): string | null {
-  if (items === null || items === undefined) return null;
-  if (typeof items === "string") return items;
-  if (Array.isArray(items)) return JSON.stringify(items);
-  return String(items);
-}
-
-const DEFAULT_ACCOUNT_ID = "default_farnoosh_mashreq";
+const DEFAULT_CATEGORIES = [
+  { name: "Food & Dining", color: "#f97316" },
+  { name: "Groceries", color: "#84cc16" },
+  { name: "Transport", color: "#3b82f6" },
+  { name: "Utilities", color: "#8b5cf6" },
+  { name: "Housing", color: "#ec4899" },
+  { name: "Entertainment", color: "#06b6d4" },
+  { name: "Healthcare", color: "#ef4444" },
+  { name: "Education", color: "#eab308" },
+  { name: "Clothing", color: "#f43f5e" },
+  { name: "Subscriptions", color: "#a855f7" },
+  { name: "Transfer", color: "#14b8a6" },
+  { name: "Other", color: "#6b7280" },
+];
 
 async function main() {
   console.log("Seeding database...");
 
-  const filePath = path.join(process.cwd(), "transactions.json");
-  const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  const transactions: Array<Record<string, unknown>> = data.transactions;
+  // Create admin user
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@moneystyle.app";
+  const adminPassword = process.env.ADMIN_PASSWORD || "moneystyle2026";
 
-  console.log(`Found ${transactions.length} transactions`);
+  const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
-  // Ensure a seed user exists
-  const seedEmail = process.env.ADMIN_EMAIL || "admin@moneystyle.app";
-  const user = await prisma.user.upsert({
-    where: { email: seedEmail },
+  const admin = await prisma.user.upsert({
+    where: { email: adminEmail },
     update: {},
-    create: { email: seedEmail, name: "Admin" },
+    create: {
+      email: adminEmail,
+      name: "Admin",
+      hashedPassword,
+      role: "admin",
+      onboardingCompleted: true,
+    },
   });
-  const userId = user.id;
-  console.log(`Using user: ${user.email} (${userId})`);
+  console.log(`Admin user: ${admin.email}`);
+
+  // Create default categories for admin
+  for (const cat of DEFAULT_CATEGORIES) {
+    await prisma.category.upsert({
+      where: { userId_name: { userId: admin.id, name: cat.name } },
+      update: { color: cat.color },
+      create: { name: cat.name, color: cat.color, userId: admin.id },
+    });
+  }
+  console.log(`Created ${DEFAULT_CATEGORIES.length} categories`);
 
   // Create default account
   await prisma.account.upsert({
-    where: { id: DEFAULT_ACCOUNT_ID },
+    where: { id: "default_cash" },
     update: {},
     create: {
-      id: DEFAULT_ACCOUNT_ID,
-      name: "Farnoosh Mashreq",
-      bank: "Mashreq",
-      color: "#3b82f6",
-      userId,
+      id: "default_cash",
+      name: "Cash",
+      type: "cash",
+      color: "#22c55e",
+      userId: admin.id,
     },
   });
-  console.log("Created default account");
+  console.log("Created default Cash account");
 
-  // Create categories
-  const categories = Object.entries(CATEGORY_COLORS).map(([name, color]) => ({
-    name,
-    color,
-  }));
+  // Create app settings for admin
+  await prisma.appSettings.upsert({
+    where: { userId: admin.id },
+    update: {},
+    create: {
+      userId: admin.id,
+      currency: "USD",
+      aiEnabled: false,
+    },
+  });
+  console.log("Created admin settings");
 
-  for (const cat of categories) {
+  // Create demo user (optional)
+  const demoPassword = await bcrypt.hash("demo-moneystyle-2026", 12);
+  const demo = await prisma.user.upsert({
+    where: { email: "demo@moneystyle.app" },
+    update: {},
+    create: {
+      email: "demo@moneystyle.app",
+      name: "Demo User",
+      hashedPassword: demoPassword,
+      role: "user",
+      onboardingCompleted: true,
+    },
+  });
+  console.log(`Demo user: ${demo.email}`);
+
+  // Create categories and account for demo user
+  for (const cat of DEFAULT_CATEGORIES) {
     await prisma.category.upsert({
-      where: { userId_name: { userId, name: cat.name } },
+      where: { userId_name: { userId: demo.id, name: cat.name } },
       update: { color: cat.color },
-      create: { name: cat.name, color: cat.color, userId },
+      create: { name: cat.name, color: cat.color, userId: demo.id },
     });
   }
-  console.log(`Created ${categories.length} categories`);
 
-  // Get category map
-  const allCategories = await prisma.category.findMany();
-  const categoryMap = new Map(allCategories.map((c) => [c.name, c.id]));
+  await prisma.account.upsert({
+    where: { id: "demo_cash" },
+    update: {},
+    create: {
+      id: "demo_cash",
+      name: "Cash",
+      type: "cash",
+      color: "#22c55e",
+      userId: demo.id,
+    },
+  });
 
-  // Insert transactions in batches
-  const BATCH_SIZE = 100;
-  let inserted = 0;
+  await prisma.appSettings.upsert({
+    where: { userId: demo.id },
+    update: {},
+    create: {
+      userId: demo.id,
+      currency: "USD",
+      aiEnabled: false,
+    },
+  });
+  console.log("Created demo user data");
 
-  for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
-    const batch = transactions.slice(i, i + BATCH_SIZE);
-
-    await prisma.$transaction(
-      batch.map((t) =>
-        prisma.transaction.upsert({
-          where: { id: t.id as string },
-          update: {},
-          create: {
-            id: t.id as string,
-            date: new Date(t.date as string),
-            time: (t.time as string) || null,
-            amount: t.amount != null ? t.amount as number : null,
-            currency: (t.currency as string) || "AED",
-            type: t.type as string,
-            categoryId: categoryMap.get(t.category as string) || null,
-            accountId: DEFAULT_ACCOUNT_ID,
-            merchant: (t.merchant as string) || null,
-            description: (t.description as string) || null,
-            items: normalizeItems(t.items),
-            source: (t.source as string) || null,
-            hasReceipt: (t.hasReceipt as boolean) || false,
-            mediaFiles: Array.isArray(t.mediaFiles)
-              ? (t.mediaFiles as string[])
-              : [],
-            userId,
-          },
-        })
-      )
-    );
-
-    inserted += batch.length;
-    console.log(`Inserted ${inserted}/${transactions.length} transactions`);
-  }
-
-  console.log("Seeding complete!");
+  console.log("\nSeeding complete!");
+  console.log(`  Admin: ${adminEmail} / ${adminPassword}`);
+  console.log(`  Demo:  demo@moneystyle.app / demo-moneystyle-2026`);
 }
 
 main()

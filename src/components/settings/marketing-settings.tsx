@@ -513,21 +513,140 @@ function copySubmitText() {
   toast.success("Submit text copied to clipboard!");
 }
 
+const STRATEGY_PHASES = [
+  {
+    phase: "Phase 1 — Launch (Week 1-2)",
+    budget: "$0",
+    badge: "Free",
+    badgeColor: "bg-emerald-500/10 text-emerald-700",
+    steps: [
+      "Make GitHub repo public — get stars from dev communities",
+      "Post on Hacker News: 'Show HN: MoneyStyle — Free AI finance tracker with 30+ features'",
+      "Submit to Product Hunt (Tuesday/Wednesday, 00:01 AM PST)",
+      "Post on Reddit: r/personalfinance, r/selfhosted, r/SideProject (story format, not promo)",
+      "Twitter/X thread: #buildinpublic — share the journey, not the product",
+      "Submit to all free Auto-Promote platforms below (AlternativeTo, SaaSHub, Futurepedia)",
+    ],
+  },
+  {
+    phase: "Phase 2 — Traction (Week 3-6)",
+    budget: "$3-5/day",
+    badge: "$90-150/mo",
+    badgeColor: "bg-blue-500/10 text-blue-700",
+    steps: [
+      "Start Meta Ads (Facebook/Instagram): $2/day, target Personal Finance interest, age 22-45",
+      "Start Bing Ads: $1/day — import from Google Ads, 30-50% cheaper clicks",
+      "Write 2 blog posts: 'Free YNAB Alternative' and 'AI Receipt Scanning'",
+      "Submit to newsletters: Ben's Bites, TLDR, Console.dev",
+      "LinkedIn personal post: 'I built this in my free time and deployed it'",
+      "Ask first 50 users for feedback — iterate fast",
+    ],
+  },
+  {
+    phase: "Phase 3 — Growth (Month 2-3)",
+    budget: "$5-10/day",
+    badge: "$150-300/mo",
+    badgeColor: "bg-amber-500/10 text-amber-700",
+    steps: [
+      "Add Google Search Ads: $2-3/day, keywords 'free budget app', 'YNAB alternative'",
+      "YouTube Shorts: 15-sec feature demos (receipt scan, voice, money map)",
+      "TikTok organic: 'This free app replaces YNAB' style videos",
+      "Reddit Ads: $1/day targeting r/personalfinance, r/ynab",
+      "Start collecting emails for newsletter on landing page",
+      "Submit to directories: G2, Capterra, GetApp for SEO",
+    ],
+  },
+  {
+    phase: "Phase 4 — Scale (Month 4+)",
+    budget: "$10-20/day",
+    badge: "$300-600/mo",
+    badgeColor: "bg-purple-500/10 text-purple-700",
+    steps: [
+      "Scale what works: double budget on best-performing ad platform",
+      "Quora Ads: target questions like 'best free budget app'",
+      "Influencer outreach: personal finance YouTubers for review",
+      "Telegram groups: MENA market (Persian, Arabic finance groups)",
+      "Consider AppSumo for lifetime deal campaign",
+      "A/B test landing page: try different headlines and CTAs",
+    ],
+  },
+];
+
+const KEY_METRICS = [
+  { label: "Don't pay more than", value: "$0.50/click", note: "for Meta/TikTok ads" },
+  { label: "Don't pay more than", value: "$1.50/click", note: "for Google Search ads" },
+  { label: "Target signup rate", value: "10-20%", note: "of landing page visitors" },
+  { label: "Target activation", value: "30%", note: "users who add 5+ transactions" },
+  { label: "Best free channel", value: "Product Hunt", note: "can get 500+ signups in 1 day" },
+  { label: "Best paid channel", value: "Meta Ads", note: "cheapest CPC, best targeting" },
+];
+
 export function MarketingSettings() {
   return (
     <div className="space-y-6">
+      {/* Strategy Guide */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Rocket className="h-4 w-4" />
+            Growth Strategy
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Follow these phases in order. Start with free channels, validate product-market fit, then scale with paid ads.
+          </p>
+          {STRATEGY_PHASES.map((phase) => (
+            <div key={phase.phase} className="rounded-lg border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">{phase.phase}</p>
+                <Badge variant="secondary" className={phase.badgeColor}>{phase.badge}</Badge>
+              </div>
+              <div className="space-y-1">
+                {phase.steps.map((step, i) => (
+                  <div key={i} className="flex items-start gap-2 text-xs">
+                    <Circle className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground" />
+                    <span>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Key Metrics */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Search className="h-4 w-4" />
+            Key Benchmarks
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {KEY_METRICS.map((m) => (
+              <div key={m.label + m.value} className="rounded-lg border p-2.5 space-y-0.5">
+                <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                <p className="text-sm font-bold">{m.value}</p>
+                <p className="text-[10px] text-muted-foreground">{m.note}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Megaphone className="h-4 w-4" />
-            Marketing & Campaigns
+            Platforms & Campaigns
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
             Submit MoneyStyle to these platforms to get users. Each platform has step-by-step instructions.
-            Start with the free auto-promote platforms, then move to paid ads.
           </p>
 
           <div className="flex flex-wrap gap-2">

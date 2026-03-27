@@ -505,6 +505,8 @@ const SOCIAL_AND_CAMPAIGN_PLATFORMS: Platform[] = [
 // Merge all platforms
 const ALL_PLATFORMS = [...PLATFORMS, ...SOCIAL_AND_CAMPAIGN_PLATFORMS];
 
+const PLATFORM_TYPES = ["auto-promote", "social-media", "campaign-platform", "newsletter", "directory", "paid-ads"] as const;
+
 const TYPE_LABELS: Record<string, { label: string; color: string; icon: typeof Rocket }> = {
   "auto-promote": { label: "Auto-Promote", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", icon: Rocket },
   newsletter: { label: "Newsletter", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400", icon: Mail },
@@ -899,7 +901,7 @@ export function MarketingSettings() {
       </Card>
 
       {/* Platform sections */}
-      {(["auto-promote", "social-media", "campaign-platform", "newsletter", "directory", "paid-ads"] as const).map((type) => {
+      {PLATFORM_TYPES.map((type) => {
         const typeInfo = TYPE_LABELS[type];
         const platforms = ALL_PLATFORMS.filter((p) => p.type === type);
         const TypeIcon = typeInfo.icon;

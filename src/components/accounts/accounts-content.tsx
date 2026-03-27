@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +9,7 @@ import { DeleteAccountDialog } from "./delete-account-dialog";
 import { getAccountsWithStats } from "@/actions/accounts";
 import { formatCurrency } from "@/lib/utils";
 import type { AccountWithStats } from "@/lib/types";
+import { useAsyncData } from "@/hooks/use-async-data";
 import { Plus, Pencil, Trash2, Landmark, Wallet, Bitcoin, ArrowLeftRight, Banknote, MoreHorizontal } from "lucide-react";
 
 const ACCOUNT_TYPE_META: Record<string, { label: string; icon: typeof Landmark }> = {
@@ -21,30 +22,17 @@ const ACCOUNT_TYPE_META: Record<string, { label: string; icon: typeof Landmark }
 };
 
 export function AccountsContent() {
-  const [accounts, setAccounts] = useState<AccountWithStats[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: accounts, loading, refresh } = useAsyncData(getAccountsWithStats, []);
   const [showCreate, setShowCreate] = useState(false);
   const [editAcc, setEditAcc] = useState<AccountWithStats | null>(null);
   const [deleteAcc, setDeleteAcc] = useState<AccountWithStats | null>(null);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    const data = await getAccountsWithStats();
-    setAccounts(data);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadData();
-  }, [loadData]);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">🏦 Accounts</h2>
-          <p className="text-muted-foreground">{accounts.length} accounts</p>
+          <p className="text-muted-foreground">{(accounts ?? []).length} accounts</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-4 w-4" />
@@ -60,7 +48,7 @@ export function AccountsContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {accounts.map((acc) => (
+          {(accounts ?? []).map((acc) => (
             <Card key={acc.id} className="group relative">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
@@ -115,7 +103,7 @@ export function AccountsContent() {
         <AccountFormDialog
           open={showCreate}
           onOpenChange={setShowCreate}
-          onSuccess={loadData}
+          onSuccess={refresh}
         />
       )}
 
@@ -124,17 +112,17 @@ export function AccountsContent() {
           account={editAcc}
           open={!!editAcc}
           onOpenChange={(open) => !open && setEditAcc(null)}
-          onSuccess={loadData}
+          onSuccess={refresh}
         />
       )}
 
       {deleteAcc && (
         <DeleteAccountDialog
           account={deleteAcc}
-          allAccounts={accounts}
+          allAccounts={accounts ?? []}
           open={!!deleteAcc}
           onOpenChange={(open) => !open && setDeleteAcc(null)}
-          onSuccess={loadData}
+          onSuccess={refresh}
         />
       )}
     </div>

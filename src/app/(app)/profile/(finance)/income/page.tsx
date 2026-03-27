@@ -1,33 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IncomeSourcesSection } from "@/components/profile/income-sources-section";
 import { ReservesSection } from "@/components/profile/reserves-section";
 import { getIncomeSources } from "@/actions/income-sources";
 import { getReserves } from "@/actions/reserves";
-import type { IncomeSourceData, ReserveData } from "@/lib/types";
 import { FeatureGate } from "@/components/layout/feature-gate";
+import { useAsyncMulti } from "@/hooks/use-async-data";
 
 export default function ProfileIncomePage() {
-  const [loading, setLoading] = useState(true);
-  const [incomeSources, setIncomeSources] = useState<IncomeSourceData[]>([]);
-  const [reserves, setReserves] = useState<ReserveData[]>([]);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    const [sources, res] = await Promise.all([
-      getIncomeSources(),
-      getReserves(),
-    ]);
-    setIncomeSources(sources);
-    setReserves(res);
-    setLoading(false);
+  const { data, loading, refresh } = useAsyncMulti({
+    incomeSources: getIncomeSources,
+    reserves: getReserves,
   }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   if (loading) {
     return (
@@ -41,8 +26,8 @@ export default function ProfileIncomePage() {
   return (
     <FeatureGate feature="profileIncome">
       <div className="space-y-6">
-        <IncomeSourcesSection sources={incomeSources} onRefresh={loadData} />
-        <ReservesSection reserves={reserves} onRefresh={loadData} />
+        <IncomeSourcesSection sources={data?.incomeSources ?? []} onRefresh={refresh} />
+        <ReservesSection reserves={data?.reserves ?? []} onRefresh={refresh} />
       </div>
     </FeatureGate>
   );

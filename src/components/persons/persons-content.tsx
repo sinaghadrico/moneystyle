@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useAsyncData } from "@/hooks/use-async-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,25 +29,12 @@ type PersonWithDebt = {
 };
 
 export function PersonsContent() {
-  const [persons, setPersons] = useState<PersonWithDebt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: persons, loading, refresh } = useAsyncData(getPersonsWithDebt, []);
   const [showCreate, setShowCreate] = useState(false);
   const [editPerson, setEditPerson] = useState<PersonWithDebt | null>(null);
   const [deletingPerson, setDeletingPerson] = useState<PersonWithDebt | null>(
     null,
   );
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    const data = await getPersonsWithDebt();
-    setPersons(data);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadData();
-  }, [loadData]);
 
   const handleDelete = async () => {
     if (!deletingPerson) return;
@@ -55,7 +43,7 @@ export function PersonsContent() {
       toast.error("❌ " + String(result.error));
     } else {
       toast.success("🗑️ Person deleted");
-      loadData();
+      refresh();
     }
     setDeletingPerson(null);
   };
@@ -65,7 +53,7 @@ export function PersonsContent() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">👥 Persons</h2>
-          <p className="text-muted-foreground">{persons.length} persons</p>
+          <p className="text-muted-foreground">{(persons ?? []).length} persons</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="mr-1 h-4 w-4" />
@@ -79,7 +67,7 @@ export function PersonsContent() {
             <Skeleton key={i} className="h-[120px] rounded-lg" />
           ))}
         </div>
-      ) : persons.length === 0 ? (
+      ) : (persons ?? []).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-4xl mb-3">👥</p>
           <p className="text-lg font-medium">No persons yet</p>
@@ -87,7 +75,7 @@ export function PersonsContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {persons.map((p) => (
+          {(persons ?? []).map((p) => (
             <Card key={p.id} className="group relative">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
@@ -155,7 +143,7 @@ export function PersonsContent() {
         <PersonFormDialog
           open={showCreate}
           onOpenChange={setShowCreate}
-          onSuccess={() => loadData()}
+          onSuccess={() => refresh()}
         />
       )}
 
@@ -164,7 +152,7 @@ export function PersonsContent() {
           person={editPerson}
           open={!!editPerson}
           onOpenChange={(open) => !open && setEditPerson(null)}
-          onSuccess={() => loadData()}
+          onSuccess={() => refresh()}
         />
       )}
 

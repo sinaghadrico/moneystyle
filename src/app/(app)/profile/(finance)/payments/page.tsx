@@ -1,33 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InstallmentsSection } from "@/components/profile/installments-section";
 import { BillsSection } from "@/components/profile/bills-section";
 import { getInstallments } from "@/actions/installments";
 import { getBills } from "@/actions/bills";
-import type { InstallmentData, BillData } from "@/lib/types";
 import { FeatureGate } from "@/components/layout/feature-gate";
+import { useAsyncMulti } from "@/hooks/use-async-data";
 
 export default function ProfilePaymentsPage() {
-  const [loading, setLoading] = useState(true);
-  const [installments, setInstallments] = useState<InstallmentData[]>([]);
-  const [bills, setBills] = useState<BillData[]>([]);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    const [inst, bl] = await Promise.all([
-      getInstallments(),
-      getBills(),
-    ]);
-    setInstallments(inst);
-    setBills(bl);
-    setLoading(false);
+  const { data, loading, refresh } = useAsyncMulti({
+    installments: getInstallments,
+    bills: getBills,
   }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   if (loading) {
     return (
@@ -41,8 +26,8 @@ export default function ProfilePaymentsPage() {
   return (
     <FeatureGate feature="profilePayments">
       <div className="space-y-6">
-        <InstallmentsSection installments={installments} onRefresh={loadData} />
-        <BillsSection bills={bills} onRefresh={loadData} />
+        <InstallmentsSection installments={data?.installments ?? []} onRefresh={refresh} />
+        <BillsSection bills={data?.bills ?? []} onRefresh={refresh} />
       </div>
     </FeatureGate>
   );

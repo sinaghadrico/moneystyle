@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -66,13 +66,18 @@ const axisStyle = {
   fill: "var(--muted-foreground)",
 };
 
-export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
-  if (data.length === 0) return null;
+const cellInteractiveStyle = {
+  transition: "opacity 0.2s",
+  cursor: "pointer" as const,
+};
 
-  const chartData = data.map((d) => ({
-    ...d,
-    label: formatMonth(d.month),
-  }));
+export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
+  const chartData = useMemo(
+    () => data.map((d) => ({ ...d, label: formatMonth(d.month) })),
+    [data],
+  );
+
+  if (data.length === 0) return null;
 
   return (
     <Card className="overflow-hidden">
@@ -146,7 +151,7 @@ export function MonthlyBarChart({ data }: { data: MonthlyData[] }) {
 
 export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const total = data.reduce((s, d) => s + d.total, 0);
+  const total = useMemo(() => data.reduce((s, d) => s + d.total, 0), [data]);
 
   if (data.length === 0) return null;
 
@@ -182,7 +187,7 @@ export function CategoryDonut({ data }: { data: CategoryBreakdown[] }) {
                       opacity={
                         activeIndex === null || activeIndex === index ? 1 : 0.4
                       }
-                      style={{ transition: "opacity 0.2s", cursor: "pointer" }}
+                      style={cellInteractiveStyle}
                     />
                   ))}
                 </Pie>
@@ -337,10 +342,10 @@ export function MonthlyCategoryChart({
     }
   };
 
-  const chartData = data.map((d) => ({
-    ...d,
-    label: formatMonth(d.month),
-  }));
+  const chartData = useMemo(
+    () => data.map((d) => ({ ...d, label: formatMonth(d.month) })),
+    [data],
+  );
 
   return (
     <Card className="overflow-hidden">
@@ -435,13 +440,17 @@ export function MonthlyCategoryChart({
 }
 
 export function MonthlyTrendChart({ data }: { data: MonthlyData[] }) {
-  if (data.length === 0) return null;
+  const chartData = useMemo(
+    () =>
+      data.map((d) => ({
+        ...d,
+        label: formatMonth(d.month),
+        net: Math.round((d.income - d.expense) * 100) / 100,
+      })),
+    [data],
+  );
 
-  const chartData = data.map((d) => ({
-    ...d,
-    label: formatMonth(d.month),
-    net: Math.round((d.income - d.expense) * 100) / 100,
-  }));
+  if (data.length === 0) return null;
 
   return (
     <Card className="overflow-hidden">

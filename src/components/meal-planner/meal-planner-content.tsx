@@ -37,6 +37,8 @@ const MEAL_ICONS = {
   dinner: Moon,
 } as const;
 
+const MEAL_KEYS = ["breakfast", "lunch", "dinner"] as const;
+
 const MEAL_LABELS: Record<string, string> = {
   breakfast: "Breakfast",
   lunch: "Lunch",
@@ -202,7 +204,7 @@ export function MealPlannerContent() {
             <Card key={day.day}>
               <CardContent className="pt-4 pb-4 space-y-3">
                 <h3 className="font-bold text-base">{day.day}</h3>
-                {(["breakfast", "lunch", "dinner"] as const).map((mealKey) => {
+                {MEAL_KEYS.map((mealKey) => {
                   const meal = day.meals?.[mealKey];
                   if (!meal) return null;
                   const Icon = MEAL_ICONS[mealKey];

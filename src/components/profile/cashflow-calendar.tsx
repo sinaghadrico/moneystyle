@@ -290,7 +290,7 @@ export function CashflowCalendar({ data, month, onMonthChange }: Props) {
 
       {/* Legend */}
       <div className="flex flex-wrap justify-center gap-3">
-        {(["expense", "deposit", "income", "bill", "installment"] as const).map((kind) => (
+        {ALL_KINDS.map((kind) => (
           <div key={kind} className="flex items-center gap-1">
             <span className={cn("h-2 w-2 rounded-full", KIND_CONFIG[kind].color)} />
             <span className="text-[10px] text-muted-foreground">{KIND_CONFIG[kind].label}</span>

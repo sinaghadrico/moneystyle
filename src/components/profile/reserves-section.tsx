@@ -14,7 +14,7 @@ import {
 import { ReserveDialog } from "./reserve-dialog";
 import { RecordReserveDialog } from "./record-reserve-dialog";
 import { ReserveHistoryDialog } from "./reserve-history-dialog";
-import { deleteReserve, refreshInvestmentPrices } from "@/actions/profile";
+import { deleteReserve, refreshInvestmentPrices } from "@/actions/reserves";
 import { formatCurrency } from "@/lib/utils";
 import type { ReserveData } from "@/lib/types";
 import { Plus, Pencil, Trash2, MapPin, RefreshCw, History, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
@@ -90,7 +90,9 @@ export function ReservesSection({
     setRefreshing(true);
     const result = await refreshInvestmentPrices();
     setRefreshing(false);
-    if (result.updated > 0) {
+    if ("error" in result) {
+      toast.error(result.error);
+    } else if (result.updated > 0) {
       toast.success(`Updated ${result.updated} investment${result.updated > 1 ? "s" : ""}`);
       onRefresh();
     } else {

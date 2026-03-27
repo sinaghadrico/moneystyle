@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IncomeSourcesSection } from "@/components/profile/income-sources-section";
 import { ReservesSection } from "@/components/profile/reserves-section";
-import { getIncomeSources, getReserves } from "@/actions/profile";
+import { getIncomeSources } from "@/actions/income-sources";
+import { getReserves } from "@/actions/reserves";
 import type { IncomeSourceData, ReserveData } from "@/lib/types";
 import { FeatureGate } from "@/components/layout/feature-gate";
 

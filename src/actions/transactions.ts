@@ -191,54 +191,59 @@ export async function createTransaction(
 
   const values = parsed.data;
 
-  const tx = await prisma.transaction.create({
-    data: {
-      userId,
-      date: values.date,
-      time: values.time ?? null,
-      amount: values.amount ?? null,
-      currency: values.currency,
-      type: values.type,
-      categoryId: values.categoryId ?? null,
-      accountId: values.accountId,
-      merchant: values.merchant ?? null,
-      description: values.description ?? null,
-      location: values.location ?? null,
-      latitude: values.latitude ?? null,
-      longitude: values.longitude ?? null,
-      source: "manual",
-      spreadMonths: values.spreadMonths ?? null,
-    },
-  });
-
-  if (values.tagIds && values.tagIds.length > 0) {
-    await prisma.transactionTag.createMany({
-      data: values.tagIds.map((tagId) => ({ transactionId: tx.id, tagId })),
+  try {
+    const tx = await prisma.transaction.create({
+      data: {
+        userId,
+        date: values.date,
+        time: values.time ?? null,
+        amount: values.amount ?? null,
+        currency: values.currency,
+        type: values.type,
+        categoryId: values.categoryId ?? null,
+        accountId: values.accountId,
+        merchant: values.merchant ?? null,
+        description: values.description ?? null,
+        location: values.location ?? null,
+        latitude: values.latitude ?? null,
+        longitude: values.longitude ?? null,
+        source: "manual",
+        spreadMonths: values.spreadMonths ?? null,
+      },
     });
-  }
 
-  // Check anomaly and send Telegram alert for web-created transactions
-  if (values.type === "expense" && values.amount && values.amount > 0) {
-    const settings = await getSettings();
-    const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-    if (chatId && settings.notifyWebTransaction) {
-      const warning = await checkTransactionAnomaly(
-        values.amount,
-        values.categoryId ?? null,
-        values.merchant ?? null,
-      );
-      if (warning) {
-        const tpl = await getNotificationTemplate(
-          NOTIFICATION_TEMPLATE_KEYS.webTransactionAlert,
+    if (values.tagIds && values.tagIds.length > 0) {
+      await prisma.transactionTag.createMany({
+        data: values.tagIds.map((tagId) => ({ transactionId: tx.id, tagId })),
+      });
+    }
+
+    // Check anomaly and send Telegram alert for web-created transactions
+    if (values.type === "expense" && values.amount && values.amount > 0) {
+      const settings = await getSettings();
+      const chatId = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+      if (chatId && settings.notifyWebTransaction) {
+        const warning = await checkTransactionAnomaly(
+          values.amount,
+          values.categoryId ?? null,
+          values.merchant ?? null,
         );
-        const msg = renderTemplate(tpl, {
-          amount: values.amount,
-          merchant: values.merchant ? ` at ${values.merchant}` : "",
-          warning,
-        });
-        await sendTelegramMessage(chatId, msg);
+        if (warning) {
+          const tpl = await getNotificationTemplate(
+            NOTIFICATION_TEMPLATE_KEYS.webTransactionAlert,
+          );
+          const msg = renderTemplate(tpl, {
+            amount: values.amount,
+            merchant: values.merchant ? ` at ${values.merchant}` : "",
+            warning,
+          });
+          await sendTelegramMessage(chatId, msg);
+        }
       }
     }
+  } catch (err) {
+    console.error("Failed to create transaction:", err);
+    return { error: { _form: ["Failed to create transaction. Please try again."] } };
   }
 
   revalidatePath("/transactions");
@@ -298,18 +303,23 @@ export async function updateTransaction(
     updateData.spreadMonths = values.spreadMonths;
   }
 
-  await prisma.transaction.update({
-    where: { id, userId },
-    data: updateData,
-  });
+  try {
+    await prisma.transaction.update({
+      where: { id, userId },
+      data: updateData,
+    });
 
-  if (values.tagIds !== undefined) {
-    await prisma.transactionTag.deleteMany({ where: { transactionId: id } });
-    if (values.tagIds.length > 0) {
-      await prisma.transactionTag.createMany({
-        data: values.tagIds.map((tagId) => ({ transactionId: id, tagId })),
-      });
+    if (values.tagIds !== undefined) {
+      await prisma.transactionTag.deleteMany({ where: { transactionId: id } });
+      if (values.tagIds.length > 0) {
+        await prisma.transactionTag.createMany({
+          data: values.tagIds.map((tagId) => ({ transactionId: id, tagId })),
+        });
+      }
     }
+  } catch (err) {
+    console.error("Failed to update transaction:", err);
+    return { error: { _form: ["Failed to update transaction. Please try again."] } };
   }
 
   revalidatePath("/transactions");
@@ -325,13 +335,18 @@ export async function deleteTransactions(
   if (!ids.length) return { error: "No IDs provided" };
   if (ids.length > 100) return { error: "Too many IDs (max 100)" };
 
-  const { count } = await prisma.transaction.deleteMany({
-    where: { id: { in: ids }, userId },
-  });
+  try {
+    const { count } = await prisma.transaction.deleteMany({
+      where: { id: { in: ids }, userId },
+    });
 
-  revalidatePath("/transactions");
-  revalidatePath("/");
-  return { success: true, count };
+    revalidatePath("/transactions");
+    revalidatePath("/");
+    return { success: true, count };
+  } catch (err) {
+    console.error("Failed to delete transactions:", err);
+    return { error: "Failed to delete transactions. Please try again." };
+  }
 }
 
 export async function splitTransaction(
@@ -356,19 +371,24 @@ export async function splitTransaction(
     return { error: "Need at least 2 splits" };
   }
 
-  // Delete existing splits
-  await prisma.transactionSplit.deleteMany({ where: { transactionId } });
+  try {
+    // Delete existing splits
+    await prisma.transactionSplit.deleteMany({ where: { transactionId } });
 
-  // Create new splits
-  await prisma.transactionSplit.createMany({
-    data: data.splits.map((s) => ({
-      transactionId,
-      categoryId: s.categoryId,
-      personId: s.personId ?? null,
-      amount: s.amount,
-      description: s.description,
-    })),
-  });
+    // Create new splits
+    await prisma.transactionSplit.createMany({
+      data: data.splits.map((s) => ({
+        transactionId,
+        categoryId: s.categoryId,
+        personId: s.personId ?? null,
+        amount: s.amount,
+        description: s.description,
+      })),
+    });
+  } catch (err) {
+    console.error("Failed to split transaction:", err);
+    return { error: "Failed to split transaction. Please try again." };
+  }
 
   revalidatePath("/transactions");
   revalidatePath("/");
@@ -382,7 +402,12 @@ export async function unsplitTransaction(transactionId: string) {
   const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
   if (!tx) return { error: "Transaction not found" };
 
-  await prisma.transactionSplit.deleteMany({ where: { transactionId } });
+  try {
+    await prisma.transactionSplit.deleteMany({ where: { transactionId } });
+  } catch (err) {
+    console.error("Failed to unsplit transaction:", err);
+    return { error: "Failed to remove splits. Please try again." };
+  }
   revalidatePath("/transactions");
   revalidatePath("/");
   return { success: true };
@@ -435,21 +460,26 @@ export async function saveTransactionItems(
   const tx = await prisma.transaction.findUnique({ where: { id: transactionId, userId } });
   if (!tx) return { error: "Transaction not found" };
 
-  // Delete existing items then bulk create (same pattern as splitTransaction)
-  await prisma.transactionItem.deleteMany({ where: { transactionId } });
+  try {
+    // Delete existing items then bulk create (same pattern as splitTransaction)
+    await prisma.transactionItem.deleteMany({ where: { transactionId } });
 
-  if (items.length > 0) {
-    await prisma.transactionItem.createMany({
-      data: items.map((item, idx) => ({
-        transactionId,
-        name: item.name,
-        normalizedName: basicNormalize(item.name),
-        quantity: item.quantity,
-        unitPrice: item.unitPrice ?? null,
-        totalPrice: item.totalPrice,
-        sortOrder: idx,
-      })),
-    });
+    if (items.length > 0) {
+      await prisma.transactionItem.createMany({
+        data: items.map((item, idx) => ({
+          transactionId,
+          name: item.name,
+          normalizedName: basicNormalize(item.name),
+          quantity: item.quantity,
+          unitPrice: item.unitPrice ?? null,
+          totalPrice: item.totalPrice,
+          sortOrder: idx,
+        })),
+      });
+    }
+  } catch (err) {
+    console.error("Failed to save transaction items:", err);
+    return { error: "Failed to save items. Please try again." };
   }
 
   revalidatePath("/transactions");
@@ -468,13 +498,18 @@ export async function addTransactionMedia(
   });
   if (!tx) return { error: "Transaction not found" };
 
-  await prisma.transaction.update({
-    where: { id: transactionId, userId },
-    data: {
-      mediaFiles: { push: filePath },
-      hasReceipt: true,
-    },
-  });
+  try {
+    await prisma.transaction.update({
+      where: { id: transactionId, userId },
+      data: {
+        mediaFiles: { push: filePath },
+        hasReceipt: true,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to add transaction media:", err);
+    return { error: "Failed to add media. Please try again." };
+  }
 
   revalidatePath("/transactions");
   return { success: true };
@@ -494,13 +529,18 @@ export async function removeTransactionMedia(
 
   const updated = tx.mediaFiles.filter((f) => f !== filePath);
 
-  await prisma.transaction.update({
-    where: { id: transactionId, userId },
-    data: {
-      mediaFiles: updated,
-      hasReceipt: updated.length > 0,
-    },
-  });
+  try {
+    await prisma.transaction.update({
+      where: { id: transactionId, userId },
+      data: {
+        mediaFiles: updated,
+        hasReceipt: updated.length > 0,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to remove transaction media:", err);
+    return { error: "Failed to remove media. Please try again." };
+  }
 
   // Delete from storage (best-effort)
   try {
@@ -517,13 +557,18 @@ export async function confirmTransactions(ids: string[]) {
   const userId = await requireAuth();
   if (!ids.length) return { count: 0 };
 
-  const result = await prisma.transaction.updateMany({
-    where: { id: { in: ids }, userId },
-    data: { confirmed: true },
-  });
+  try {
+    const result = await prisma.transaction.updateMany({
+      where: { id: { in: ids }, userId },
+      data: { confirmed: true },
+    });
 
-  revalidatePath("/transactions");
-  return { count: result.count };
+    revalidatePath("/transactions");
+    return { count: result.count };
+  } catch (err) {
+    console.error("Failed to confirm transactions:", err);
+    return { error: "Failed to confirm transactions. Please try again." };
+  }
 }
 
 export async function getUnconfirmedCount() {
@@ -539,10 +584,15 @@ export async function setTransactionMood(transactionId: string, mood: string) {
   if (!validMoods.includes(mood)) {
     return { error: "Invalid mood" };
   }
-  await prisma.transaction.update({
-    where: { id: transactionId, userId },
-    data: { mood },
-  });
+  try {
+    await prisma.transaction.update({
+      where: { id: transactionId, userId },
+      data: { mood },
+    });
+  } catch (err) {
+    console.error("Failed to set transaction mood:", err);
+    return { error: "Failed to set mood. Please try again." };
+  }
   revalidatePath("/transactions");
   revalidatePath("/");
   return { success: true };
@@ -672,10 +722,15 @@ export async function setTransactionLocation(
 ) {
   const userId = await requireAuth();
 
-  await prisma.transaction.update({
-    where: { id: transactionId, userId },
-    data: { location: location || null },
-  });
+  try {
+    await prisma.transaction.update({
+      where: { id: transactionId, userId },
+      data: { location: location || null },
+    });
+  } catch (err) {
+    console.error("Failed to set transaction location:", err);
+    return { error: "Failed to set location. Please try again." };
+  }
 
   revalidatePath("/transactions");
   revalidatePath("/money-map");

@@ -69,7 +69,12 @@ export async function createCategory(data: Record<string, unknown>) {
     return { error: { name: ["Category already exists"] } };
   }
 
-  await prisma.category.create({ data: { ...parsed.data, userId } });
+  try {
+    await prisma.category.create({ data: { ...parsed.data, userId } });
+  } catch (err) {
+    console.error("Failed to create category:", err);
+    return { error: "Failed to create category. Please try again." };
+  }
 
   revalidatePath("/categories");
   revalidatePath("/");
@@ -95,10 +100,15 @@ export async function updateCategory(
     }
   }
 
-  await prisma.category.update({
-    where: { id, userId },
-    data: parsed.data,
-  });
+  try {
+    await prisma.category.update({
+      where: { id, userId },
+      data: parsed.data,
+    });
+  } catch (err) {
+    console.error("Failed to update category:", err);
+    return { error: "Failed to update category. Please try again." };
+  }
 
   revalidatePath("/categories");
   revalidatePath("/");
@@ -116,19 +126,24 @@ export async function deleteCategory(id: string, reassignToId?: string) {
     return { error: "Category not found" };
   }
 
-  if (category._count.transactions > 0 && reassignToId) {
-    await prisma.transaction.updateMany({
-      where: { categoryId: id, userId },
-      data: { categoryId: reassignToId },
-    });
-  } else if (category._count.transactions > 0) {
-    await prisma.transaction.updateMany({
-      where: { categoryId: id, userId },
-      data: { categoryId: null },
-    });
-  }
+  try {
+    if (category._count.transactions > 0 && reassignToId) {
+      await prisma.transaction.updateMany({
+        where: { categoryId: id, userId },
+        data: { categoryId: reassignToId },
+      });
+    } else if (category._count.transactions > 0) {
+      await prisma.transaction.updateMany({
+        where: { categoryId: id, userId },
+        data: { categoryId: null },
+      });
+    }
 
-  await prisma.category.delete({ where: { id, userId } });
+    await prisma.category.delete({ where: { id, userId } });
+  } catch (err) {
+    console.error("Failed to delete category:", err);
+    return { error: "Failed to delete category. Please try again." };
+  }
 
   revalidatePath("/categories");
   revalidatePath("/transactions");

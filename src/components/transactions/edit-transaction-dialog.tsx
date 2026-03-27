@@ -35,7 +35,7 @@ import {
   linkTransactionToNewPayment,
   unlinkTransactionFromPayment,
 } from "@/actions/profile";
-import type { ActivePaymentTarget } from "@/actions/profile";
+import type { ActivePaymentTarget } from "@/lib/types";
 import type { TransactionPaymentLink } from "@/lib/types";
 
 function isImage(path: string): boolean {

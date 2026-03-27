@@ -2,17 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionFilters } from "./transaction-filters";
 import {
   ResponsiveDialog,
@@ -37,9 +28,9 @@ import { MediaViewerDialog } from "./media-viewer-dialog";
 import { MergeDialog } from "./merge-dialog";
 import { SplitDialog } from "./split-dialog";
 import { ItemsDialog } from "./items-dialog";
-import { SwipeableCard } from "./swipeable-card";
-import { MoodPicker } from "./mood-picker";
 import { BulkImportDialog } from "./bulk-import-dialog";
+import { TransactionsMobileList } from "./transactions-mobile-list";
+import { TransactionsDesktopTable } from "./transactions-desktop-table";
 import {
   getTransactions,
   getCategories,
@@ -51,62 +42,22 @@ import {
 import { getPersons } from "@/actions/persons";
 import type { TransactionWithCategory, PaginatedResult } from "@/lib/types";
 import type { Category, Account, Person } from "@prisma/client";
-import { formatCurrency, formatDate } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useAppSettings } from "@/components/settings/settings-provider";
 import {
   ChevronLeft,
   ChevronRight,
-  ArrowUpDown,
-  Pencil,
-  Image as ImageIcon,
-  FileText,
   Merge,
   Plus,
   Trash2,
-  Split,
-  List,
   Loader2,
-  ArrowDown,
   X,
   Upload,
   CheckCheck,
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
-
-function SortableHeader({
-  field,
-  children,
-  onSort,
-}: {
-  field: string;
-  children: React.ReactNode;
-  onSort: (field: string) => void;
-}) {
-  return (
-    <TableHead>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-3 h-8"
-        onClick={() => onSort(field)}
-      >
-        {children}
-        <ArrowUpDown className="ml-1 h-3 w-3" />
-      </Button>
-    </TableHead>
-  );
-}
-
-const TYPE_COLORS: Record<string, string> = {
-  income:
-    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  expense: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-  transfer: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  other: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-};
 
 function buildUrl(params: Record<string, string | number>) {
   const sp = new URLSearchParams();
@@ -400,9 +351,13 @@ export function TransactionsContent({
     setConfirming(true);
     const res = await confirmTransactions(ids);
     setConfirming(false);
-    toast.success(`Confirmed ${res.count} transaction${res.count > 1 ? "s" : ""}`);
-    setSelected(new Set());
-    loadData();
+    if ("error" in res) {
+      toast.error(res.error);
+    } else {
+      toast.success(`Confirmed ${res.count} transaction${res.count > 1 ? "s" : ""}`);
+      setSelected(new Set());
+      loadData();
+    }
   };
 
   const selectedTransactions =
@@ -662,456 +617,48 @@ export function TransactionsContent({
       </div>
 
       {/* Mobile card view with pull-to-refresh */}
-      <div
-        ref={containerRef}
+      <TransactionsMobileList
+        result={result}
+        loading={loading}
+        page={page}
+        selected={selected}
+        showMood={showMood}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canSplit={canSplit}
+        canItems={canItems}
+        containerRef={containerRef}
+        pullDistance={pullDistance}
+        refreshing={refreshing}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
-        className="space-y-3 md:hidden"
-      >
-        {/* Pull-to-refresh indicator */}
-        {(pullDistance > 0 || refreshing) && (
-          <div
-            className="flex items-center justify-center overflow-hidden transition-all"
-            style={{ height: refreshing ? 40 : pullDistance }}
-          >
-            {refreshing ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : (
-              <ArrowDown
-                className="h-5 w-5 text-muted-foreground transition-transform"
-                style={{ transform: `rotate(${pullDistance >= 72 ? 180 : 0}deg)` }}
-              />
-            )}
-          </div>
-        )}
-        {loading
-          ? [...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-[120px] rounded-lg" />
-            ))
-          : result?.data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-4xl mb-3">📭</p>
-              <p className="text-lg font-medium">No transactions yet</p>
-              <p className="text-sm text-muted-foreground mt-1">Add your first transaction to get started</p>
-            </div>
-          )
-          : result?.data.map((tx, txIdx) => (
-              <div key={tx.id}>
-              <SwipeableCard
-                onTap={() => toggleSelect(tx.id)}
-                showHint={txIdx === 0 && page === 1}
-                actionWidth={tx.amount != null && tx.amount > 0 ? 280 : 210}
-                actions={
-                  <div className="flex h-full items-stretch">
-                    {canEdit && (
-                      <button
-                        className="flex w-[70px] items-center justify-center bg-blue-500 text-white"
-                        onClick={() => setEditTx(tx)}
-                      >
-                        <Pencil className="h-5 w-5" />
-                      </button>
-                    )}
-                    {canItems && (
-                      <button
-                        className="flex w-[70px] items-center justify-center bg-violet-500 text-white"
-                        onClick={() => setItemsTx(tx)}
-                      >
-                        <List className="h-5 w-5" />
-                      </button>
-                    )}
-                    {canSplit && tx.amount != null && tx.amount > 0 && (
-                      <button
-                        className="flex w-[70px] items-center justify-center bg-amber-500 text-white"
-                        onClick={() => setSplitTx(tx)}
-                      >
-                        <Split className="h-5 w-5" />
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button
-                        className="flex w-[70px] items-center justify-center bg-red-500 text-white"
-                        onClick={() => setDeleteIds([tx.id])}
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    )}
-                  </div>
-                }
-              >
-                <div
-                  className={`p-3 space-y-2 ${selected.has(tx.id) ? "bg-primary/5" : ""}`}
-                >
-                  <div className="flex items-start gap-2 min-w-0">
-                    <div
-                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
-                        selected.has(tx.id)
-                          ? "border-primary bg-primary"
-                          : "border-muted-foreground/30"
-                      }`}
-                    >
-                      {selected.has(tx.id) && (
-                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">
-                          {tx.amount != null ? formatCurrency(Number(tx.amount), tx.currency) : "-"}
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] ${TYPE_COLORS[tx.type] || TYPE_COLORS.other}`}
-                        >
-                          {tx.type}
-                        </Badge>
-                        {tx.spreadMonths && tx.spreadMonths > 1 && (
-                          <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                            {tx.spreadMonths}mo
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {formatDate(tx.date)}
-                        {tx.time && ` ${tx.time}`}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm pl-7">
-                    {tx.splits && tx.splits.length > 0 ? (
-                      <div className="space-y-0.5 w-full">
-                        {tx.splits.map((s, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-xs">
-                            <div
-                              className="h-2 w-2 rounded-full"
-                              style={{ backgroundColor: s.categoryColor ?? "#6b7280" }}
-                            />
-                            <span>{s.categoryName ?? "None"}</span>
-                            {s.personName && (
-                              <span
-                                className="rounded px-1 text-[10px]"
-                                style={{ backgroundColor: (s.personColor ?? "#6b7280") + "20", color: s.personColor ?? "#6b7280" }}
-                              >
-                                {s.personName}
-                              </span>
-                            )}
-                            <span className="text-muted-foreground">({formatCurrency(s.amount, tx.currency)})</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : tx.category ? (
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.category.color }} />
-                        <span>{tx.category.name}</span>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tx.account.color }} />
-                      <span>{tx.account.name}</span>
-                    </div>
-                    {tx.merchant && (
-                      <span className="text-muted-foreground truncate">{tx.merchant}</span>
-                    )}
-                    {tx.tags && tx.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {tx.tags.map((tag) => (
-                          <Badge
-                            key={tag.id}
-                            variant="secondary"
-                            className="text-[10px] px-1.5 py-0"
-                            style={{ backgroundColor: tag.color + "20", color: tag.color, borderColor: tag.color }}
-                          >
-                            {tag.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    {(tx.lineItemCount ?? 0) > 0 && (
-                      <Badge variant="secondary" className="text-[10px] gap-1 px-1.5 py-0">
-                        <List className="h-3 w-3" />
-                        {tx.lineItemCount}
-                      </Badge>
-                    )}
-                    {tx.mediaFiles.length > 0 && (
-                      <button
-                        className="relative z-10 inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[10px] text-muted-foreground active:bg-muted/80"
-                        onPointerDownCapture={(e) => e.stopPropagation()}
-                        onClick={(e) => { e.stopPropagation(); setViewMedia(tx.mediaFiles); setViewMediaTxId(tx.id); }}
-                      >
-                        {tx.mediaFiles.some((f) => /\.(jpg|jpeg|png)$/i.test(f)) ? (
-                          <ImageIcon className="h-3.5 w-3.5" />
-                        ) : (
-                          <FileText className="h-3.5 w-3.5" />
-                        )}
-                        {tx.mediaFiles.length > 1 && tx.mediaFiles.length}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </SwipeableCard>
-              {/* Mood Picker — outside SwipeableCard so taps work */}
-              {showMood && (
-              <div className="pl-10 pb-2 -mt-1">
-                <MoodPicker
-                  transactionId={tx.id}
-                  currentMood={(tx as Record<string, unknown>).mood as string | undefined}
-                />
-              </div>
-              )}
-            </div>
-            ))}
-      </div>
+        onToggleSelect={toggleSelect}
+        onEditTx={setEditTx}
+        onItemsTx={setItemsTx}
+        onSplitTx={setSplitTx}
+        onDeleteIds={setDeleteIds}
+        onViewMedia={(files, txId) => { setViewMedia(files); setViewMediaTxId(txId); }}
+      />
 
       {/* Desktop table view */}
-      <div className="hidden md:block rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-input accent-primary"
-                  checked={
-                    !!result &&
-                    result.data.length > 0 &&
-                    selected.size === result.data.length
-                  }
-                  onChange={toggleSelectAll}
-                />
-              </TableHead>
-              <SortableHeader field="date" onSort={handleSort}>
-                Date & Time
-              </SortableHeader>
-              <SortableHeader field="amount" onSort={handleSort}>
-                Amount
-              </SortableHeader>
-              <TableHead>Type</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead>Account</TableHead>
-              <SortableHeader field="merchant" onSort={handleSort}>
-                Merchant
-              </SortableHeader>
-              <TableHead className="hidden lg:table-cell">
-                Description
-              </TableHead>
-              {showMood && <TableHead>Mood</TableHead>}
-              <TableHead>Files</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading
-              ? [...Array(10)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(11)].map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : result?.data.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={11} className="h-40 text-center">
-                      <p className="text-4xl mb-2">📭</p>
-                      <p className="font-medium">No transactions yet</p>
-                      <p className="text-sm text-muted-foreground">Add your first transaction to get started</p>
-                    </TableCell>
-                  </TableRow>
-                )
-              : result?.data.map((tx) => (
-                  <TableRow
-                    key={tx.id}
-                    className={selected.has(tx.id) ? "bg-primary/5" : ""}
-                  >
-                    <TableCell>
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-input accent-primary"
-                        checked={selected.has(tx.id)}
-                        onChange={() => toggleSelect(tx.id)}
-                      />
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <div className="flex ">{formatDate(tx.date)}</div>
-                      {tx.time && (
-                        <div className="text-xs text-muted-foreground">
-                          {tx.time}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium whitespace-nowrap">
-                      {tx.amount != null
-                        ? formatCurrency(Number(tx.amount), tx.currency)
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Badge
-                          variant="secondary"
-                          className={TYPE_COLORS[tx.type] || TYPE_COLORS.other}
-                        >
-                          {tx.type}
-                        </Badge>
-                        {tx.spreadMonths && tx.spreadMonths > 1 && (
-                          <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                            {tx.spreadMonths}mo
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {tx.splits && tx.splits.length > 0 ? (
-                        <div className="space-y-0.5">
-                          {tx.splits.map((s, i) => (
-                            <div key={i} className="flex items-center gap-1.5 text-xs">
-                              <div
-                                className="h-2 w-2 rounded-full"
-                                style={{ backgroundColor: s.categoryColor ?? "#6b7280" }}
-                              />
-                              <span>{s.categoryName ?? "None"}</span>
-                              {s.personName && (
-                                <span
-                                  className="rounded px-1 text-[10px]"
-                                  style={{ backgroundColor: (s.personColor ?? "#6b7280") + "20", color: s.personColor ?? "#6b7280" }}
-                                >
-                                  {s.personName}
-                                </span>
-                              )}
-                              <span className="text-muted-foreground">
-                                ({formatCurrency(s.amount, tx.currency)})
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : tx.category ? (
-                        <div className="flex items-center gap-1.5">
-                          <div
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{ backgroundColor: tx.category.color }}
-                          />
-                          <span className="text-sm">{tx.category.name}</span>
-                        </div>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {tx.tags?.map((tag) => (
-                          <Badge
-                            key={tag.id}
-                            variant="secondary"
-                            className="text-[10px] px-1.5 py-0"
-                            style={{
-                              backgroundColor: tag.color + "20",
-                              color: tag.color,
-                              borderColor: tag.color,
-                            }}
-                          >
-                            {tag.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <div
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: tx.account.color }}
-                        />
-                        <span className="text-sm">{tx.account.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-[150px] truncate">
-                      {tx.merchant}
-                    </TableCell>
-                    <TableCell className="hidden max-w-[200px] truncate lg:table-cell">
-                      {tx.description}
-                    </TableCell>
-                    {showMood && (
-                    <TableCell>
-                      <MoodPicker
-                        transactionId={tx.id}
-                        currentMood={(tx as Record<string, unknown>).mood as string | undefined}
-                      />
-                    </TableCell>
-                    )}
-                    <TableCell>
-                      {tx.mediaFiles.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 gap-1 px-2 text-xs"
-                          onClick={() => { setViewMedia(tx.mediaFiles); setViewMediaTxId(tx.id); }}
-                        >
-                          {tx.mediaFiles.some((f) =>
-                            /\.(jpg|jpeg|png)$/i.test(f),
-                          ) ? (
-                            <ImageIcon className="h-3.5 w-3.5" />
-                          ) : (
-                            <FileText className="h-3.5 w-3.5" />
-                          )}
-                          {tx.mediaFiles.length > 1 && tx.mediaFiles.length}
-                        </Button>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-0.5">
-                        {canEdit && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => setEditTx(tx)}
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                        )}
-                        {canItems && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 relative"
-                            title="Line items"
-                            onClick={() => setItemsTx(tx)}
-                          >
-                            <List className="h-3 w-3" />
-                            {(tx.lineItemCount ?? 0) > 0 && (
-                              <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-500 text-[9px] text-white">
-                                {tx.lineItemCount}
-                              </span>
-                            )}
-                          </Button>
-                        )}
-                        {canSplit && tx.amount != null && tx.amount > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            title="Split transaction"
-                            onClick={() => setSplitTx(tx)}
-                          >
-                            <Split className="h-3 w-3" />
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive"
-                            onClick={() => setDeleteIds([tx.id])}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-          </TableBody>
-        </Table>
-      </div>
+      <TransactionsDesktopTable
+        result={result}
+        loading={loading}
+        selected={selected}
+        showMood={showMood}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canSplit={canSplit}
+        canItems={canItems}
+        onSort={handleSort}
+        onToggleSelect={toggleSelect}
+        onToggleSelectAll={toggleSelectAll}
+        onEditTx={setEditTx}
+        onItemsTx={setItemsTx}
+        onSplitTx={setSplitTx}
+        onDeleteIds={setDeleteIds}
+        onViewMedia={(files, txId) => { setViewMedia(files); setViewMediaTxId(txId); }}
+      />
 
       {result && result.totalPages > 1 && (
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">

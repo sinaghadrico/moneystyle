@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import NextLink from "next/link";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { getUserPreferences } from "@/actions/weekend-planner";
-import { getIncomeSources, getReserves } from "@/actions/profile";
+import { getIncomeSources } from "@/actions/income-sources";
+import { getReserves } from "@/actions/reserves";
 
 type Tip = {
   label: string;

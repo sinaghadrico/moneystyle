@@ -14,14 +14,14 @@ import {
 import { BillDialog } from "./bill-dialog";
 import { BillHistoryDialog } from "./bill-history-dialog";
 import { RecordBillPaymentDialog } from "./record-bill-payment-dialog";
-import { deleteBill } from "@/actions/profile";
+import { deleteBill } from "@/actions/bills";
 import { formatCurrency } from "@/lib/utils";
 import type { BillData } from "@/lib/types";
 import { renderInstructions } from "./payment-instructions-display";
 import { Plus, Pencil, Trash2, CheckCircle, Bell, Clock, Link, CreditCard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import NextLink from "next/link";
-import { getBillHistory } from "@/actions/profile";
+import { getBillHistory } from "@/actions/bills";
 import type { BillPaymentData } from "@/lib/types";
 
 export function BillsSection({

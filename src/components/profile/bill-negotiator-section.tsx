@@ -8,7 +8,7 @@ import {
   getBillNegotiation,
   getBillNegotiationHistory,
   deleteBillNegotiation,
-} from "@/actions/profile";
+} from "@/actions/bill-negotiation";
 import { formatCurrency } from "@/lib/utils";
 import type { BillNegotiatorRecommendation, BillNegotiatorHistoryItem } from "@/lib/types";
 import {

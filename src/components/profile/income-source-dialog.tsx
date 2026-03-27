@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { createIncomeSource, updateIncomeSource } from "@/actions/profile";
+import { createIncomeSource, updateIncomeSource } from "@/actions/income-sources";
 import { toast } from "sonner";
 import type { IncomeSourceData } from "@/lib/types";
 

@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { createBill, updateBill } from "@/actions/profile";
+import { createBill, updateBill } from "@/actions/bills";
 import { toast } from "sonner";
 import type { BillData } from "@/lib/types";
 

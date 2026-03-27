@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { createReserve, updateReserve } from "@/actions/profile";
+import { createReserve, updateReserve } from "@/actions/reserves";
 import { toast } from "sonner";
 import type { ReserveData } from "@/lib/types";
 

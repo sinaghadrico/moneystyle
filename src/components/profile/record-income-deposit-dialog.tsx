@@ -11,8 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { recordIncomeDeposit, getSuggestedIncomeTransactions } from "@/actions/profile";
-import type { SuggestedTransaction } from "@/actions/profile";
+import { recordIncomeDeposit, getSuggestedIncomeTransactions } from "@/actions/income-sources";
+import type { SuggestedTransaction } from "@/lib/types";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import type { IncomeSourceData } from "@/lib/types";

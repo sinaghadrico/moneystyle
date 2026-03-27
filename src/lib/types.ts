@@ -672,3 +672,21 @@ export type BillNegotiatorHistoryItem = BillNegotiatorResult & {
   id: string;
   createdAt: string;
 };
+
+export type SuggestedTransaction = {
+  id: string;
+  date: string;
+  amount: number;
+  currency: string;
+  merchant: string | null;
+  description: string | null;
+  isSuggested: boolean;
+};
+
+export type ActivePaymentTarget = {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  type: "installment" | "bill" | "income";
+};

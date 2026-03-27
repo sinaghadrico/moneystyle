@@ -11,8 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { recordBillPayment, getSuggestedTransactions } from "@/actions/profile";
-import type { SuggestedTransaction } from "@/actions/profile";
+import { recordBillPayment } from "@/actions/bills";
+import { getSuggestedTransactions } from "@/actions/profile";
+import type { SuggestedTransaction } from "@/lib/types";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import type { BillData } from "@/lib/types";

@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getInstallmentHistory, unlinkTransactionFromPayment } from "@/actions/profile";
+import { getInstallmentHistory } from "@/actions/installments";
+import { unlinkTransactionFromPayment } from "@/actions/profile";
 import { formatCurrency } from "@/lib/utils";
 import type { InstallmentData, InstallmentPaymentData } from "@/lib/types";
 import { LinkPaymentTransactionDialog } from "./link-payment-transaction-dialog";

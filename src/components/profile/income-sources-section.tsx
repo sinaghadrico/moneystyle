@@ -14,7 +14,7 @@ import {
 import { IncomeSourceDialog } from "./income-source-dialog";
 import { RecordIncomeDepositDialog } from "./record-income-deposit-dialog";
 import { IncomeDepositHistoryDialog } from "./income-deposit-history-dialog";
-import { deleteIncomeSource, getIncomeDepositHistory } from "@/actions/profile";
+import { deleteIncomeSource, getIncomeDepositHistory } from "@/actions/income-sources";
 import { formatCurrency } from "@/lib/utils";
 import type { IncomeSourceData, IncomeDepositData } from "@/lib/types";
 import {

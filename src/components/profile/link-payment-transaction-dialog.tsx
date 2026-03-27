@@ -11,10 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   getSuggestedTransactions,
-  getSuggestedIncomeTransactions,
   linkTransactionToPayment,
 } from "@/actions/profile";
-import type { SuggestedTransaction } from "@/actions/profile";
+import { getSuggestedIncomeTransactions } from "@/actions/income-sources";
+import type { SuggestedTransaction } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Loader2, Star } from "lucide-react";

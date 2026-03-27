@@ -14,7 +14,7 @@ import {
 import { InstallmentDialog } from "./installment-dialog";
 import { InstallmentHistoryDialog } from "./installment-history-dialog";
 import { RecordPaymentDialog } from "./record-payment-dialog";
-import { deleteInstallment } from "@/actions/profile";
+import { deleteInstallment } from "@/actions/installments";
 import { formatCurrency } from "@/lib/utils";
 import type { InstallmentData } from "@/lib/types";
 import { renderInstructions } from "./payment-instructions-display";
@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import NextLink from "next/link";
-import { getInstallmentHistory } from "@/actions/profile";
+import { getInstallmentHistory } from "@/actions/installments";
 import type { InstallmentPaymentData } from "@/lib/types";
 
 export function InstallmentsSection({

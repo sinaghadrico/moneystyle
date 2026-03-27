@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { detectSubscriptions } from "@/actions/profile";
+import { detectSubscriptions } from "@/actions/reserves";
 import { formatCurrency } from "@/lib/utils";
 import type { DetectedSubscription } from "@/lib/types";
 import { RefreshCw, TrendingDown, Calendar, Loader2 } from "lucide-react";

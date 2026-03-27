@@ -7,7 +7,7 @@ import {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog";
-import { getReserveHistory } from "@/actions/profile";
+import { getReserveHistory } from "@/actions/reserves";
 import { formatCurrency } from "@/lib/utils";
 import type { ReserveData, ReserveSnapshotData } from "@/lib/types";
 import { ArrowUp, ArrowDown, Minus, Loader2 } from "lucide-react";

@@ -51,30 +51,35 @@ export async function upsertSavingsGoal(
 
   const values = parsed.data;
 
-  if (id) {
-    await prisma.savingsGoal.update({
-      where: { id, userId },
-      data: {
-        name: values.name,
-        description: values.description ?? null,
-        targetAmount: values.targetAmount,
-        currency: values.currency,
-        deadline: values.deadline ?? null,
-        color: values.color,
-      },
-    });
-  } else {
-    await prisma.savingsGoal.create({
-      data: {
-        userId,
-        name: values.name,
-        description: values.description ?? null,
-        targetAmount: values.targetAmount,
-        currency: values.currency,
-        deadline: values.deadline ?? null,
-        color: values.color,
-      },
-    });
+  try {
+    if (id) {
+      await prisma.savingsGoal.update({
+        where: { id, userId },
+        data: {
+          name: values.name,
+          description: values.description ?? null,
+          targetAmount: values.targetAmount,
+          currency: values.currency,
+          deadline: values.deadline ?? null,
+          color: values.color,
+        },
+      });
+    } else {
+      await prisma.savingsGoal.create({
+        data: {
+          userId,
+          name: values.name,
+          description: values.description ?? null,
+          targetAmount: values.targetAmount,
+          currency: values.currency,
+          deadline: values.deadline ?? null,
+          color: values.color,
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Failed to save savings goal:", err);
+    return { error: "Failed to save goal. Please try again." };
   }
 
   revalidatePath("/");
@@ -92,13 +97,18 @@ export async function addToSavings(id: string, amount: number) {
   const target = Number(goal.targetAmount);
   const isCompleted = newAmount >= target;
 
-  await prisma.savingsGoal.update({
-    where: { id, userId },
-    data: {
-      currentAmount: newAmount,
-      status: isCompleted ? "completed" : "active",
-    },
-  });
+  try {
+    await prisma.savingsGoal.update({
+      where: { id, userId },
+      data: {
+        currentAmount: newAmount,
+        status: isCompleted ? "completed" : "active",
+      },
+    });
+  } catch (err) {
+    console.error("Failed to add to savings:", err);
+    return { error: "Failed to update savings. Please try again." };
+  }
 
   revalidatePath("/");
   return { success: true, completed: isCompleted };
@@ -106,7 +116,12 @@ export async function addToSavings(id: string, amount: number) {
 
 export async function deleteSavingsGoal(id: string) {
   const userId = await requireAuth();
-  await prisma.savingsGoal.delete({ where: { id, userId } });
+  try {
+    await prisma.savingsGoal.delete({ where: { id, userId } });
+  } catch (err) {
+    console.error("Failed to delete savings goal:", err);
+    return { error: "Failed to delete goal. Please try again." };
+  }
   revalidatePath("/");
   return { success: true };
 }

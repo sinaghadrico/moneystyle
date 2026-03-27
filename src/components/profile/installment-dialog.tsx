@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { createInstallment, updateInstallment } from "@/actions/profile";
+import { createInstallment, updateInstallment } from "@/actions/installments";
 import { toast } from "sonner";
 import type { InstallmentData } from "@/lib/types";
 

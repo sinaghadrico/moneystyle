@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InstallmentsSection } from "@/components/profile/installments-section";
 import { BillsSection } from "@/components/profile/bills-section";
-import { getInstallments, getBills } from "@/actions/profile";
+import { getInstallments } from "@/actions/installments";
+import { getBills } from "@/actions/bills";
 import type { InstallmentData, BillData } from "@/lib/types";
 import { FeatureGate } from "@/components/layout/feature-gate";
 

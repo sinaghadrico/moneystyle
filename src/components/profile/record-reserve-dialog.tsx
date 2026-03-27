@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { recordReserveValue } from "@/actions/profile";
+import { recordReserveValue } from "@/actions/reserves";
 import { toast } from "sonner";
 import type { ReserveData } from "@/lib/types";
 

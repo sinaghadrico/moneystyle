@@ -1,9 +1,13 @@
 # MoneyStyle — AI-Powered Personal Finance Tracker
 
-**Domain:** moneystyle.app
-**Brand:** Emerald gradient (#10b981 → #14b8a6)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 A full-stack, multi-user personal finance platform with AI-powered insights, receipt scanning, financial planning, and Telegram/SMS integrations. Built mobile-first as a PWA.
+
+**[Live Demo](https://moneystyle.app)** | **[Changelog](./CHANGELOG.md)** | **[Contributing](./CONTRIBUTING.md)**
 
 ---
 
@@ -499,3 +503,68 @@ docker compose --profile seed up seed
 - **PWA** — Serwist service worker with precaching, runtime caching, navigation preload. Enabled in production only.
 - **OG Images** — Dynamic generation via `next/og` ImageResponse (edge runtime). Explicit `images` in metadata to avoid conflicts with file-based convention.
 - **metadataBase** — Uses `NEXT_PUBLIC_APP_URL` (not `NEXTAUTH_URL`) to ensure correct OG image URLs in production builds.
+
+---
+
+## FAQ
+
+**Do I need an OpenAI API key?**
+Only for AI features (Money Pilot, receipt scanning, meal/weekend planner, Money Chat). All other features work without it.
+
+**Can I self-host?**
+Yes. Docker Compose is included for both development and production. See the deployment section above.
+
+**Is there a mobile app?**
+MoneyStyle is a PWA (Progressive Web App). Install it from your browser on any device — it works like a native app.
+
+**Is it really free?**
+Yes, 100% free and open source. AI features use your own OpenAI API key (you pay OpenAI directly, typically ~$0.01 per request).
+
+**Multi-user support?**
+Yes. Each user has their own data. Household sharing lets family members share a view.
+
+---
+
+## Troubleshooting
+
+**Port 3020 already in use**
+```bash
+lsof -i :3020  # Find the process
+kill -9 <PID>  # Kill it
+```
+
+**Database connection error**
+```bash
+docker compose up -d db  # Ensure PostgreSQL is running
+pnpm db:migrate          # Run pending migrations
+```
+
+**Telegram bot not responding**
+- Verify webhook URL: `https://api.telegram.org/bot<TOKEN>/getWebhookInfo`
+- Check `TELEGRAM_WEBHOOK_SECRET` matches between .env and webhook setup
+- Ensure your server is accessible from the internet (HTTPS required)
+
+**Build fails with Prisma errors**
+```bash
+npx prisma generate  # Regenerate Prisma client
+pnpm build           # Retry build
+```
+
+---
+
+## Support
+
+- [GitHub Issues](https://github.com/sinaghadrico/moneystyle/issues) — Bug reports
+- [GitHub Discussions](https://github.com/sinaghadrico/moneystyle/discussions) — Questions & ideas
+
+---
+
+## Acknowledgments
+
+Built with [Next.js](https://nextjs.org), [Prisma](https://prisma.io), [shadcn/ui](https://ui.shadcn.com), [Tailwind CSS](https://tailwindcss.com), [Recharts](https://recharts.org), and [Lucide Icons](https://lucide.dev).
+
+---
+
+## License
+
+[MIT](./LICENSE) - Free for personal and commercial use.

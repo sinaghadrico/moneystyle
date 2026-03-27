@@ -92,7 +92,8 @@ export function LandingHero({
               >
                 <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm text-foreground/70 mb-6">
                   <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                  100% Free &middot; Bring your own AI key &middot; No credit card
+                  100% Free &middot; Bring your own AI key &middot; No credit
+                  card
                 </div>
               </div>
               <h1
@@ -107,10 +108,10 @@ export function LandingHero({
                 className={`mt-6 text-lg text-muted-foreground sm:text-xl max-w-lg transition-all duration-700 delay-200 ${heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
               >
                 MoneyStyle is a completely free personal finance tracker that
-                shows you exactly where every dollar goes. All 30 features
-                are free — forever. Want AI powers like receipt scanning and
-                Money Pilot? Just bring your own OpenAI API key, or let us
-                set it up for you.
+                shows you exactly where every dollar goes. All 30 features are
+                free — forever. Want AI powers like receipt scanning and Money
+                Pilot? Just bring your own OpenAI API key, or let us set it up
+                for you.
               </p>
               <div
                 className={`mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition-all duration-700 delay-300 ${heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
@@ -135,7 +136,9 @@ export function LandingHero({
                     ) : (
                       <Send className="mr-2 h-5 w-5" />
                     )}
-                    {tgAuthStatus === "loading" ? "Signing in..." : "Sign in with Telegram"}
+                    {tgAuthStatus === "loading"
+                      ? "Signing in..."
+                      : "Sign in with Telegram"}
                   </Button>
                 )}
                 {!isLoggedIn && !isTelegramMiniApp && (
@@ -156,6 +159,23 @@ export function LandingHero({
                   {demoLoading ? "Loading..." : "Try Live Demo"}
                 </Button>
               </div>
+
+              {/* Product Hunt badge */}
+              <a
+                href="https://www.producthunt.com/products/moneystyle"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-[#da552f]/50 transition-colors"
+              >
+                <svg
+                  className="h-5 w-5 text-[#da552f]"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M13.604 8.4h-3.405V12h3.405a1.8 1.8 0 001.8-1.8 1.8 1.8 0 00-1.8-1.8zM12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm1.604 14.4h-3.405V18H7.801V6h5.804a4.2 4.2 0 014.199 4.2 4.2 4.2 0 01-4.2 4.2z" />
+                </svg>
+                Featured on Product Hunt
+              </a>
             </div>
 
             {/* Phone mockup */}
@@ -196,7 +216,7 @@ export function LandingHero({
                               transitionDelay: `${800 + i * 60}ms`,
                             }}
                           />
-                        )
+                        ),
                       )}
                     </div>
                     {/* Categories */}
@@ -254,9 +274,7 @@ export function LandingHero({
                   <div className="flex items-center gap-2">
                     <Receipt className="h-4 w-4 text-purple-500" />
                     <div>
-                      <p className="text-[10px] font-medium">
-                        Receipt scanned
-                      </p>
+                      <p className="text-[10px] font-medium">Receipt scanned</p>
                       <p className="text-[9px] text-muted-foreground">
                         5 items &middot; $23.76
                       </p>

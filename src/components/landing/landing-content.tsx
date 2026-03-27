@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
@@ -9,9 +10,11 @@ import { signInAsDemo } from "@/actions/auth";
 import { useInView } from "@/hooks/use-in-view";
 import { useTelegramAutoAuth } from "@/hooks/use-telegram-auto-auth";
 import { LandingHero } from "./landing-hero";
-import { LandingSections } from "./landing-sections";
-import { LandingFeatures } from "./landing-features";
-import { LandingFooter } from "./landing-footer";
+
+// Lazy load below-fold sections (SSR still renders HTML for SEO)
+const LandingSections = dynamic(() => import("./landing-sections").then(m => ({ default: m.LandingSections })), { ssr: true });
+const LandingFeatures = dynamic(() => import("./landing-features").then(m => ({ default: m.LandingFeatures })), { ssr: true });
+const LandingFooter = dynamic(() => import("./landing-footer").then(m => ({ default: m.LandingFooter })), { ssr: true });
 
 // ─── Component ───────────────────────────────────────────────────────────────
 

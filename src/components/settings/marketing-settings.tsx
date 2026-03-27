@@ -13,6 +13,12 @@ import {
   DollarSign,
   BarChart3,
   Rocket,
+  Target,
+  Eye,
+  MousePointer,
+  Users,
+  Video,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -632,6 +638,177 @@ export function MarketingSettings() {
                 <p className="text-[10px] text-muted-foreground">{m.note}</p>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Channel Strategy by Objective */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Target className="h-4 w-4" />
+            Channel Strategy by Objective
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Pick your objective, then follow the recommended channels. Start with free, scale with paid.
+          </p>
+
+          {/* Brand Awareness */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-violet-500" />
+              <p className="text-sm font-semibold">Brand Awareness</p>
+              <Badge variant="secondary" className="bg-violet-500/10 text-violet-700 text-[10px]">Reach</Badge>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="rounded-md bg-muted/50 p-2 space-y-1">
+                <p className="text-[10px] font-medium text-emerald-600">Free</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>Product Hunt launch (1000+ views day 1)</li>
+                  <li>Show HN on Hacker News</li>
+                  <li>Twitter #buildinpublic posts</li>
+                  <li>GitHub repo public + stars</li>
+                </ul>
+              </div>
+              <div className="rounded-md bg-muted/50 p-2 space-y-1">
+                <p className="text-[10px] font-medium text-amber-600">Paid ($2-4/day)</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>TikTok Ads — cheapest CPM</li>
+                  <li>YouTube Shorts Ads — 15sec demos</li>
+                  <li>Instagram Reels boost</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Website Visits */}
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <MousePointer className="h-4 w-4 text-emerald-500" />
+              <p className="text-sm font-semibold">Website Visits</p>
+              <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 text-[10px]">Priority #1</Badge>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="rounded-md bg-background p-2 space-y-1">
+                <p className="text-[10px] font-medium text-emerald-600">Free</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>Reddit posts (r/personalfinance, r/ynab)</li>
+                  <li>SEO blog: &quot;Free YNAB Alternative 2026&quot;</li>
+                  <li>AlternativeTo listing</li>
+                  <li>SaaSHub listing</li>
+                </ul>
+              </div>
+              <div className="rounded-md bg-background p-2 space-y-1">
+                <p className="text-[10px] font-medium text-amber-600">Paid ($3-6/day)</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>Meta Ads $2/day — CPC $0.10-0.30</li>
+                  <li>Google Search $3/day — &quot;free budget app&quot;</li>
+                  <li>Bing Ads $1/day — 50% cheaper than Google</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Engagement */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-pink-500" />
+              <p className="text-sm font-semibold">Engagement & Community</p>
+              <Badge variant="secondary" className="bg-pink-500/10 text-pink-700 text-[10px]">Retention</Badge>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="rounded-md bg-muted/50 p-2 space-y-1">
+                <p className="text-[10px] font-medium text-emerald-600">Free</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>GitHub Discussions — enable on repo</li>
+                  <li>Telegram group (Persian + English)</li>
+                  <li>Twitter weekly updates</li>
+                  <li>Blog: 1 post/week (AI-generated)</li>
+                </ul>
+              </div>
+              <div className="rounded-md bg-muted/50 p-2 space-y-1">
+                <p className="text-[10px] font-medium text-amber-600">Later</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>Discord server (after 200+ users)</li>
+                  <li>Email newsletter (after 500+ signups)</li>
+                  <li>Community challenges / rewards</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Video Views */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Video className="h-4 w-4 text-red-500" />
+              <p className="text-sm font-semibold">Video Views</p>
+              <Badge variant="secondary" className="bg-red-500/10 text-red-700 text-[10px]">Viral potential</Badge>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="rounded-md bg-muted/50 p-2 space-y-1">
+                <p className="text-[10px] font-medium text-emerald-600">Content ideas</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>15sec: Scan receipt → instant transaction</li>
+                  <li>15sec: Say &quot;250 carrefour&quot; → voice transaction</li>
+                  <li>15sec: Money Map — where you spend on a real map</li>
+                  <li>30sec: &quot;This free app has 30 features&quot; tour</li>
+                </ul>
+              </div>
+              <div className="rounded-md bg-muted/50 p-2 space-y-1">
+                <p className="text-[10px] font-medium text-amber-600">Platforms</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>YouTube Shorts (organic first)</li>
+                  <li>TikTok (organic, then $2/day ads)</li>
+                  <li>Instagram Reels (reuse TikTok content)</li>
+                  <li>Promote best-performing video</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Conversions */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-blue-500" />
+              <p className="text-sm font-semibold">Signups & Conversions</p>
+              <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 text-[10px]">After 500 visits/day</Badge>
+            </div>
+            <div className="rounded-md bg-muted/50 p-2">
+              <ul className="text-xs space-y-0.5">
+                <li>Install Facebook Pixel now (for retargeting later)</li>
+                <li>Google Ads with conversion tracking → optimize for signups</li>
+                <li>Quora Ads — target &quot;best free budget app&quot; questions</li>
+                <li>Retarget landing page visitors who didn&apos;t sign up</li>
+                <li>A/B test headlines: &quot;Free&quot; vs &quot;AI-Powered&quot; vs &quot;Replace YNAB&quot;</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Priority table */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <p className="text-xs font-semibold">Priority Order</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-1 pr-3">#</th>
+                    <th className="text-left py-1 pr-3">Channel</th>
+                    <th className="text-left py-1 pr-3">Cost</th>
+                    <th className="text-left py-1">When</th>
+                  </tr>
+                </thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-dashed"><td className="py-1 pr-3">1</td><td className="pr-3">Product Hunt + Hacker News</td><td className="pr-3 text-emerald-600">Free</td><td>Week 1</td></tr>
+                  <tr className="border-b border-dashed"><td className="py-1 pr-3">2</td><td className="pr-3">Reddit + GitHub</td><td className="pr-3 text-emerald-600">Free</td><td>Week 1-2</td></tr>
+                  <tr className="border-b border-dashed"><td className="py-1 pr-3">3</td><td className="pr-3">Meta Ads (IG/FB)</td><td className="pr-3">$2/day</td><td>Week 3</td></tr>
+                  <tr className="border-b border-dashed"><td className="py-1 pr-3">4</td><td className="pr-3">Google Search Ads</td><td className="pr-3">$3/day</td><td>Month 2</td></tr>
+                  <tr className="border-b border-dashed"><td className="py-1 pr-3">5</td><td className="pr-3">TikTok / YouTube Shorts</td><td className="pr-3">$2/day</td><td>Month 2</td></tr>
+                  <tr><td className="py-1 pr-3">6</td><td className="pr-3">Quora + Bing Ads</td><td className="pr-3">$2/day</td><td>Month 3</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </CardContent>
       </Card>

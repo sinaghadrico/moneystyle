@@ -170,11 +170,17 @@ export async function resolveTagsByHints(
   for (const hint of hints) {
     const lower = hint.toLowerCase();
     let tag = await prisma.tag.findFirst({
-      where: { name: { equals: lower, mode: "insensitive" }, ...(userId ? { userId } : {}) },
+      where: {
+        name: { equals: lower, mode: "insensitive" },
+        ...(userId ? { userId } : {}),
+      },
     });
     if (!tag) {
       tag = await prisma.tag.findFirst({
-        where: { name: { contains: lower, mode: "insensitive" }, ...(userId ? { userId } : {}) },
+        where: {
+          name: { contains: lower, mode: "insensitive" },
+          ...(userId ? { userId } : {}),
+        },
       });
     }
     if (!tag && userId) {
@@ -193,7 +199,11 @@ export async function resolveTagsByHints(
       ];
       const count = await prisma.tag.count({ where: { userId } });
       tag = await prisma.tag.create({
-        data: { name: hint, color: TAG_COLORS[count % TAG_COLORS.length], userId },
+        data: {
+          name: hint,
+          color: TAG_COLORS[count % TAG_COLORS.length],
+          userId,
+        },
       });
     }
     if (tag) resolved.push({ id: tag.id, name: tag.name });
@@ -267,7 +277,10 @@ export async function deleteByShortIds(
   return { deleted, notFound };
 }
 
-export async function deleteLastN(n: number, userId?: string): Promise<{ deleted: string[] }> {
+export async function deleteLastN(
+  n: number,
+  userId?: string,
+): Promise<{ deleted: string[] }> {
   const txs = await prisma.transaction.findMany({
     where: { source: "telegram", ...(userId ? { userId } : {}) },
     orderBy: { createdAt: "desc" },
@@ -390,7 +403,10 @@ const MONTH_NAMES = [
   "December",
 ];
 
-export async function generateStats(monthStr?: string, userId?: string): Promise<string> {
+export async function generateStats(
+  monthStr?: string,
+  userId?: string,
+): Promise<string> {
   // /today is handled separately
   if (monthStr === "__today__") {
     return generateTodayStats(userId);
@@ -544,15 +560,15 @@ export function generateHelp(): string {
     "",
     "📝 Record a transaction:",
     "  250 Carrefour #grocery",
-    "  +15000 Salary #income @farnoosh",
+    "  +15000 Salary #income @sina",
     "  50.5 Uber",
     "",
     "👥 Split with someone:",
-    "  500 restaurant /split علی",
+    "  500 restaurant /split sina",
     "  Auto 50/50 split, creates debt",
     "",
     "💳 /debts — View who owes what",
-    "  /settle علی 250 — Record payment",
+    "  /settle sina 250 — Record payment",
     "",
     "📊 /stats — This month's report",
     "  /stats last — Last month",
@@ -852,7 +868,11 @@ export function isUnknownCommand(text: string): boolean {
 
 const TELEGRAM_API = "https://api.telegram.org/bot";
 
-export type InlineButton = { text: string; callback_data?: string; url?: string };
+export type InlineButton = {
+  text: string;
+  callback_data?: string;
+  url?: string;
+};
 
 export async function sendTelegramMessage(
   chatId: number | string,

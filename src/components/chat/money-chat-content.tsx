@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useReducer, useRef, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,14 +45,85 @@ const SUGGESTIONS = [
   "What's my net cashflow?",
 ];
 
+// ── Reducer types & function ──
+
+type ChatState = {
+  messages: Message[];
+  input: string;
+  loading: boolean;
+  sessionId: string | null;
+  sessions: ChatSessionItem[];
+  showHistory: boolean;
+  historyLoading: boolean;
+};
+
+type ChatAction =
+  | { type: "SET_MESSAGES"; payload: Message[] }
+  | { type: "SET_INPUT"; payload: string }
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_SESSION_ID"; payload: string | null }
+  | { type: "SET_SESSIONS"; payload: ChatSessionItem[] }
+  | { type: "SET_SHOW_HISTORY"; payload: boolean }
+  | { type: "SET_HISTORY_LOADING"; payload: boolean }
+  | { type: "SEND_MESSAGE"; payload: { messages: Message[] } }
+  | { type: "RECEIVE_REPLY"; payload: { messages: Message[] } }
+  | { type: "START_NEW_CHAT" }
+  | { type: "LOAD_SESSION"; payload: { messages: Message[]; sessionId: string } }
+  | { type: "DELETE_SESSION"; payload: string }
+  | { type: "LOAD_SESSIONS_DONE"; payload: ChatSessionItem[] };
+
+const chatInitialState: ChatState = {
+  messages: [],
+  input: "",
+  loading: false,
+  sessionId: null,
+  sessions: [],
+  showHistory: false,
+  historyLoading: false,
+};
+
+function chatReducer(state: ChatState, action: ChatAction): ChatState {
+  switch (action.type) {
+    case "SET_MESSAGES":
+      return { ...state, messages: action.payload };
+    case "SET_INPUT":
+      return { ...state, input: action.payload };
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_SESSION_ID":
+      return { ...state, sessionId: action.payload };
+    case "SET_SESSIONS":
+      return { ...state, sessions: action.payload };
+    case "SET_SHOW_HISTORY":
+      return { ...state, showHistory: action.payload };
+    case "SET_HISTORY_LOADING":
+      return { ...state, historyLoading: action.payload };
+    case "SEND_MESSAGE":
+      return { ...state, messages: action.payload.messages, input: "", loading: true };
+    case "RECEIVE_REPLY":
+      return { ...state, messages: action.payload.messages, loading: false };
+    case "START_NEW_CHAT":
+      return { ...state, messages: [], sessionId: null, showHistory: false };
+    case "LOAD_SESSION":
+      return { ...state, messages: action.payload.messages, sessionId: action.payload.sessionId, showHistory: false };
+    case "DELETE_SESSION": {
+      const isCurrentSession = state.sessionId === action.payload;
+      return {
+        ...state,
+        sessions: state.sessions.filter((s) => s.id !== action.payload),
+        ...(isCurrentSession ? { messages: [], sessionId: null } : {}),
+      };
+    }
+    case "LOAD_SESSIONS_DONE":
+      return { ...state, sessions: action.payload, historyLoading: false };
+    default:
+      return state;
+  }
+}
+
 export function MoneyChatContent() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [sessions, setSessions] = useState<ChatSessionItem[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [state, dispatch] = useReducer(chatReducer, chatInitialState);
+  const { messages, input, loading, sessionId, sessions, showHistory, historyLoading } = state;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -65,10 +136,9 @@ export function MoneyChatContent() {
   }, [messages]);
 
   const loadSessions = useCallback(async () => {
-    setHistoryLoading(true);
+    dispatch({ type: "SET_HISTORY_LOADING", payload: true });
     const items = await getChatSessions();
-    setSessions(items);
-    setHistoryLoading(false);
+    dispatch({ type: "LOAD_SESSIONS_DONE", payload: items });
   }, []);
 
   // Auto-save after each AI reply
@@ -91,9 +161,7 @@ export function MoneyChatContent() {
     };
 
     const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
+    dispatch({ type: "SEND_MESSAGE", payload: { messages: newMessages } });
 
     const chatHistory = newMessages.map((m) => ({
       role: m.role,
@@ -109,12 +177,11 @@ export function MoneyChatContent() {
     };
 
     const allMessages = [...newMessages, assistantMsg];
-    setMessages(allMessages);
-    setLoading(false);
+    dispatch({ type: "RECEIVE_REPLY", payload: { messages: allMessages } });
 
     // Auto-save
     const newId = await autoSave(allMessages, sessionId);
-    if (newId && !sessionId) setSessionId(newId);
+    if (newId && !sessionId) dispatch({ type: "SET_SESSION_ID", payload: newId });
 
     inputRef.current?.focus();
   };
@@ -125,34 +192,30 @@ export function MoneyChatContent() {
   };
 
   const startNewChat = () => {
-    setMessages([]);
-    setSessionId(null);
-    setShowHistory(false);
+    dispatch({ type: "START_NEW_CHAT" });
   };
 
   const loadSession = (session: ChatSessionItem) => {
-    setMessages(
-      session.messages.map((m) => ({
-        ...m,
-        id: crypto.randomUUID(),
-      }))
-    );
-    setSessionId(session.id);
-    setShowHistory(false);
+    dispatch({
+      type: "LOAD_SESSION",
+      payload: {
+        messages: session.messages.map((m) => ({
+          ...m,
+          id: crypto.randomUUID(),
+        })),
+        sessionId: session.id,
+      },
+    });
   };
 
   const handleDeleteSession = async (id: string) => {
     await deleteChatSession(id);
-    setSessions((prev) => prev.filter((s) => s.id !== id));
-    if (sessionId === id) {
-      setMessages([]);
-      setSessionId(null);
-    }
+    dispatch({ type: "DELETE_SESSION", payload: id });
     toast.success("Chat deleted");
   };
 
   const openHistory = async () => {
-    setShowHistory(true);
+    dispatch({ type: "SET_SHOW_HISTORY", payload: true });
     await loadSessions();
   };
 
@@ -270,7 +333,7 @@ export function MoneyChatContent() {
           <Input
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => dispatch({ type: "SET_INPUT", payload: e.target.value })}
             placeholder="Ask about your money..."
             disabled={loading}
             autoFocus
@@ -283,7 +346,7 @@ export function MoneyChatContent() {
       </div>
 
       {/* History Dialog */}
-      <ResponsiveDialog open={showHistory} onOpenChange={setShowHistory}>
+      <ResponsiveDialog open={showHistory} onOpenChange={(v) => dispatch({ type: "SET_SHOW_HISTORY", payload: v })}>
         <ResponsiveDialogContent>
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Chat History</ResponsiveDialogTitle>

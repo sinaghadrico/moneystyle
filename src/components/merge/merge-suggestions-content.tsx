@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useReducer, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,25 +22,83 @@ import {
   PartyPopper,
 } from "lucide-react";
 
+// ── Reducer types & function ──
+
+type MergeState = {
+  suggestions: MergeSuggestion[];
+  currentIndex: number;
+  loading: boolean;
+  merging: boolean;
+  primaryId: string;
+  mergedCount: number;
+  viewMedia: string[];
+};
+
+type MergeAction =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "LOAD_SUGGESTIONS"; payload: MergeSuggestion[] }
+  | { type: "GO_NEXT" }
+  | { type: "SET_MERGING"; payload: boolean }
+  | { type: "SET_PRIMARY_ID"; payload: string }
+  | { type: "ADD_MERGED_COUNT"; payload: number }
+  | { type: "SET_VIEW_MEDIA"; payload: string[] };
+
+const mergeInitialState: MergeState = {
+  suggestions: [],
+  currentIndex: 0,
+  loading: true,
+  merging: false,
+  primaryId: "",
+  mergedCount: 0,
+  viewMedia: [],
+};
+
+function mergeReducer(state: MergeState, action: MergeAction): MergeState {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "LOAD_SUGGESTIONS": {
+      const data = action.payload;
+      return {
+        ...state,
+        suggestions: data,
+        currentIndex: 0,
+        primaryId: data.length > 0 ? data[0].transactions[0].id : "",
+        loading: false,
+      };
+    }
+    case "GO_NEXT": {
+      const nextIdx = state.currentIndex + 1;
+      return {
+        ...state,
+        currentIndex: nextIdx,
+        primaryId: nextIdx < state.suggestions.length
+          ? state.suggestions[nextIdx].transactions[0].id
+          : state.primaryId,
+      };
+    }
+    case "SET_MERGING":
+      return { ...state, merging: action.payload };
+    case "SET_PRIMARY_ID":
+      return { ...state, primaryId: action.payload };
+    case "ADD_MERGED_COUNT":
+      return { ...state, mergedCount: state.mergedCount + action.payload };
+    case "SET_VIEW_MEDIA":
+      return { ...state, viewMedia: action.payload };
+    default:
+      return state;
+  }
+}
+
 export function MergeSuggestionsContent() {
   const router = useRouter();
-  const [suggestions, setSuggestions] = useState<MergeSuggestion[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [merging, setMerging] = useState(false);
-  const [primaryId, setPrimaryId] = useState<string>("");
-  const [mergedCount, setMergedCount] = useState(0);
-  const [viewMedia, setViewMedia] = useState<string[]>([]);
+  const [state, dispatch] = useReducer(mergeReducer, mergeInitialState);
+  const { suggestions, currentIndex, loading, merging, primaryId, mergedCount, viewMedia } = state;
 
   const loadSuggestions = useCallback(async () => {
-    setLoading(true);
+    dispatch({ type: "SET_LOADING", payload: true });
     const data = await getMergeSuggestions();
-    setSuggestions(data);
-    setCurrentIndex(0);
-    if (data.length > 0) {
-      setPrimaryId(data[0].transactions[0].id);
-    }
-    setLoading(false);
+    dispatch({ type: "LOAD_SUGGESTIONS", payload: data });
   }, []);
 
   useEffect(() => {
@@ -53,16 +111,12 @@ export function MergeSuggestionsContent() {
   const isDone = !loading && (!current || currentIndex >= suggestions.length);
 
   const goNext = () => {
-    const nextIdx = currentIndex + 1;
-    setCurrentIndex(nextIdx);
-    if (nextIdx < suggestions.length) {
-      setPrimaryId(suggestions[nextIdx].transactions[0].id);
-    }
+    dispatch({ type: "GO_NEXT" });
   };
 
   const handleMerge = async () => {
     if (!current) return;
-    setMerging(true);
+    dispatch({ type: "SET_MERGING", payload: true });
 
     const mergeIds = current.transactions
       .filter((t) => t.id !== primaryId)
@@ -73,11 +127,11 @@ export function MergeSuggestionsContent() {
       toast.error("❌ " + result.error);
     } else {
       toast.success(`✅ Merged ${result.mergedCount} duplicate(s)`);
-      setMergedCount((c) => c + (result.mergedCount ?? 0));
+      dispatch({ type: "ADD_MERGED_COUNT", payload: result.mergedCount ?? 0 });
       router.refresh();
       goNext();
     }
-    setMerging(false);
+    dispatch({ type: "SET_MERGING", payload: false });
   };
 
   if (loading) {
@@ -163,7 +217,7 @@ export function MergeSuggestionsContent() {
             <button
               key={tx.id}
               type="button"
-              onClick={() => setPrimaryId(tx.id)}
+              onClick={() => dispatch({ type: "SET_PRIMARY_ID", payload: tx.id })}
               className={`w-full rounded-lg border p-3 text-left transition-colors ${
                 isPrimary
                   ? "border-primary bg-primary/5"
@@ -223,12 +277,12 @@ export function MergeSuggestionsContent() {
                     className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setViewMedia(tx.mediaFiles);
+                      dispatch({ type: "SET_VIEW_MEDIA", payload: tx.mediaFiles });
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.stopPropagation();
-                        setViewMedia(tx.mediaFiles);
+                        dispatch({ type: "SET_VIEW_MEDIA", payload: tx.mediaFiles });
                       }
                     }}
                   >
@@ -263,7 +317,7 @@ export function MergeSuggestionsContent() {
       <MediaViewerDialog
         files={viewMedia}
         open={viewMedia.length > 0}
-        onOpenChange={(open) => !open && setViewMedia([])}
+        onOpenChange={(open) => !open && dispatch({ type: "SET_VIEW_MEDIA", payload: [] })}
       />
     </div>
   );

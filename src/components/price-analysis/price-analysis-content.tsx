@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useReducer, useState, useTransition } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -51,24 +51,101 @@ import {
 } from "lucide-react";
 import { useAiCheck, AiSetupDialog } from "@/components/ai-setup-dialog";
 
+// ── Reducer types & function ──
+
+type PriceAnalysisState = {
+  groups: ItemPriceSummary[];
+  items: ItemPriceSummary[];
+  loading: boolean;
+  search: string;
+  searchDebounce: string;
+  fuzzy: boolean;
+  sortBy: PriceAnalysisFilters["sortBy"];
+  sortOrder: PriceAnalysisFilters["sortOrder"];
+  detailKey: string | null;
+  detailMode: "group" | "item";
+  detailOpen: boolean;
+  groupFormOpen: boolean;
+  editGroup: { id: string; name: string; rawNames: string[] } | null;
+  deleteGroup: { id: string; name: string } | null;
+  tab: "groups" | "items";
+};
+
+type PriceAnalysisAction =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_DATA"; payload: { groups: ItemPriceSummary[]; items: ItemPriceSummary[] } }
+  | { type: "SET_SEARCH"; payload: string }
+  | { type: "SET_SEARCH_DEBOUNCE"; payload: string }
+  | { type: "SET_FUZZY"; payload: boolean }
+  | { type: "SET_SORT_BY"; payload: PriceAnalysisFilters["sortBy"] }
+  | { type: "SET_SORT_ORDER"; payload: PriceAnalysisFilters["sortOrder"] }
+  | { type: "OPEN_GROUP_DETAIL"; payload: string }
+  | { type: "OPEN_ITEM_DETAIL"; payload: string }
+  | { type: "SET_DETAIL_OPEN"; payload: boolean }
+  | { type: "OPEN_GROUP_FORM"; payload: { id: string; name: string; rawNames: string[] } | null }
+  | { type: "SET_GROUP_FORM_OPEN"; payload: boolean }
+  | { type: "SET_DELETE_GROUP"; payload: { id: string; name: string } | null }
+  | { type: "SET_TAB"; payload: "groups" | "items" };
+
+const initialState: PriceAnalysisState = {
+  groups: [],
+  items: [],
+  loading: true,
+  search: "",
+  searchDebounce: "",
+  fuzzy: false,
+  sortBy: "totalPurchases",
+  sortOrder: "desc",
+  detailKey: null,
+  detailMode: "group",
+  detailOpen: false,
+  groupFormOpen: false,
+  editGroup: null,
+  deleteGroup: null,
+  tab: "groups",
+};
+
+function priceAnalysisReducer(state: PriceAnalysisState, action: PriceAnalysisAction): PriceAnalysisState {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_DATA":
+      return { ...state, groups: action.payload.groups, items: action.payload.items, loading: false };
+    case "SET_SEARCH":
+      return { ...state, search: action.payload };
+    case "SET_SEARCH_DEBOUNCE":
+      return { ...state, searchDebounce: action.payload };
+    case "SET_FUZZY":
+      return { ...state, fuzzy: action.payload };
+    case "SET_SORT_BY":
+      return { ...state, sortBy: action.payload };
+    case "SET_SORT_ORDER":
+      return { ...state, sortOrder: action.payload };
+    case "OPEN_GROUP_DETAIL":
+      return { ...state, detailKey: action.payload, detailMode: "group", detailOpen: true };
+    case "OPEN_ITEM_DETAIL":
+      return { ...state, detailKey: action.payload, detailMode: "item", detailOpen: true };
+    case "SET_DETAIL_OPEN":
+      return { ...state, detailOpen: action.payload };
+    case "OPEN_GROUP_FORM":
+      return { ...state, editGroup: action.payload, groupFormOpen: true };
+    case "SET_GROUP_FORM_OPEN":
+      return { ...state, groupFormOpen: action.payload };
+    case "SET_DELETE_GROUP":
+      return { ...state, deleteGroup: action.payload };
+    case "SET_TAB":
+      return { ...state, tab: action.payload };
+    default:
+      return state;
+  }
+}
+
 export function PriceAnalysisContent() {
-  const [groups, setGroups] = useState<ItemPriceSummary[]>([]);
-  const [items, setItems] = useState<ItemPriceSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [fuzzy, setFuzzy] = useState(false);
-  const [sortBy, setSortBy] = useState<PriceAnalysisFilters["sortBy"]>("totalPurchases");
-  const [sortOrder, setSortOrder] = useState<PriceAnalysisFilters["sortOrder"]>("desc");
-
-  // Detail dialog
-  const [detailKey, setDetailKey] = useState<string | null>(null);
-  const [detailMode, setDetailMode] = useState<"group" | "item">("group");
-  const [detailOpen, setDetailOpen] = useState(false);
-
-  // Group form dialog
-  const [groupFormOpen, setGroupFormOpen] = useState(false);
-  const [editGroup, setEditGroup] = useState<{ id: string; name: string; rawNames: string[] } | null>(null);
-  const [deleteGroup, setDeleteGroup] = useState<{ id: string; name: string } | null>(null);
+  const [state, dispatch] = useReducer(priceAnalysisReducer, initialState);
+  const {
+    groups, items, loading, search, searchDebounce, fuzzy, sortBy, sortOrder,
+    detailKey, detailMode, detailOpen, groupFormOpen, editGroup, deleteGroup, tab,
+  } = state;
 
   // AI normalization
   const [aiPending, startAiTransition] = useTransition();
@@ -76,14 +153,12 @@ export function PriceAnalysisContent() {
   const itemOpts = { search: search || undefined, fuzzy, sortBy, sortOrder };
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    dispatch({ type: "SET_LOADING", payload: true });
     const [g, i] = await Promise.all([
       getItemPriceSummaries({}),
       getIndividualItemSummaries(itemOpts),
     ]);
-    setGroups(g);
-    setItems(i);
-    setLoading(false);
+    dispatch({ type: "SET_DATA", payload: { groups: g, items: i } });
   }, [search, fuzzy, sortBy, sortOrder]);
 
   useEffect(() => {
@@ -91,22 +166,17 @@ export function PriceAnalysisContent() {
   }, [loadData]);
 
   // Debounce search
-  const [searchDebounce, setSearchDebounce] = useState("");
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchDebounce), 300);
+    const t = setTimeout(() => dispatch({ type: "SET_SEARCH", payload: searchDebounce }), 300);
     return () => clearTimeout(t);
   }, [searchDebounce]);
 
   function openGroupDetail(normalizedName: string) {
-    setDetailKey(normalizedName);
-    setDetailMode("group");
-    setDetailOpen(true);
+    dispatch({ type: "OPEN_GROUP_DETAIL", payload: normalizedName });
   }
 
   function openItemDetail(normalizedName: string) {
-    setDetailKey(normalizedName);
-    setDetailMode("item");
-    setDetailOpen(true);
+    dispatch({ type: "OPEN_ITEM_DETAIL", payload: normalizedName });
   }
 
   const { checkAi, showSetup, setShowSetup } = useAiCheck();
@@ -125,7 +195,6 @@ export function PriceAnalysisContent() {
   }
 
   const actualGroups = groups.filter((g) => g.isGroup);
-  const [tab, setTab] = useState<"groups" | "items">("groups");
 
   return (
     <>
@@ -142,7 +211,7 @@ export function PriceAnalysisContent() {
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
-          onClick={() => setTab("groups")}
+          onClick={() => dispatch({ type: "SET_TAB", payload: "groups" })}
         >
           <Layers className="h-3.5 w-3.5" />
           Groups
@@ -158,7 +227,7 @@ export function PriceAnalysisContent() {
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
-          onClick={() => setTab("items")}
+          onClick={() => dispatch({ type: "SET_TAB", payload: "items" })}
         >
           <Package className="h-3.5 w-3.5" />
           Items
@@ -179,13 +248,13 @@ export function PriceAnalysisContent() {
               placeholder="Search items..."
               className="pl-9"
               value={searchDebounce}
-              onChange={(e) => setSearchDebounce(e.target.value)}
+              onChange={(e) => dispatch({ type: "SET_SEARCH_DEBOUNCE", payload: e.target.value })}
             />
           </div>
           <div className="flex items-center gap-3">
             <Select
               value={sortBy}
-              onValueChange={(v) => setSortBy(v as PriceAnalysisFilters["sortBy"])}
+              onValueChange={(v) => dispatch({ type: "SET_SORT_BY", payload: v as PriceAnalysisFilters["sortBy"] })}
             >
               <SelectTrigger className="w-[160px]">
                 <ArrowUpDown className="h-3.5 w-3.5 mr-1.5" />
@@ -199,7 +268,7 @@ export function PriceAnalysisContent() {
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
-              <Switch id="fuzzy" checked={fuzzy} onCheckedChange={setFuzzy} />
+              <Switch id="fuzzy" checked={fuzzy} onCheckedChange={(v) => dispatch({ type: "SET_FUZZY", payload: v })} />
               <Label htmlFor="fuzzy" className="text-sm whitespace-nowrap">
                 Fuzzy
               </Label>
@@ -218,7 +287,7 @@ export function PriceAnalysisContent() {
         /* ── Groups tab ── */
         <>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setEditGroup(null); setGroupFormOpen(true); }}>
+            <Button variant="outline" size="sm" onClick={() => dispatch({ type: "OPEN_GROUP_FORM", payload: null })}>
               <Plus className="h-4 w-4 mr-1" />
               Add Group
             </Button>
@@ -307,8 +376,7 @@ export function PriceAnalysisContent() {
                             className="h-7 w-7"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditGroup({ id: group.groupId!, name: group.normalizedName, rawNames: group.rawNames });
-                              setGroupFormOpen(true);
+                              dispatch({ type: "OPEN_GROUP_FORM", payload: { id: group.groupId!, name: group.normalizedName, rawNames: group.rawNames } });
                             }}
                           >
                             <Pencil className="h-3 w-3" />
@@ -319,7 +387,7 @@ export function PriceAnalysisContent() {
                             className="h-7 w-7 text-destructive"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setDeleteGroup({ id: group.groupId!, name: group.displayName });
+                              dispatch({ type: "SET_DELETE_GROUP", payload: { id: group.groupId!, name: group.displayName } });
                             }}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -419,7 +487,7 @@ export function PriceAnalysisContent() {
         mode={detailMode}
         fuzzy={fuzzy}
         open={detailOpen}
-        onOpenChange={setDetailOpen}
+        onOpenChange={(v) => dispatch({ type: "SET_DETAIL_OPEN", payload: v })}
       />
       <GroupFormDialog
         key={editGroup?.id ?? "new"}
@@ -427,12 +495,12 @@ export function PriceAnalysisContent() {
         canonicalName={editGroup?.name}
         rawNames={editGroup?.rawNames}
         open={groupFormOpen}
-        onOpenChange={setGroupFormOpen}
+        onOpenChange={(v) => dispatch({ type: "SET_GROUP_FORM_OPEN", payload: v })}
         onSuccess={loadData}
       />
       <DeleteGroupDialog
         group={deleteGroup}
-        onOpenChange={(open) => { if (!open) setDeleteGroup(null); }}
+        onOpenChange={(open) => { if (!open) dispatch({ type: "SET_DELETE_GROUP", payload: null }); }}
         onSuccess={loadData}
       />
     </div>

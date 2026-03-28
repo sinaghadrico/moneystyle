@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   serverExternalPackages: ["@prisma/client"],
+  async redirects() {
+    return [
+      { source: "/features/money-advice", destination: "/features/money-pilot", permanent: true },
+      { source: "/features/wealth-pilot", destination: "/features/money-pilot", permanent: true },
+      { source: "/wealth", destination: "/pilot", permanent: true },
+    ];
+  },
 };
 
 export default withSerwist(nextConfig);

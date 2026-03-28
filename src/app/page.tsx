@@ -147,11 +147,6 @@ const jsonLd = [
     "@type": "WebSite",
     name: "MoneyStyle",
     url: "https://moneystyle.app/",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: "https://moneystyle.app/features/{search_term_string}",
-      "query-input": "required name=search_term_string",
-    },
   },
   {
     "@context": "https://schema.org",

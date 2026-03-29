@@ -1,13 +1,75 @@
 {
-  "name": "MoneyStyle - Finance Tracker",
+  "id": "/",
+  "name": "MoneyStyle - Free Finance Tracker",
   "short_name": "MoneyStyle",
-  "description": "100% free personal finance tracker with AI features",
+  "description": "100% free AI-powered personal finance tracker with 30+ features. Track spending, scan receipts, manage budgets, and grow savings.",
   "display": "standalone",
-  "start_url": "/",
-  "theme_color": "#09090b",
-  "background_color": "#09090b",
+  "display_override": ["standalone", "window-controls-overlay"],
+  "orientation": "portrait",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "theme_color": "#10b981",
+  "background_color": "#ffffff",
   "categories": ["finance", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "iarc_rating_id": "",
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=app.moneystyle.twa",
+      "id": "app.moneystyle.twa"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "scope_extensions": [
+    { "origin": "https://moneystyle.app" }
+  ],
+  "handle_links": "preferred",
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "share_target": {
+    "action": "/transactions?action=add&type=expense",
+    "method": "GET",
+    "params": {
+      "text": "description"
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "/transactions?action=import",
+      "accept": {
+        "text/csv": [".csv"]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+moneystyle",
+      "url": "/%s"
+    }
+  ],
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/icons/icon-192.svg",
       "sizes": "192x192",
@@ -17,12 +79,6 @@
       "src": "/icons/icon-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml"
-    },
-    {
-      "src": "/icons/icon-maskable-512.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -31,29 +87,51 @@
       "short_name": "Expense",
       "description": "Quick add a new expense",
       "url": "/transactions?action=add&type=expense",
-      "icons": [{ "src": "/icons/shortcut-expense.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Add Income",
       "short_name": "Income",
       "description": "Quick add a new income",
       "url": "/transactions?action=add&type=income",
-      "icons": [{ "src": "/icons/shortcut-income.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "View your financial dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/icons/shortcut-dashboard.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Scan Receipt",
       "short_name": "Scan",
-      "description": "Scan a receipt",
+      "description": "Scan a receipt with AI",
       "url": "/transactions?action=add&scan=true",
-      "icons": [{ "src": "/icons/shortcut-scan.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
-  "screenshots": []
+  "screenshots": [
+    {
+      "src": "/screenshot/mobile/dashboard.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard"
+    },
+    {
+      "src": "/screenshot/mobile/transactions.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Transactions"
+    },
+    {
+      "src": "/screenshot/desktop/dashboard.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard Desktop"
+    }
+  ]
 }

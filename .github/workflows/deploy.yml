@@ -36,8 +36,8 @@ jobs:
       - name: Write .env
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
-        run: echo "$ENV_FILE" | ssh deploy-server "cat > ~/revenue/.env"
+        run: echo "$ENV_FILE" | ssh deploy-server "cat > ~/moneystyle/.env"
 
       - name: Deploy
         run: |
-          ssh deploy-server "cd ~/revenue && git pull origin main && docker compose -f docker-compose.prod.yml up -d --build && docker image prune -f"
+          ssh deploy-server "cd ~/moneystyle && git pull origin main && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml exec -T app npx prisma migrate deploy || true && docker image prune -f"
